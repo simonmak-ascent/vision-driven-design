@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [1.8.1] — 2026-09-27
+
+### Changed (SEO & discoverability)
+- **Landing page (`index.html`)**: added Open Graph (`og:site_name`, `og:locale`, image dimensions/alt), a Twitter `summary_large_image` card, `robots`/`keywords`/`author` meta, and JSON-LD `SoftwareApplication` structured data; `og:image` now points at a real PNG (`https://vdd.simonmak.com/og.png`, 1280×640) instead of an SVG on `raw.githubusercontent.com` (SVGs are not rendered by most social crawlers).
+- **Hosted MCP docs page (`GET /api/mcp`)**: same Open Graph/Twitter/JSON-LD/keywords treatment, and its meta description no longer says "16 tools" (stale — the surface is 15).
+- **Registry metadata**: `server.json` gains a `title` and a keyword-rich description; the root `package.json` now carries `description`/`keywords`/`homepage`/`repository`/`license`/`author`.
+- **Crawlability**: added `robots.txt` and `sitemap.xml` (served from `public/` on vdd.simonmak.com and from the repo root on GitHub Pages); repo homepage set to `https://vdd.simonmak.com` and the GitHub description refreshed.
+
 ## [1.8.0] — 2026-09-27
 
 ### Changed (MCP tool surface — 16 → 15 tools)

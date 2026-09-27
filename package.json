@@ -1,5 +1,28 @@
 {
   "name": "vision-driven-design",
+  "description": "Spec-driven development MCP server: 8 phases, bi-directional V→S→T→SP→PL→TK traceability, and 7 quality gates for AI-assisted development.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "mcp-server",
+    "vdd",
+    "spec-driven-development",
+    "requirements-traceability",
+    "ai-agents",
+    "ai-coding",
+    "claude",
+    "cursor",
+    "opencode",
+    "developer-tools",
+    "quality-gates"
+  ],
+  "homepage": "https://vdd.simonmak.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simonplmak-cloud/vision-driven-design.git"
+  },
+  "license": "MIT",
+  "author": "simonplmak-cloud",
   "private": true,
   "scripts": {
     "build": "mkdir -p public && cp index.html public/",

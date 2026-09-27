@@ -1,8 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.simonplmak-cloud/vision-driven-design",
-  "description": "Bi-directional traceability for AI-assisted development: 8-phase spec-driven chain, 7 gates.",
-  "version": "1.8.0",
+  "title": "Vision Driven Design (VDD) MCP Server",
+  "description": "Spec-driven development MCP server: 8 phases, bi-directional traceability, 7 quality gates.",
+  "version": "1.8.1",
   "repository": {
     "url": "https://github.com/simonplmak-cloud/vision-driven-design",
     "source": "github",

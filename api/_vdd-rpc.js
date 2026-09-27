@@ -751,7 +751,7 @@ function handleJsonRpc(body) {
   const { method, params, id } = body || {};
 
   if (method === "initialize") {
-    return { jsonrpc: "2.0", id, result: { protocolVersion: "2025-06-18", serverInfo: { name: "vdd", title: "Vision Driven Design", version: "1.8.0" }, capabilities: { tools: {} }, instructions: "Vision Driven Design (VDD): an 8-phase, spec-driven development methodology with bi-directional traceability. Start with vdd_init, then vdd_vision (pass a freeform statement). Before each implementation session call vdd_get_next_task. Read-only tools that write nothing are vdd_inspect, vdd_detect_environment, vdd_get_next_task, vdd_clarify, vdd_implement, and vdd_amend; other write tools overwrite their target artifacts unless their description says otherwise (vdd_validate writes only a new vdd/impact-report.generated.md without clobbering a hand-authored report)." } };
+    return { jsonrpc: "2.0", id, result: { protocolVersion: "2025-06-18", serverInfo: { name: "vdd", title: "Vision Driven Design", version: "1.8.1" }, capabilities: { tools: {} }, instructions: "Vision Driven Design (VDD): an 8-phase, spec-driven development methodology with bi-directional traceability. Start with vdd_init, then vdd_vision (pass a freeform statement). Before each implementation session call vdd_get_next_task. Read-only tools that write nothing are vdd_inspect, vdd_detect_environment, vdd_get_next_task, vdd_clarify, vdd_implement, and vdd_amend; other write tools overwrite their target artifacts unless their description says otherwise (vdd_validate writes only a new vdd/impact-report.generated.md without clobbering a hand-authored report)." } };
   }
 
   if (method === "tools/list") {
@@ -800,9 +800,26 @@ const HTML = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2363c8c4'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='18' font-weight='700' fill='%230f1115' text-anchor='middle'%3EV%3C/text%3E%3C/svg%3E">
-<title>VDD MCP Server — Vision Driven Design API</title>
-<meta name="description" content="Public Model Context Protocol (MCP) server for Vision Driven Design (VDD) — 16 tools for template generation, environment detection, website cloning, and bi-directional traceability in AI-assisted development.">
+<title>VDD MCP Server — Vision Driven Design (MCP API)</title>
+<meta name="description" content="Public Model Context Protocol (MCP) server for Vision Driven Design (VDD) — 15 tools over streamable HTTP, no API key. Spec-driven development with bi-directional traceability for AI coding agents (Claude, Cursor, VS Code).">
 <link rel="canonical" href="https://vdd.simonmak.com/api/mcp">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="keywords" content="MCP server, Model Context Protocol, spec-driven development, requirements traceability, AI coding agents, Claude, Cursor, VS Code, developer tools">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vision Driven Design">
+<meta property="og:title" content="VDD MCP Server — 15 tools for spec-driven traceability">
+<meta property="og:description" content="Public MCP server (streamable HTTP, no API key): 15 tools, 8 phases, 7 quality gates, bi-directional V→S→T→SP→PL→TK traceability for AI coding agents.">
+<meta property="og:url" content="https://vdd.simonmak.com/api/mcp">
+<meta property="og:image" content="https://vdd.simonmak.com/og.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="VDD MCP Server — 15 tools for spec-driven traceability">
+<meta name="twitter:description" content="Public MCP server (streamable HTTP, no API key): 15 tools, 8 phases, 7 quality gates, bi-directional traceability for AI coding agents.">
+<meta name="twitter:image" content="https://vdd.simonmak.com/og.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Vision Driven Design MCP Server","alternateName":"VDD MCP Server","description":"Spec-driven development MCP server: 8 phases, bi-directional V→S→T→SP→PL→TK traceability, 7 quality gates.","url":"https://vdd.simonmak.com/api/mcp","applicationCategory":"DeveloperApplication","operatingSystem":"Any","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"sameAs":["https://github.com/simonplmak-cloud/vision-driven-design","https://www.npmjs.com/package/@simonmak-ascent/mcp"]}
+</script>
 <style>
   /* Dark theme (default) — all contrast >= 7:1 (WCAG 2.2 AAA) */
   :root {

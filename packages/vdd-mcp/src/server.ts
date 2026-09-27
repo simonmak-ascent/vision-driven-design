@@ -105,7 +105,7 @@ export const MCP_TOOL_PHASES = PHASE_NAMES.filter(
 );
 
 export function createVddMcpServer(): McpServer {
-    const server = new McpServer({ name: 'vdd', version: '1.8.0' });
+    const server = new McpServer({ name: 'vdd', version: '1.8.1' });
 
   for (const name of MCP_TOOL_PHASES) {
     const toolName = `vdd_${name.replace(/-/g, '_')}`;
