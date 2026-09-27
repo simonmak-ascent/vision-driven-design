@@ -51,7 +51,7 @@ export const PHASE_META: Record<PhaseName, PhaseMeta> = {
     instructions: 'Pass actionItemId (e.g., "A-001") or a freeform "description". The AI agent should surface assumptions, write precise ACs with measurable criteria, define boundaries, and connect each AC to a vision impact. Output to vdd/specs/<id>/spec.md.',
   },
   clarify: {
-    description: 'VDD Phase 4b: Clarify an existing spec in place — resolves every [NEEDS CLARIFICATION] marker, replaces [e.g.] placeholders with concrete values, and adds edge-case acceptance criteria (AC-E*). Mutates vdd/specs/<feature>/spec.md. Pass feature (spec directory name). Run after vdd_specify when a spec has unresolved markers; to author a brand-new spec use vdd_specify instead.',
+    description: 'VDD Phase 4b: Clarify an existing spec — scans vdd/specs/<feature>/spec.md and returns the items to resolve: every [NEEDS CLARIFICATION] marker, [e.g.] placeholder, and happy-path acceptance criterion (AC) still needing an edge-case counterpart (AC-E*). Read-only; returns the list without editing the file (the host agent then applies the resolutions). Pass feature (spec directory name). Run after vdd_specify when a spec has unresolved markers; to author a brand-new spec use vdd_specify instead.',
     instructions: 'Pass "feature" (the spec directory name). AI agent reads the spec, resolves every [NEEDS CLARIFICATION] item, replaces [e.g.] placeholders with concrete values, and adds edge-case ACs (AC-E*) for every happy-path MUST AC.',
   },
   plan: {
@@ -67,7 +67,7 @@ export const PHASE_META: Record<PhaseName, PhaseMeta> = {
     instructions: 'Pass "feature". Returns the first uncompleted task line from tasks.md. The AI agent should then start a fresh context window for that task.',
   },
   implement: {
-    description: 'VDD Phase 7b: Execute one task — load constitution, spec, plan, and contracts, implement, verify, and commit with an impact-chain commit message. Mutates source code and commits to git. Pass taskId (e.g. "TASK-003") from the task returned by vdd_get_next_task. Run one task at a time, after vdd_get_next_task; for read-only inspection of tasks use vdd_get_next_task or vdd_trace instead.',
+    description: 'VDD Phase 7b: Prepare one task for implementation — loads constitution, spec, plan, and contracts and returns the implementation instruction plus the impact-chain commit-message format. Read-only; the tool writes nothing — the host agent performs the code edits, verification, and commit. Pass taskId (e.g. "TASK-003") from the task returned by vdd_get_next_task. Run one task at a time, after vdd_get_next_task; for read-only inspection of tasks use vdd_get_next_task or vdd_trace instead.',
     instructions: 'Pass "taskId". AI agent loads constitution + task description + relevant spec/plan/contracts. Implements with constraints from Boundaries section. Commits with traceable message format.',
   },
   validate: {
@@ -83,7 +83,7 @@ export const PHASE_META: Record<PhaseName, PhaseMeta> = {
     instructions: 'Pass "feature". AI agent reads spec.md, plan.md, tasks.md for the feature and reports metrics: AC count, unresolved [NEEDS CLARIFICATION] items, [e.g.] placeholder count, and readiness status.',
   },
   amend: {
-    description: 'VDD Cross-phase: Cascade a requirement change through the whole chain — identify the highest affected level and update downward V→S→T→SP→PL→TK, re-running affected gates (G1–G7). Mutates the affected vdd/ artifacts. Pass the change as description. Use when a requirement changes after artifacts already exist; to build a phase from scratch the first time, run that phase\'s own tool instead of vdd_amend.',
+    description: 'VDD Cross-phase: Plan a requirement-change cascade through the whole chain — identifies the highest affected level and returns the ordered steps to update downward V→S→T→SP→PL→TK and re-run affected gates (G1–G7). Read-only; returns the cascade plan without editing artifacts (the host agent applies the edits and commits). Pass the change as description. Use when a requirement changes after artifacts already exist; to build a phase from scratch the first time, run that phase\'s own tool instead of vdd_amend.',
     instructions: 'Pass "description" of what changed. AI agent identifies the highest affected level, updates all downstream artifacts, re-runs affected gates (G1–G7), and commits each updated artifact with [AMEND] marker.',
   },
   e2e: {

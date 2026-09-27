@@ -9,6 +9,11 @@
 - **Per-tool input schemas** — each tool advertises only the parameters it actually reads (e.g. `vdd_init` → `projectRoot` only; clone-only params on `vdd_clone`).
 - **Documented output schema** (`outputSchema` + `structuredContent`) shared by every tool.
 
+### Fixed (MCP annotation accuracy + surface parity)
+- **Destructive annotations now describe each tool's own filesystem effect.** `vdd_clarify`, `vdd_implement`, and `vdd_amend` write nothing — they return questions/instructions to the host agent — so they are now `readOnlyHint: true, idempotentHint: true` (were `destructiveHint: true`). `vdd_validate` writes only a new `vdd/impact-report.generated.md` and never clobbers a hand-authored report, so it is now `destructiveHint: false, idempotentHint: true`. The genuine overwriters (`init`, `vision`, `strategize`, `tactics`, `specify`, `plan`, `tasks`, `clone`) stay `destructiveHint: true`. This clears the false "Destructive" badges Glama renders for the three non-writers.
+- **Descriptions no longer overstate writes.** The `clarify`, `implement`, and `amend` descriptions in `packages/vdd-engine/src/meta.ts` said "Mutates …"/"commits to git"; they now state the tool is read-only and the host agent applies the edits.
+- **Deployed HTTP surface parity.** `api/sse.js` (SSE + the shared JSON-RPC handler used by `api/mcp.js`) now emits the same `title` + `annotations` per tool as the stdio server, and its duplicated `PHASE_META` is synced to the engine. Previously only the npm stdio build carried hints, so Glama and the hosted endpoint disagreed.
+
 ### Changed (MCP tool surface)
 - `vdd_next_task` → **`vdd_get_next_task`** (consistent `verb_noun` naming) across the engine, MCP server, CLI, SSE endpoint, and docs.
 - **`e2e` is no longer an MCP/SSE tool** — it duplicates the phase sequence. It remains the CLI `vdd e2e` shortcut (and `vdd e2e -clone`) and an engine phase. **MCP tool surface: 17 → 16.**

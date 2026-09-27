@@ -45,9 +45,16 @@ const PHASE_INPUT_SCHEMAS: Record<string, Record<string, z.ZodType>> = {
 };
 
 // MCP annotation hints feed Glama's Tool Definition Quality Score (Behavioral
-// Transparency dimension). Read-only tools are safe to re-run; write tools
-// mutate the project; open-world tools reach external systems (web research,
-// site cloning).
+// Transparency dimension). Annotations describe the tool's OWN effect on the
+// filesystem, not the follow-on work the host agent performs from its output:
+//   - readOnlyHint: the tool writes nothing (it reads or returns instructions).
+//   - destructiveHint: true only when the tool overwrites an existing artifact;
+//     false when it is additive (writes a new generated file). The MCP default
+//     is true, so a non-read-only tool must set false to be shown as additive.
+//   - openWorldHint: the tool reaches external systems (web research, cloning).
+// `clarify`, `implement`, and `amend` return questions/instructions without
+// touching disk, so they are read-only; `validate` writes only a new generated
+// report and never clobbers a hand-authored one.
 const TOOL_ANNOTATIONS: Record<string, {
   title: string;
   annotations: {
@@ -62,15 +69,15 @@ const TOOL_ANNOTATIONS: Record<string, {
   strategize: { title: 'Research Strategy', annotations: { destructiveHint: true, openWorldHint: true } },
   tactics: { title: 'Audit Tactics', annotations: { destructiveHint: true } },
   specify: { title: 'Generate Spec', annotations: { destructiveHint: true } },
-  clarify: { title: 'Clarify Spec', annotations: { destructiveHint: true } },
+  clarify: { title: 'Clarify Spec', annotations: { readOnlyHint: true, idempotentHint: true } },
   plan: { title: 'Generate Plan', annotations: { destructiveHint: true } },
   tasks: { title: 'Generate Tasks', annotations: { destructiveHint: true } },
   'get-next-task': { title: 'Get Next Task', annotations: { readOnlyHint: true, idempotentHint: true } },
-  implement: { title: 'Implement Task', annotations: { destructiveHint: true } },
-  validate: { title: 'Validate Impact', annotations: { destructiveHint: true } },
+  implement: { title: 'Implement Task', annotations: { readOnlyHint: true, idempotentHint: true } },
+  validate: { title: 'Validate Impact', annotations: { destructiveHint: false, idempotentHint: true } },
   trace: { title: 'Traceability Matrix', annotations: { readOnlyHint: true, idempotentHint: true } },
   analyze: { title: 'Analyze Consistency', annotations: { readOnlyHint: true, idempotentHint: true } },
-  amend: { title: 'Amend Requirements', annotations: { destructiveHint: true } },
+  amend: { title: 'Amend Requirements', annotations: { readOnlyHint: true, idempotentHint: true } },
   clone: { title: 'Clone Website', annotations: { destructiveHint: true, openWorldHint: true } },
   'detect-environment': { title: 'Detect Environment', annotations: { readOnlyHint: true, idempotentHint: true } },
 };
