@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Fixed (social preview asset)
+- `docs/social-preview.svg` said **"113 Checks"**; corrected to the canonical **108**. Regenerated `og.png` (1280×640 PNG) from it so the Open Graph/Twitter image and the GitHub repository social preview show the correct count.
+
 ## [1.8.2] — 2026-09-27
 
 ### Fixed (SEO follow-up)
