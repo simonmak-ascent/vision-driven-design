@@ -1,3 +1,7 @@
+// VDD MCP JSON-RPC core — tool definitions, dispatch, and phase handlers.
+// Shared by the Streamable HTTP endpoint (api/mcp.js). The leading underscore
+// keeps this file out of Vercel's /api route generation (it is not an endpoint).
+
 const today = new Date().toISOString().split("T")[0];
 function hdr(chain) { return `Status: Draft\nVersion: 1.0\nLast updated: ${today}\n\n> Impact Chain: ${chain}\n\n`; }
 
@@ -650,22 +654,22 @@ const PHASE_NAMES = ["init","vision","strategize","tactics","specify","clarify",
 // write nothing; destructiveHint is true only for tools that overwrite an existing
 // artifact; open-world tools reach external systems (web research, cloning).
 const TOOL_ANNOTATIONS = {
-  init: { title: "Initialize Constitution", annotations: { destructiveHint: true } },
-  vision: { title: "Expand Vision", annotations: { destructiveHint: true } },
+  init: { title: "Initialize Constitution", annotations: { destructiveHint: true, openWorldHint: false } },
+  vision: { title: "Expand Vision", annotations: { destructiveHint: true, openWorldHint: false } },
   strategize: { title: "Research Strategy", annotations: { destructiveHint: true, openWorldHint: true } },
-  tactics: { title: "Audit Tactics", annotations: { destructiveHint: true } },
-  specify: { title: "Generate Spec", annotations: { destructiveHint: true } },
-  clarify: { title: "Clarify Spec", annotations: { readOnlyHint: true, idempotentHint: true } },
-  plan: { title: "Generate Plan", annotations: { destructiveHint: true } },
-  tasks: { title: "Generate Tasks", annotations: { destructiveHint: true } },
-  "get-next-task": { title: "Get Next Task", annotations: { readOnlyHint: true, idempotentHint: true } },
-  implement: { title: "Implement Task", annotations: { readOnlyHint: true, idempotentHint: true } },
-  validate: { title: "Validate Impact", annotations: { destructiveHint: false, idempotentHint: true } },
-  trace: { title: "Traceability Matrix", annotations: { readOnlyHint: true, idempotentHint: true } },
-  analyze: { title: "Analyze Consistency", annotations: { readOnlyHint: true, idempotentHint: true } },
-  amend: { title: "Amend Requirements", annotations: { readOnlyHint: true, idempotentHint: true } },
+  tactics: { title: "Audit Tactics", annotations: { destructiveHint: true, openWorldHint: false } },
+  specify: { title: "Generate Spec", annotations: { destructiveHint: true, openWorldHint: false } },
+  clarify: { title: "Clarify Spec", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
+  plan: { title: "Generate Plan", annotations: { destructiveHint: true, openWorldHint: false } },
+  tasks: { title: "Generate Tasks", annotations: { destructiveHint: true, openWorldHint: false } },
+  "get-next-task": { title: "Get Next Task", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
+  implement: { title: "Implement Task", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
+  validate: { title: "Validate Impact", annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false } },
+  trace: { title: "Traceability Matrix", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
+  analyze: { title: "Analyze Consistency", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
+  amend: { title: "Amend Requirements", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
   clone: { title: "Clone Website", annotations: { destructiveHint: true, openWorldHint: true } },
-  "detect-environment": { title: "Detect Environment", annotations: { readOnlyHint: true, idempotentHint: true } },
+  "detect-environment": { title: "Detect Environment", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
 };
 
 function toolDefs() {
@@ -696,7 +700,7 @@ function handleJsonRpc(body) {
   const { method, params, id } = body || {};
 
   if (method === "initialize") {
-    return { jsonrpc: "2.0", id, result: { protocolVersion: "2025-06-18", serverInfo: { name: "vdd", title: "Vision Driven Design", version: "1.6.0" }, capabilities: { tools: {} }, instructions: "Vision Driven Design (VDD): an 8-phase, spec-driven development methodology with bi-directional traceability. Start with vdd_init, then vdd_vision (pass a freeform statement). Before each implementation session call vdd_get_next_task. Read-only tools that write nothing are vdd_trace, vdd_analyze, vdd_detect_environment, vdd_get_next_task, vdd_clarify, vdd_implement, and vdd_amend; other write tools overwrite their target artifacts unless their description says otherwise (vdd_validate writes only a new vdd/impact-report.generated.md without clobbering a hand-authored report)." } };
+    return { jsonrpc: "2.0", id, result: { protocolVersion: "2025-06-18", serverInfo: { name: "vdd", title: "Vision Driven Design", version: "1.7.0" }, capabilities: { tools: {} }, instructions: "Vision Driven Design (VDD): an 8-phase, spec-driven development methodology with bi-directional traceability. Start with vdd_init, then vdd_vision (pass a freeform statement). Before each implementation session call vdd_get_next_task. Read-only tools that write nothing are vdd_trace, vdd_analyze, vdd_detect_environment, vdd_get_next_task, vdd_clarify, vdd_implement, and vdd_amend; other write tools overwrite their target artifacts unless their description says otherwise (vdd_validate writes only a new vdd/impact-report.generated.md without clobbering a hand-authored report)." } };
   }
 
   if (method === "tools/list") {
@@ -745,8 +749,8 @@ const HTML = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2363c8c4'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='18' font-weight='700' fill='%230f1115' text-anchor='middle'%3EV%3C/text%3E%3C/svg%3E">
 <title>VDD MCP Server — Vision Driven Design API</title>
-<meta name="description" content="Public Model Context Protocol (MCP) server for Vision Driven Design (VDD) — 17 tools for template generation, environment detection, website cloning, and bi-directional traceability in AI-assisted development.">
-<link rel="canonical" href="https://vdd.simonmak.com/api/sse">
+<meta name="description" content="Public Model Context Protocol (MCP) server for Vision Driven Design (VDD) — 16 tools for template generation, environment detection, website cloning, and bi-directional traceability in AI-assisted development.">
+<link rel="canonical" href="https://vdd.simonmak.com/api/mcp">
 <style>
   /* Dark theme (default) — all contrast >= 7:1 (WCAG 2.2 AAA) */
   :root {
@@ -906,11 +910,11 @@ const HTML = `<!DOCTYPE html>
     <p>Add to <abbr title="Model Context Protocol">MCP</abbr> agent configuration:</p>
     <pre>{
   "mcpServers": {
-    "vdd": { "type": "sse", "url": "https://vdd.simonmak.com/api/sse" }
+    "vdd": { "url": "https://vdd.simonmak.com/api/mcp" }
   }
 }</pre>
     <p><strong>OpenCode</strong> — <code>opencode.json</code>:</p>
-    <pre>"vdd": { "type": "remote", "url": "https://vdd.simonmak.com/api/sse", "timeout": 120000 }</pre>
+    <pre>"vdd": { "type": "remote", "url": "https://vdd.simonmak.com/api/mcp", "timeout": 120000 }</pre>
     <p><strong>Claude Desktop</strong> — <code>claude_desktop_config.json</code>:</p>
     <pre>"vdd": { "command": "npx", "args": ["-y", "@simonmak-ascent/mcp"], "type": "stdio" }</pre>
     <div class="cta-group">
@@ -921,12 +925,12 @@ const HTML = `<!DOCTYPE html>
   <section aria-labelledby="usage-heading">
     <h2 id="usage-heading">Usage</h2>
     <div class="card">
-      <div class="row"><span class="label">Transport</span><span class="value"><abbr title="Server-Sent Events">SSE</abbr> + <abbr title="JavaScript Object Notation Remote Procedure Call">JSON-RPC</abbr> 2.0</span></div>
-      <div class="row"><span class="label">Endpoint</span><span class="value">https://vdd.simonmak.com/api/sse</span></div>
+      <div class="row"><span class="label">Transport</span><span class="value">Streamable HTTP + <abbr title="JavaScript Object Notation Remote Procedure Call">JSON-RPC</abbr> 2.0</span></div>
+      <div class="row"><span class="label">Endpoint</span><span class="value">https://vdd.simonmak.com/api/mcp</span></div>
       <div class="row"><span class="label">Auth</span><span class="value">None — public, no API key</span></div>
     </div>
     <h3>Example: vdd_vision</h3>
-    <pre>curl -X POST https://vdd.simonmak.com/api/sse \\
+    <pre>curl -X POST https://vdd.simonmak.com/api/mcp \\
   -H "Content-Type: application/json" \\
   -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"vdd_vision","arguments":{"statement":"Build a platform that...","projectRoot":"."}},"id":1}'</pre>
     <p>Runs init → vision → strategize → tactics → specify → clarify → plan → tasks → get-next-task → validate. Returns all templates.</p>
@@ -940,37 +944,9 @@ const HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
-module.exports = async function (req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  if (req.method === "OPTIONS") {
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, Mcp-Session-Id");
-    return res.status(204).end();
-  }
-  if (req.method === "GET") {
-    if (isBrowser(req)) { res.setHeader("Content-Type", "text/html; charset=utf-8"); return res.status(200).send(HTML); }
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache, no-transform");
-    res.setHeader("Connection", "keep-alive");
-    res.setHeader("X-Accel-Buffering", "no");
-    res.write(`event: endpoint\ndata: https://vdd.simonmak.com/api/sse\n\n`);
-    const keepAlive = setInterval(() => { res.write(`: heartbeat\n\n`); }, 12000);
-    req.on("close", () => clearInterval(keepAlive));
-    res.socket?.setTimeout?.(0);
-    return;
-  }
-  if (req.method === "POST") {
-    let body = {};
-    try { body = req.body || {}; } catch {}
-    const response = handleJsonRpc(body);
-    if (response === null) return res.status(202).end();
-    res.setHeader("Content-Type", "application/json");
-    return res.status(200).json(response);
-  }
-  return res.status(405).json({ error: "Method not allowed" });
-};
-
-// Reusable JSON-RPC core so the Streamable HTTP entrypoint (api/mcp.js) shares
-// the exact same tool set and behavior as the SSE endpoint.
+// Shared JSON-RPC core + the accessible API docs page. The Streamable HTTP
+// endpoint (api/mcp.js) reuses both; the docs page is served there for browsers.
 module.exports.handleJsonRpc = handleJsonRpc;
 module.exports.toolDefs = toolDefs;
+module.exports.isBrowser = isBrowser;
+module.exports.html = HTML;

@@ -240,8 +240,8 @@ vdd/
 
 ## MCP & Packages
 
-The public MCP server at `vdd.simonmak.com/api/sse` and the TypeScript packages are in this repo:
-- `api/sse.js` — deployed Vercel handler (16 tools)
+The public MCP server at `vdd.simonmak.com/api/mcp` and the TypeScript packages are in this repo:
+- `api/mcp.js` — deployed Vercel Streamable HTTP handler (16 tools); `api/_vdd-rpc.js` — shared JSON-RPC core + browser docs page
 - `packages/vdd-engine/` — shared core (17 phase functions + `meta.ts`: phase metadata, tool requirements, research subagents, domain primers)
 - `packages/vdd-mcp/` — MCP server (16 tools, stdio + Streamable HTTP)
 - `packages/vdd-cli/` — CLI binary (17 subcommands, `--json`)

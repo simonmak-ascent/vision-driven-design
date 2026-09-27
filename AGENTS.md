@@ -10,7 +10,8 @@ README.md                ← GitHub landing page.
 constitution.md          ← Project constitution (dogfooded).
 index.html               ← GitHub Pages landing page at simonplmak-cloud.github.io/vision-driven-design.
 api/                     ← Vercel MCP endpoint (deployed at vdd.simonmak.com).
-  sse.js                 ← MCP SSE transport — GET returns SSE stream (or HTML for browsers), POST handles JSON-RPC 2.0 (initialize, tools/list, tools/call). 16 tools.
+  mcp.js                 ← Streamable HTTP MCP endpoint — POST handles JSON-RPC 2.0 (initialize, tools/list, tools/call); GET serves the browser docs page. 16 tools.
+  _vdd-rpc.js            ← Shared JSON-RPC core + browser docs page (underscore = not a Vercel route).
 vercel.json              ← Vercel deploy config (Framework: Other).
 Dockerfile               ← Self-host build — Streamable HTTP MCP server. (Glama generates its own; it ignores this file.)
 glama.json               ← Glama registry file — `maintainers` only (the sole field Glama's schema consumes).

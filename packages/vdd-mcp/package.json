@@ -1,6 +1,6 @@
 {
   "name": "@simonmak-ascent/mcp",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Vision Driven Design MCP server — 16 tools for bi-directional traceability across an 8-phase, spec-driven development chain (Vision → Strategy → Tactics → Spec → Plan → Tasks) with 7 quality gates.",
   "mcpName": "io.github.simonplmak-cloud/vision-driven-design",
   "license": "MIT",
@@ -44,5 +44,5 @@
     "@modelcontextprotocol/server": "^2.0.0",
     "zod": "^4.0.0"
   },
-  "devDependencies": { "@types/node": "^22.0.0", "typescript": "^5.6.0" }
+  "devDependencies": { "@types/node": "^22.0.0", "typescript": "^5.6.0", "vitest": "^2.1.0" }
 }

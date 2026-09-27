@@ -2,7 +2,7 @@
 
 <a href="https://github.com/simonplmak-cloud/vision-driven-design/blob/main/LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
 <a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/phases-8-blueviolet" alt="8 Phases"></a>
-<a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/version-1.6.0-blue" alt="Version 1.6.0"></a>
+<a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/version-1.7.0-blue" alt="Version 1.7.0"></a>
 <a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/gates-7%20bidirectional-orange" alt="7 Bidirectional Gates"></a>
 <a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/checks-108-green" alt="108 Verification Checks"></a>
 <a href="https://vdd.simonmak.com"><img src="https://img.shields.io/badge/API-vdd.simonmak.com-0d7377" alt="MCP API"></a>
@@ -145,7 +145,7 @@ git clone https://github.com/simonplmak-cloud/vision-driven-design.git \
 
 ### Local MCP (from source)
 
-To run the MCP server locally (stdio) instead of the public SSE endpoint:
+To run the MCP server locally (stdio) instead of the hosted endpoint:
 
 ```bash
 # 1. Clone the repo
@@ -181,10 +181,7 @@ pnpm -r build
 
 ## MCP API
 
-VDD is available as a public MCP server at `https://vdd.simonmak.com` — 16 tools, no API key required. Two transports:
-
-- **Streamable HTTP** — `https://vdd.simonmak.com/api/mcp` (recommended; Smithery and modern MCP clients)
-- **SSE** — `https://vdd.simonmak.com/api/sse` (legacy, JSON-RPC 2.0)
+VDD is available as a public MCP server at `https://vdd.simonmak.com` — 16 tools, no API key required — over the MCP **Streamable HTTP** transport at `https://vdd.simonmak.com/api/mcp` (also reachable at `/mcp`). The legacy SSE endpoint is retired: `https://vdd.simonmak.com/api/sse` now returns an HTTP 308 redirect to `/api/mcp`.
 
 ### Agent Configuration
 
@@ -192,7 +189,7 @@ VDD is available as a public MCP server at `https://vdd.simonmak.com` — 16 too
 ```json
 "vdd": {
   "type": "remote",
-  "url": "https://vdd.simonmak.com/api/sse",
+  "url": "https://vdd.simonmak.com/api/mcp",
   "timeout": 120000
 }
 ```
@@ -206,11 +203,9 @@ VDD is available as a public MCP server at `https://vdd.simonmak.com` — 16 too
 }
 ```
 
-**Cursor** — add MCP server URL: `https://vdd.simonmak.com/api/sse`
+**Cursor** — add MCP server URL: `https://vdd.simonmak.com/api/mcp`
 
 **Any Streamable HTTP client** (Smithery, Claude Code, …) — MCP server URL: `https://vdd.simonmak.com/api/mcp`
-
-**Any SSE-compatible agent** — endpoint: `https://vdd.simonmak.com/api/sse`
 
 ### MCP Tools (16)
 
@@ -239,10 +234,9 @@ Maintainer notes:
 | Method | Description |
 |--------|-------------|
 | POST `/api/mcp` | Streamable HTTP — JSON-RPC `initialize`, `tools/list`, `tools/call` (stateless) |
-| GET `/api/mcp` | 405 — no server-initiated stream |
+| GET `/api/mcp` | HTML docs page for browsers; 405 for MCP clients (no server-initiated stream) |
 | DELETE `/api/mcp` | 204 — no session state to terminate |
-| GET `/api/sse` | SSE stream (MCP client) or HTML docs (browser) |
-| POST `/api/sse` | JSON-RPC — `initialize`, `tools/list`, `tools/call` |
+| `/api/sse` | Retired — HTTP 308 redirect to `/api/mcp` |
 
 ```bash
 # Streamable HTTP call example
@@ -253,8 +247,8 @@ curl -X POST https://vdd.simonmak.com/api/mcp \
 ```
 
 ```bash
-# JSON-RPC call example
-curl -X POST https://vdd.simonmak.com/api/sse \
+# tools/call example
+curl -X POST https://vdd.simonmak.com/api/mcp \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"vdd_validate","arguments":{"projectRoot":"."}},"id":1}'
 ```
@@ -357,7 +351,8 @@ VDD is benchmarked against NASA SE, CMMI REQM, DO-178C, IEC 62304, DORA, ISO 291
 │   ├── vdd-mcp/                     # MCP server — 16 tools, stdio + Streamable HTTP
 │   └── vdd-cli/                     # CLI binary — 17 subcommands
 ├── api/                             # Vercel MCP endpoint
-│   └── sse.js                       # MCP SSE + JSON-RPC 2.0 handler
+│   ├── mcp.js                       # Streamable HTTP MCP endpoint (16 tools)
+│   └── _vdd-rpc.js                  # Shared JSON-RPC core + browser docs page (not routed)
 ├── scripts/                         # 4 installer/helper scripts
 └── .github/                         # GitHub config
     ├── CODEOWNERS

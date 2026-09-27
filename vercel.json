@@ -1,14 +1,16 @@
 {
   "functions": {
-    "api/sse.js": {
-      "memory": 512,
-      "maxDuration": 30
-    },
     "api/mcp.js": {
-      "memory": 512,
       "maxDuration": 30
     }
   },
+  "redirects": [
+    {
+      "source": "/api/sse",
+      "destination": "/api/mcp",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/mcp",

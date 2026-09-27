@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [1.7.0] — 2026-09-27
+
+### Removed (SSE transport retired)
+- **The legacy SSE endpoint is gone.** `api/sse.js` became the non-routed `api/_vdd-rpc.js` (Vercel does not create a function for underscore-prefixed files), so `/api/sse` now returns an **HTTP 308 redirect** to `/api/mcp` and `server.json` advertises only the `streamable-http` remote. This eliminates the recurring `Vercel Runtime Timeout Error: Task timed out after 30 seconds` on `/api/sse` (64 occurrences, 30 users since Aug 10) — a long-lived SSE stream cannot outlive a serverless function's `maxDuration`.
+- README, SKILL, AGENTS, the GitHub Pages landing page, and the in-repo API reference no longer mention SSE; `/api/mcp` is the single canonical transport.
+
+### Added (hosted-surface tests + CI)
+- **Regression tests for the hosted tool surface** (`packages/vdd-mcp/test/api-surface.test.ts`, `server-surface.test.ts`): asserts 16 tools, titles, destructive/read-only classification, `openWorldHint` accuracy, and — most importantly — `PHASE_META` description parity between `api/_vdd-rpc.js` and the engine, guarding the duplication that produced the earlier annotation bug.
+- **CI now runs the code.** `.github/workflows/vdd-quality-gates.yml` gains a `build-test` job (`pnpm -r build` → `pnpm check` → `pnpm test` → `node --check` on the Vercel handlers). Previously CI only inspected `vdd/` artifacts and never type-checked or tested.
+- **Browser docs page at `GET /api/mcp`** — the accessible HTML page (WCAG-AAA palette) moves from the retired `/api/sse` route to the canonical endpoint.
+
+### Fixed (deploy + annotation precision)
+- Removed the ignored `memory` setting from `vercel.json` (ignored under Active CPU billing) — silences the build warning.
+- Local-only tools now declare `openWorldHint: false`; only `strategize` and `clone` are open-world.
+
 ### Added (MCP distribution & Glama registry)
 - **Streamable HTTP transport** (`packages/vdd-mcp/src/http.ts` + `http-entry.ts`): the VDD tools now serve over the MCP Streamable HTTP transport (port 3000) alongside the stdio entrypoint, making the server hostable/deployable.
 - **`glama.json`** registry file (repo root): `maintainers` only — the sole field Glama's [server schema](https://glama.ai/mcp/schemas/server.json) consumes. Glama generates its own container build from the stdio entrypoint (`packages/vdd-mcp/dist/stdio.js`) wrapped with `mcp-proxy`; the root **`Dockerfile`** is for self-hosting the Streamable HTTP server, not for Glama.

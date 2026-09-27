@@ -55,7 +55,7 @@ const PHASE_INPUT_SCHEMAS: Record<string, Record<string, z.ZodType>> = {
 // `clarify`, `implement`, and `amend` return questions/instructions without
 // touching disk, so they are read-only; `validate` writes only a new generated
 // report and never clobbers a hand-authored one.
-const TOOL_ANNOTATIONS: Record<string, {
+export const TOOL_ANNOTATIONS: Record<string, {
   title: string;
   annotations: {
     readOnlyHint?: boolean;
@@ -64,22 +64,22 @@ const TOOL_ANNOTATIONS: Record<string, {
     openWorldHint?: boolean;
   };
 }> = {
-  init: { title: 'Initialize Constitution', annotations: { destructiveHint: true } },
-  vision: { title: 'Expand Vision', annotations: { destructiveHint: true } },
+  init: { title: 'Initialize Constitution', annotations: { destructiveHint: true, openWorldHint: false } },
+  vision: { title: 'Expand Vision', annotations: { destructiveHint: true, openWorldHint: false } },
   strategize: { title: 'Research Strategy', annotations: { destructiveHint: true, openWorldHint: true } },
-  tactics: { title: 'Audit Tactics', annotations: { destructiveHint: true } },
-  specify: { title: 'Generate Spec', annotations: { destructiveHint: true } },
-  clarify: { title: 'Clarify Spec', annotations: { readOnlyHint: true, idempotentHint: true } },
-  plan: { title: 'Generate Plan', annotations: { destructiveHint: true } },
-  tasks: { title: 'Generate Tasks', annotations: { destructiveHint: true } },
-  'get-next-task': { title: 'Get Next Task', annotations: { readOnlyHint: true, idempotentHint: true } },
-  implement: { title: 'Implement Task', annotations: { readOnlyHint: true, idempotentHint: true } },
-  validate: { title: 'Validate Impact', annotations: { destructiveHint: false, idempotentHint: true } },
-  trace: { title: 'Traceability Matrix', annotations: { readOnlyHint: true, idempotentHint: true } },
-  analyze: { title: 'Analyze Consistency', annotations: { readOnlyHint: true, idempotentHint: true } },
-  amend: { title: 'Amend Requirements', annotations: { readOnlyHint: true, idempotentHint: true } },
+  tactics: { title: 'Audit Tactics', annotations: { destructiveHint: true, openWorldHint: false } },
+  specify: { title: 'Generate Spec', annotations: { destructiveHint: true, openWorldHint: false } },
+  clarify: { title: 'Clarify Spec', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
+  plan: { title: 'Generate Plan', annotations: { destructiveHint: true, openWorldHint: false } },
+  tasks: { title: 'Generate Tasks', annotations: { destructiveHint: true, openWorldHint: false } },
+  'get-next-task': { title: 'Get Next Task', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
+  implement: { title: 'Implement Task', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
+  validate: { title: 'Validate Impact', annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false } },
+  trace: { title: 'Traceability Matrix', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
+  analyze: { title: 'Analyze Consistency', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
+  amend: { title: 'Amend Requirements', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
   clone: { title: 'Clone Website', annotations: { destructiveHint: true, openWorldHint: true } },
-  'detect-environment': { title: 'Detect Environment', annotations: { readOnlyHint: true, idempotentHint: true } },
+  'detect-environment': { title: 'Detect Environment', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
 };
 
 // Documented output shape so clients and evaluators know what each tool returns
@@ -101,10 +101,10 @@ const OUTPUT_SCHEMA = {
 // The `e2e` phase is intentionally NOT exposed as an MCP tool: it is a one-call
 // convenience that duplicates the phase sequence (the coherence dimension flags
 // it as redundant). It stays available via the CLI (`vdd e2e`).
-const MCP_TOOL_PHASES = PHASE_NAMES.filter((name) => name !== 'e2e');
+export const MCP_TOOL_PHASES = PHASE_NAMES.filter((name) => name !== 'e2e');
 
 export function createVddMcpServer(): McpServer {
-    const server = new McpServer({ name: 'vdd', version: '1.6.0' });
+    const server = new McpServer({ name: 'vdd', version: '1.7.0' });
 
   for (const name of MCP_TOOL_PHASES) {
     const toolName = `vdd_${name.replace(/-/g, '_')}`;

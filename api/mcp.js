@@ -1,16 +1,14 @@
-// MCP Streamable HTTP transport (stateless) for the VDD server.
-//
-// This is the transport Smithery, and most modern MCP clients, prefer over the
-// legacy SSE endpoint (api/sse.js). It speaks JSON-RPC 2.0 over POST:
+// MCP Streamable HTTP transport (stateless) for the VDD server — the canonical
+// public endpoint at https://vdd.simonmak.com/api/mcp. It speaks JSON-RPC 2.0:
 //   - POST /api/mcp  → initialize / tools/list / tools/call (JSON response)
 //   - notifications (no id) → 202 Accepted
-//   - GET  → 405 (this server offers no server-initiated stream)
+//   - GET /api/mcp   → accessible HTML docs page for browsers; 405 for MCP clients
 //   - DELETE → 204 (no session state to terminate)
 //
 // Sessions are advisory: an `Mcp-Session-Id` is issued on initialize but not
 // required afterwards, so the endpoint stays stateless and horizontally scalable.
-// Tool definitions and dispatch are shared with api/sse.js via handleJsonRpc.
-const { handleJsonRpc } = require("./sse.js");
+// Tool definitions, dispatch, and the docs page are shared via api/_vdd-rpc.js.
+const { handleJsonRpc, isBrowser, html } = require("./_vdd-rpc.js");
 
 const PROTOCOL_HEADER = "Mcp-Protocol-Version";
 
@@ -30,8 +28,13 @@ module.exports = async function (req, res) {
   // No session state: accept termination as a no-op.
   if (req.method === "DELETE") return res.status(204).end();
 
-  // This server does not offer server-initiated messages, so GET is not allowed.
+  // Browsers get the human-readable docs page; MCP clients (no text/html Accept)
+  // get 405 — this server has no server-initiated stream.
   if (req.method === "GET") {
+    if (isBrowser(req)) {
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      return res.status(200).send(html);
+    }
     res.setHeader("Allow", "POST, DELETE, OPTIONS");
     return rpcError(res, 405, -32000, "Method Not Allowed: this server has no server-initiated stream");
   }
