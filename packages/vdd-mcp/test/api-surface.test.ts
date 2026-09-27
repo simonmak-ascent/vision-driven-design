@@ -21,7 +21,8 @@ const callTool = (name: string, args: Record<string, unknown> = {}) => {
 };
 
 const DESTRUCTIVE = ['init', 'vision', 'strategize', 'tactics', 'specify', 'plan', 'tasks', 'clone'];
-const PHASE_NAMES_NO_E2E = PHASE_NAMES.filter((name) => name !== 'e2e');
+// MCP surface folds trace + analyze into `inspect`; e2e is CLI-only.
+const MCP_PHASES = PHASE_NAMES.filter((name) => !['e2e', 'trace', 'analyze'].includes(name));
 const OPEN_WORLD = ['strategize', 'clone'];
 
 const phaseOf = (name: string) => name.replace(/^vdd_/, '').replace(/_/g, '-');
@@ -31,8 +32,8 @@ describe('hosted MCP tool surface (api/_vdd-rpc.js)', () => {
   const tools = core.toolDefs();
   const byName = new Map(tools.map((tool) => [tool.name, tool]));
 
-  it('exposes 16 tools', () => {
-    expect(tools).toHaveLength(16);
+  it('exposes 15 tools', () => {
+    expect(tools).toHaveLength(15);
   });
 
   it('has a title and annotations for every tool', () => {
@@ -50,6 +51,7 @@ describe('hosted MCP tool surface (api/_vdd-rpc.js)', () => {
     expect(byName.get(toolName('clarify'))?.annotations?.readOnlyHint).toBe(true);
     expect(byName.get(toolName('implement'))?.annotations?.readOnlyHint).toBe(true);
     expect(byName.get(toolName('amend'))?.annotations?.readOnlyHint).toBe(true);
+    expect(byName.get(toolName('inspect'))?.annotations?.readOnlyHint).toBe(true);
     expect(byName.get(toolName('validate'))?.annotations?.destructiveHint).toBe(false);
   });
 
@@ -68,7 +70,6 @@ describe('hosted MCP tool surface (api/_vdd-rpc.js)', () => {
       'vdd_plan',
       'vdd_tasks',
       'vdd_get_next_task',
-      'vdd_analyze',
       'vdd_implement',
       'vdd_amend',
     ]);
@@ -82,7 +83,7 @@ describe('hosted MCP tool surface (api/_vdd-rpc.js)', () => {
   });
 
   it('keeps every description in sync with the engine PHASE_META', () => {
-    const phases = new Set<string>(PHASE_NAMES_NO_E2E);
+    const phases = new Set<string>(MCP_PHASES);
     for (const tool of tools) {
       const phase = phaseOf(tool.name);
       expect(phases.has(phase), tool.name).toBe(true);

@@ -16,6 +16,7 @@ export const PHASE_NAMES = [
   'validate',
   'trace',
   'analyze',
+  'inspect',
   'amend',
   'e2e',
   'clone',
@@ -67,20 +68,24 @@ export const PHASE_META: Record<PhaseName, PhaseMeta> = {
     instructions: 'Pass "feature". Returns the first uncompleted task line from tasks.md. The AI agent should then start a fresh context window for that task.',
   },
   implement: {
-    description: 'VDD Phase 7b: Prepare one task for implementation — loads constitution, spec, plan, and contracts and returns the implementation instruction plus the impact-chain commit-message format. Read-only; the tool writes nothing — the host agent performs the code edits, verification, and commit. Pass taskId (e.g. "TASK-003") from the task returned by vdd_get_next_task. Run one task at a time, after vdd_get_next_task; for read-only inspection of tasks use vdd_get_next_task or vdd_trace instead.',
+    description: 'VDD Phase 7b: Prepare one task for implementation — loads constitution, spec, plan, and contracts and returns the implementation instruction plus the impact-chain commit-message format. Read-only; the tool writes nothing — the host agent performs the code edits, verification, and commit. Pass taskId (e.g. "TASK-003") from the task returned by vdd_get_next_task. Run one task at a time, after vdd_get_next_task; for read-only inspection of tasks use vdd_get_next_task instead.',
     instructions: 'Pass "taskId". AI agent loads constitution + task description + relevant spec/plan/contracts. Implements with constraints from Boundaries section. Commits with traceable message format.',
   },
   validate: {
-    description: 'VDD Phase 8: Validate the full chain — bidirectional traceability matrix, drift detection, orphan detection, uncovered vision goals, impact metrics vs targets, and 28 S&T assumption checks across 7 gates. Writes vdd/impact-report.generated.md and never overwrites a hand-authored vdd/impact-report.md. Run after implementation is complete; for a lightweight per-feature consistency check use vdd_analyze, and for the matrix alone use vdd_trace. artifactFiles maps artifact path→content for serverless runs where the tool cannot read the filesystem — omit it when running locally against projectRoot.',
+    description: 'VDD Phase 8: Validate the full chain — bidirectional traceability matrix, drift detection, orphan detection, uncovered vision goals, impact metrics vs targets, and 28 S&T assumption checks across 7 gates. Writes vdd/impact-report.generated.md and never overwrites a hand-authored vdd/impact-report.md. Run after implementation is complete; for a lightweight per-feature consistency check or the project-wide matrix use vdd_inspect. artifactFiles maps artifact path→content for serverless runs where the tool cannot read the filesystem — omit it when running locally against projectRoot.',
     instructions: 'AI agent generates the complete impact-verification report: forward coverage (V→S→T→SP→PL→TK→code), backward authorization, orphan detection, uncovered detection, metric comparison, S&T validation, and drift report. Output to vdd/impact-report.generated.md, leaving any hand-authored vdd/impact-report.md untouched.',
   },
   trace: {
-    description: 'VDD Cross-phase: Generate the bidirectional V→S→T→SP→PL→TK traceability matrix for the current project. Read-only — reads all vdd/ artifacts and returns the matrix without modifying files. Use any time to inspect coverage; for per-feature spec metrics use vdd_analyze, and for release-readiness validation with gates use vdd_validate.',
+    description: 'VDD Cross-phase: Generate the bidirectional V→S→T→SP→PL→TK traceability matrix for the current project. Read-only — reads all vdd/ artifacts and returns the matrix without modifying files. Use any time to inspect coverage; for per-feature spec metrics use vdd_inspect, and for release-readiness validation with gates use vdd_validate.',
     instructions: 'AI agent reads all existing artifacts in vdd/ and produces a traceability matrix mapping every level to its parent and children.',
   },
   analyze: {
-    description: 'VDD Cross-phase: Cross-artifact consistency analysis for one feature — acceptance-criteria (AC) count, unresolved [NEEDS CLARIFICATION] markers, [e.g.] placeholder density, and whether plan.md and tasks.md exist. Read-only; returns metrics without modifying files. Pass feature (the spec directory name). Use during planning and implementation to check a spec is complete; for the project-wide matrix use vdd_trace, and for release validation use vdd_validate.',
+    description: 'VDD Cross-phase: Cross-artifact consistency analysis for one feature — acceptance-criteria (AC) count, unresolved [NEEDS CLARIFICATION] markers, [e.g.] placeholder density, and whether plan.md and tasks.md exist. Read-only; returns metrics without modifying files. Pass feature (the spec directory name). Use during planning and implementation to check a spec is complete; for the project-wide matrix use vdd_inspect, and for release validation use vdd_validate.',
     instructions: 'Pass "feature". AI agent reads spec.md, plan.md, tasks.md for the feature and reports metrics: AC count, unresolved [NEEDS CLARIFICATION] items, [e.g.] placeholder count, and readiness status.',
+  },
+  inspect: {
+    description: 'VDD Cross-phase: Read-only inspection of the current project in one call — scope selects the view. scope="project" (default) returns the bidirectional V→S→T→SP→PL→TK traceability matrix across all vdd/ artifacts; scope="feature" returns per-feature spec metrics (acceptance-criteria count, unresolved [NEEDS CLARIFICATION] markers, [e.g.] placeholder density, and whether plan.md/tasks.md exist). Never modifies files. Pass feature for the feature scope; for release-readiness validation with gates use vdd_validate, and to author a spec use vdd_specify.',
+    instructions: 'Read-only. With scope="project" (default), read all vdd/ artifacts and produce the traceability matrix mapping every level to its parent and children. With scope="feature", read vdd/specs/<feature>/spec.md, plan.md, and tasks.md and report AC count, unresolved clarifications, placeholder count, and readiness status.',
   },
   amend: {
     description: 'VDD Cross-phase: Plan a requirement-change cascade through the whole chain — identifies the highest affected level and returns the ordered steps to update downward V→S→T→SP→PL→TK and re-run affected gates (G1–G7). Read-only; returns the cascade plan without editing artifacts (the host agent applies the edits and commits). Pass the change as description. Use when a requirement changes after artifacts already exist; to build a phase from scratch the first time, run that phase\'s own tool instead of vdd_amend.',
@@ -91,7 +96,7 @@ export const PHASE_META: Record<PhaseName, PhaseMeta> = {
     instructions: 'Pass "statement" with your vision. The tool runs all phases end-to-end, creating every artifact: constitution.md, vision.md, strategy.md, tactics.md, spec.md, plan.md, data-model.md, contracts/, tasks.md, and impact-report.md. Use optional "feature" (default "feature-1") to customize the spec directory name. The AI agent then fills in each template with domain-specific content.',
   },
   'detect-environment': {
-    description: 'VDD Environment Detection: Report which tools/MCPs each VDD phase requires vs treats as optional — across the 8-phase pipeline (init through validate) plus the cross-phase helpers (amend, clone, trace, analyze, get-next-task) — and which of the host agent availableTools are present vs missing. Read-only; returns a capability report without modifying files. Run before vdd_strategize to plan research-subagent dispatch, or when a phase fails for lack of a tool; to inspect artifacts instead of capabilities use vdd_trace. Pass availableTools (or its alias capabilities); omitting both returns the per-phase requirements without the present/missing comparison.',
+    description: 'VDD Environment Detection: Report which tools/MCPs each VDD phase requires vs treats as optional — across the 8-phase pipeline (init through validate) plus the cross-phase helpers (amend, clone, inspect, get-next-task) — and which of the host agent availableTools are present vs missing. Read-only; returns a capability report without modifying files. Run before vdd_strategize to plan research-subagent dispatch, or when a phase fails for lack of a tool; to inspect artifacts instead of capabilities use vdd_inspect. Pass availableTools (or its alias capabilities); omitting both returns the per-phase requirements without the present/missing comparison.',
     instructions: 'Pass availableTools (array of MCP/tool names available to the host agent, e.g. ["brave-search","perplexity","context7","gh_grep","playwright","filesystem"]). Returns a per-phase capability report. Used before Phase 2 (strategize) to plan research subagent dispatch.',
   },
   clone: {
@@ -132,6 +137,7 @@ export const TOOL_REQUIREMENTS: Record<PhaseName, ToolRequirements> = {
   validate: { required: ['filesystem'], optional: ['shell'] },
   trace: { required: ['filesystem'], optional: [] },
   analyze: { required: ['filesystem'], optional: [] },
+  inspect: { required: ['filesystem'], optional: [] },
   amend: { required: ['filesystem'], optional: [] },
   e2e: { required: ['filesystem'], optional: ['brave-search', 'perplexity', 'context7', 'gh_grep', 'playwright', 'browserless', 'shell'] },
   clone: { required: ['filesystem'], optional: ['playwright', 'browserless', 'shell'] },

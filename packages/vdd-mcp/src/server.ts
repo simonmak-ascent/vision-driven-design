@@ -11,6 +11,7 @@ const statementReq = z.string().describe('Freeform vision statement');
 const actionItemId = z.string().optional().describe('Tactical action item ID (e.g., "A-001")');
 const feature = z.string().optional().describe('Feature name (spec directory name)');
 const featureReq = z.string().describe('Feature name (spec directory name)');
+const scope = z.enum(['project', 'feature']).optional().describe('Inspect scope: "project" (default) returns the traceability matrix; "feature" returns per-feature spec metrics (requires feature)');
 const taskId = z.string().describe('Task ID to implement (e.g., "TASK-003")');
 const description = z.string().optional().describe('Freeform description input');
 const descriptionReq = z.string().describe('Description of the requirement change');
@@ -37,8 +38,7 @@ const PHASE_INPUT_SCHEMAS: Record<string, Record<string, z.ZodType>> = {
   'get-next-task': { feature: featureReq, projectRoot },
   implement: { taskId, projectRoot },
   validate: { feature, artifactFiles, projectRoot },
-  trace: { projectRoot },
-  analyze: { feature: featureReq, projectRoot },
+  inspect: { scope, feature, projectRoot },
   amend: { description: descriptionReq, projectRoot },
   clone: { description, statement, maxPages, timeoutMs, concurrency, crawl, browser, refresh, projectRoot },
   'detect-environment': { availableTools, capabilities, projectRoot },
@@ -75,8 +75,7 @@ export const TOOL_ANNOTATIONS: Record<string, {
   'get-next-task': { title: 'Get Next Task', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
   implement: { title: 'Implement Task', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
   validate: { title: 'Validate Impact', annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false } },
-  trace: { title: 'Traceability Matrix', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
-  analyze: { title: 'Analyze Consistency', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
+  inspect: { title: 'Inspect Project', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
   amend: { title: 'Amend Requirements', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
   clone: { title: 'Clone Website', annotations: { destructiveHint: true, openWorldHint: true } },
   'detect-environment': { title: 'Detect Environment', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
@@ -101,10 +100,12 @@ const OUTPUT_SCHEMA = {
 // The `e2e` phase is intentionally NOT exposed as an MCP tool: it is a one-call
 // convenience that duplicates the phase sequence (the coherence dimension flags
 // it as redundant). It stays available via the CLI (`vdd e2e`).
-export const MCP_TOOL_PHASES = PHASE_NAMES.filter((name) => name !== 'e2e');
+export const MCP_TOOL_PHASES = PHASE_NAMES.filter(
+  (name) => !['e2e', 'trace', 'analyze'].includes(name),
+);
 
 export function createVddMcpServer(): McpServer {
-    const server = new McpServer({ name: 'vdd', version: '1.7.1' });
+    const server = new McpServer({ name: 'vdd', version: '1.8.0' });
 
   for (const name of MCP_TOOL_PHASES) {
     const toolName = `vdd_${name.replace(/-/g, '_')}`;

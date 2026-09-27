@@ -33,6 +33,7 @@ export const VddPhaseInput = z.object({
   feature: z.string().optional(),
   taskId: z.string().optional(),
   description: z.string().optional(),
+  scope: z.enum(['project', 'feature']).optional(),
   json: z.boolean().default(false),
   availableTools: z.array(z.string()).optional(),
   capabilities: z.array(z.string()).optional(),

@@ -10,7 +10,7 @@ README.md                ← GitHub landing page.
 constitution.md          ← Project constitution (dogfooded).
 index.html               ← GitHub Pages landing page at simonplmak-cloud.github.io/vision-driven-design.
 api/                     ← Vercel MCP endpoint (deployed at vdd.simonmak.com).
-  mcp.js                 ← Streamable HTTP MCP endpoint — POST handles JSON-RPC 2.0 (initialize, tools/list, tools/call); GET serves the browser docs page. 16 tools.
+  mcp.js                 ← Streamable HTTP MCP endpoint — POST handles JSON-RPC 2.0 (initialize, tools/list, tools/call); GET serves the browser docs page. 15 tools.
   _vdd-rpc.js            ← Shared JSON-RPC core + browser docs page (underscore = not a Vercel route).
 vercel.json              ← Vercel deploy config (Framework: Other).
 Dockerfile               ← Self-host build — Streamable HTTP MCP server. (Glama generates its own; it ignores this file.)
@@ -19,8 +19,8 @@ server.json              ← Official MCP Registry manifest (`io.github.simonplm
 package.json             ← Root workspace + Vercel runtime config.
 pnpm-workspace.yaml      ← Monorepo workspace config.
 packages/                ← TypeScript monorepo.
-  vdd-engine/            ← Shared core: 17 phase functions (incl. e2e) + Zod types.
-  vdd-mcp/               ← MCP server: 16 tools, stdio + Streamable HTTP transports.
+  vdd-engine/            ← Shared core: 18 phase functions (incl. e2e) + Zod types.
+  vdd-mcp/               ← MCP server: 15 tools, stdio + Streamable HTTP transports.
   vdd-cli/               ← CLI binary: 17 subcommands (incl. e2e), --json mode.
 domain-primers/           ← 7 domain research patterns (loaded during Phase 2).
   webapp.md, data-storage.md, etl.md, infrastructure.md  ← Conditional (per vision targets).

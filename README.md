@@ -2,7 +2,7 @@
 
 <a href="https://github.com/simonplmak-cloud/vision-driven-design/blob/main/LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
 <a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/phases-8-blueviolet" alt="8 Phases"></a>
-<a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/version-1.7.1-blue" alt="Version 1.7.1"></a>
+<a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/version-1.8.0-blue" alt="Version 1.8.0"></a>
 <a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/gates-7%20bidirectional-orange" alt="7 Bidirectional Gates"></a>
 <a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/checks-108-green" alt="108 Verification Checks"></a>
 <a href="https://vdd.simonmak.com"><img src="https://img.shields.io/badge/API-vdd.simonmak.com-0d7377" alt="MCP API"></a>
@@ -182,7 +182,7 @@ pnpm -r build
 
 ## MCP API
 
-VDD is available as a public MCP server at `https://vdd.simonmak.com` — 16 tools, no API key required — over the MCP **Streamable HTTP** transport at `https://vdd.simonmak.com/api/mcp` (also reachable at `/mcp`). The legacy SSE endpoint is retired: `https://vdd.simonmak.com/api/sse` now returns an HTTP 308 redirect to `/api/mcp`.
+VDD is available as a public MCP server at `https://vdd.simonmak.com` — 15 tools, no API key required — over the MCP **Streamable HTTP** transport at `https://vdd.simonmak.com/api/mcp` (also reachable at `/mcp`). The legacy SSE endpoint is retired: `https://vdd.simonmak.com/api/sse` now returns an HTTP 308 redirect to `/api/mcp`.
 
 ### Agent Configuration
 
@@ -210,7 +210,7 @@ VDD is available as a public MCP server at `https://vdd.simonmak.com` — 16 too
 
 ### MCP Tools (16)
 
-`vdd_init`, `vdd_vision`, `vdd_strategize`, `vdd_tactics`, `vdd_specify`, `vdd_clarify`, `vdd_plan`, `vdd_tasks`, `vdd_get_next_task`, `vdd_implement`, `vdd_validate`, `vdd_trace`, `vdd_analyze`, `vdd_amend`, `vdd_clone`, `vdd_detect_environment`.
+`vdd_init`, `vdd_vision`, `vdd_strategize`, `vdd_tactics`, `vdd_specify`, `vdd_clarify`, `vdd_plan`, `vdd_tasks`, `vdd_get_next_task`, `vdd_implement`, `vdd_validate`, `vdd_inspect`, `vdd_amend`, `vdd_clone`, `vdd_detect_environment`.
 
 The one-call `e2e` shortcut is not an MCP tool (it duplicates the phase sequence); use the CLI `vdd e2e "vision"` instead.
 
@@ -351,11 +351,11 @@ VDD is benchmarked against NASA SE, CMMI REQM, DO-178C, IEC 62304, DORA, ISO 291
 │   ├── docs/                        # 16 guides and references
 │   └── specs/                       # 3 feature specs
 ├── packages/                        # TypeScript monorepo
-│   ├── vdd-engine/                  # Shared core — 17 phase functions + meta.ts
-│   ├── vdd-mcp/                     # MCP server — 16 tools, stdio + Streamable HTTP
+│   ├── vdd-engine/                  # Shared core — 18 phase functions + meta.ts
+│   ├── vdd-mcp/                     # MCP server — 15 tools, stdio + Streamable HTTP
 │   └── vdd-cli/                     # CLI binary — 17 subcommands
 ├── api/                             # Vercel MCP endpoint
-│   ├── mcp.js                       # Streamable HTTP MCP endpoint (16 tools)
+│   ├── mcp.js                       # Streamable HTTP MCP endpoint (15 tools)
 │   └── _vdd-rpc.js                  # Shared JSON-RPC core + browser docs page (not routed)
 ├── scripts/                         # 4 installer/helper scripts
 └── .github/                         # GitHub config

@@ -793,6 +793,14 @@ async function analyze(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput
   };
 }
 
+// Cross-phase: inspect — folds trace (project) and analyze (feature) into one
+// read-only tool with a scope selector, keeping the MCP surface lean.
+async function inspect(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
+  const scope = input.scope ?? (input.feature ? 'feature' : 'project');
+  if (scope === 'feature') return analyze(input, ctx);
+  return trace(input, ctx);
+}
+
 // Cross-phase: amend
 async function amend(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
   if (!input.description) return needsInput(['description'], 'Pass the requirement change as description; the cascade plan is then returned.');
@@ -1721,6 +1729,6 @@ async function clone(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> 
 
 export const PHASES: Record<string, VddPhaseFn> = {
   init, vision, strategize, tactics, specify, clarify,
-  plan, tasks, 'get-next-task': nextTask, implement, validate, trace, analyze, amend, e2e, clone,
+  plan, tasks, 'get-next-task': nextTask, implement, validate, trace, analyze, inspect, amend, e2e, clone,
   'detect-environment': detectEnvironmentPhase,
 };

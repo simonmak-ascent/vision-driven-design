@@ -558,6 +558,16 @@ function phaseHandlers(input) {
       if (ra && ra.feature) feat = ra.feature;
       return { success: true, artifact: `Cross-artifact analysis for ${feat}`, output: { feature: feat, action: "Read spec.md, plan.md, tasks.md. Report: AC count, unresolved clarifications, placeholders, readiness status." } };
     },
+    inspect() {
+      const scope = input.scope || (feat ? "feature" : "project");
+      if (scope !== "feature") {
+        return { success: true, artifact: "Traceability matrix", chain: "V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006", files: [`${root}/vdd/vision.md`, `${root}/vdd/strategy.md`, `${root}/vdd/tactics.md`] };
+      }
+      const ri = resolveFeature(root, feat, "inspect");
+      if (ri && ri.guidance) return ri.guidance;
+      if (ri && ri.feature) feat = ri.feature;
+      return { success: true, artifact: `Cross-artifact analysis for ${feat}`, output: { feature: feat, scope: "feature", action: "Read spec.md, plan.md, tasks.md. Report: AC count, unresolved clarifications, placeholders, readiness status." } };
+    },
     amend() {
       if (!desc) return needsInput(["description"], "Pass the requirement change as description; the cascade plan is then returned.");
       return { success: true, artifact: "Chain update plan", output: { change: desc, instructions: ["1. Identify highest affected level (V→S→T→SP→PL→TK)", "2. Update that artifact, cascade downward", "3. Re-run all affected gates (G1–G7)", "4. Commit each with [AMEND] marker"] } };
@@ -679,16 +689,17 @@ const PHASE_META = {
   plan: "VDD Phase 5: Generate the technical blueprint under vdd/specs/<feature>/ — plan.md (component breakdown, AC coverage map, technology choices, verification toolchain), data-model.md (entities, indexes, migrations), and contracts/ (request/response/error schemas). Overwrites these files. Requires an existing spec for the feature; run after vdd_specify or vdd_clarify and before vdd_tasks — if no spec exists yet, run vdd_specify first.",
   tasks: "VDD Phase 6: Break the plan into atomic test-first tasks in vdd/specs/<feature>/tasks.md — each references acceptance criteria (AC) and contracts, is sized S/M/L, and is marked [P] when parallelizable. Overwrites tasks.md. Requires plan.md; run after vdd_plan. To fetch the next uncompleted task from an existing tasks.md use vdd_get_next_task instead of re-running this.",
   "get-next-task": "VDD Phase 7a: Read vdd/specs/<feature>/tasks.md and return the next uncompleted task (or a completion marker when none remain). Read-only; never edits tasks.md. Pass feature (the exact spec directory name). Use before each implementation session to keep context isolated; to regenerate the whole list use vdd_tasks, and to execute the returned task use vdd_implement.",
-  implement: "VDD Phase 7b: Prepare one task for implementation — loads constitution, spec, plan, and contracts and returns the implementation instruction plus the impact-chain commit-message format. Read-only; the tool writes nothing — the host agent performs the code edits, verification, and commit. Pass taskId (e.g. \"TASK-003\") from the task returned by vdd_get_next_task. Run one task at a time, after vdd_get_next_task; for read-only inspection of tasks use vdd_get_next_task or vdd_trace instead.",
-  validate: "VDD Phase 8: Validate the full chain — bidirectional traceability matrix, drift detection, orphan detection, uncovered vision goals, impact metrics vs targets, and 28 S&T assumption checks across 7 gates. Writes vdd/impact-report.generated.md and never overwrites a hand-authored vdd/impact-report.md. Run after implementation is complete; for a lightweight per-feature consistency check use vdd_analyze, and for the matrix alone use vdd_trace. artifactFiles maps artifact path→content for serverless runs where the tool cannot read the filesystem — omit it when running locally against projectRoot.",
-  trace: "VDD Cross-phase: Generate the bidirectional V→S→T→SP→PL→TK traceability matrix for the current project. Read-only — reads all vdd/ artifacts and returns the matrix without modifying files. Use any time to inspect coverage; for per-feature spec metrics use vdd_analyze, and for release-readiness validation with gates use vdd_validate.",
-  analyze: "VDD Cross-phase: Cross-artifact consistency analysis for one feature — acceptance-criteria (AC) count, unresolved [NEEDS CLARIFICATION] markers, [e.g.] placeholder density, and whether plan.md and tasks.md exist. Read-only; returns metrics without modifying files. Pass feature (the spec directory name). Use during planning and implementation to check a spec is complete; for the project-wide matrix use vdd_trace, and for release validation use vdd_validate.",
+  implement: "VDD Phase 7b: Prepare one task for implementation — loads constitution, spec, plan, and contracts and returns the implementation instruction plus the impact-chain commit-message format. Read-only; the tool writes nothing — the host agent performs the code edits, verification, and commit. Pass taskId (e.g. \"TASK-003\") from the task returned by vdd_get_next_task. Run one task at a time, after vdd_get_next_task; for read-only inspection of tasks use vdd_get_next_task instead.",
+  validate: "VDD Phase 8: Validate the full chain — bidirectional traceability matrix, drift detection, orphan detection, uncovered vision goals, impact metrics vs targets, and 28 S&T assumption checks across 7 gates. Writes vdd/impact-report.generated.md and never overwrites a hand-authored vdd/impact-report.md. Run after implementation is complete; for a lightweight per-feature consistency check or the project-wide matrix use vdd_inspect. artifactFiles maps artifact path→content for serverless runs where the tool cannot read the filesystem — omit it when running locally against projectRoot.",
+  trace: "VDD Cross-phase: Generate the bidirectional V→S→T→SP→PL→TK traceability matrix for the current project. Read-only — reads all vdd/ artifacts and returns the matrix without modifying files. Use any time to inspect coverage; for per-feature spec metrics use vdd_inspect, and for release-readiness validation with gates use vdd_validate.",
+  analyze: "VDD Cross-phase: Cross-artifact consistency analysis for one feature — acceptance-criteria (AC) count, unresolved [NEEDS CLARIFICATION] markers, [e.g.] placeholder density, and whether plan.md and tasks.md exist. Read-only; returns metrics without modifying files. Pass feature (the spec directory name). Use during planning and implementation to check a spec is complete; for the project-wide matrix use vdd_inspect, and for release validation use vdd_validate.",
+  inspect: 'VDD Cross-phase: Read-only inspection of the current project in one call — scope selects the view. scope="project" (default) returns the bidirectional V→S→T→SP→PL→TK traceability matrix across all vdd/ artifacts; scope="feature" returns per-feature spec metrics (acceptance-criteria count, unresolved [NEEDS CLARIFICATION] markers, [e.g.] placeholder density, and whether plan.md/tasks.md exist). Never modifies files. Pass feature for the feature scope; for release-readiness validation with gates use vdd_validate, and to author a spec use vdd_specify.',
   amend: "VDD Cross-phase: Plan a requirement-change cascade through the whole chain — identifies the highest affected level and returns the ordered steps to update downward V→S→T→SP→PL→TK and re-run affected gates (G1–G7). Read-only; returns the cascade plan without editing artifacts (the host agent applies the edits and commits). Pass the change as description. Use when a requirement changes after artifacts already exist; to build a phase from scratch the first time, run that phase's own tool instead of vdd_amend.",
   clone: "Crawl and capture a target domain into a clone dataset + manifest — WordPress-aware schema inference, Payload collections, and a Next.js + Payload + Postgres scaffold manifest (vdd/clone-manifest.json). Writes vdd/clone-dataset.json, vdd/clone-manifest.json, and vdd/clone.md. Pass the domain as description; tune maxPages, timeoutMs, concurrency, crawl, browser, and refresh (set refresh=true to bypass a cached dataset and re-crawl). Open-world: makes network requests to the target site. Use for cloning an external site; it is not part of the VDD phase pipeline, so for the normal init→validate flow call those phase tools instead.",
-  "detect-environment": "VDD Environment Detection: Report which tools/MCPs each VDD phase requires vs treats as optional — across the 8-phase pipeline (init through validate) plus the cross-phase helpers (amend, clone, trace, analyze, get-next-task) — and which of the host agent availableTools are present vs missing. Read-only; returns a capability report without modifying files. Run before vdd_strategize to plan research-subagent dispatch, or when a phase fails for lack of a tool; to inspect artifacts instead of capabilities use vdd_trace. Pass availableTools (or its alias capabilities); omitting both returns the per-phase requirements without the present/missing comparison.",
+  "detect-environment": "VDD Environment Detection: Report which tools/MCPs each VDD phase requires vs treats as optional — across the 8-phase pipeline (init through validate) plus the cross-phase helpers (amend, clone, inspect, get-next-task) — and which of the host agent availableTools are present vs missing. Read-only; returns a capability report without modifying files. Run before vdd_strategize to plan research-subagent dispatch, or when a phase fails for lack of a tool; to inspect artifacts instead of capabilities use vdd_inspect. Pass availableTools (or its alias capabilities); omitting both returns the per-phase requirements without the present/missing comparison.",
 };
 
-const PHASE_NAMES = ["init","vision","strategize","tactics","specify","clarify","plan","tasks","get-next-task","implement","validate","trace","analyze","amend","clone","detect-environment"];
+const PHASE_NAMES = ["init","vision","strategize","tactics","specify","clarify","plan","tasks","get-next-task","implement","validate","inspect","amend","clone","detect-environment"];
 
 // MCP annotation hints — mirrors packages/vdd-mcp/src/server.ts TOOL_ANNOTATIONS
 // (keep in sync). They describe the tool's OWN filesystem effect: read-only tools
@@ -706,8 +717,7 @@ const TOOL_ANNOTATIONS = {
   "get-next-task": { title: "Get Next Task", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
   implement: { title: "Implement Task", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
   validate: { title: "Validate Impact", annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false } },
-  trace: { title: "Traceability Matrix", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
-  analyze: { title: "Analyze Consistency", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
+  inspect: { title: "Inspect Project", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
   amend: { title: "Amend Requirements", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
   clone: { title: "Clone Website", annotations: { destructiveHint: true, openWorldHint: true } },
   "detect-environment": { title: "Detect Environment", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
@@ -741,7 +751,7 @@ function handleJsonRpc(body) {
   const { method, params, id } = body || {};
 
   if (method === "initialize") {
-    return { jsonrpc: "2.0", id, result: { protocolVersion: "2025-06-18", serverInfo: { name: "vdd", title: "Vision Driven Design", version: "1.7.1" }, capabilities: { tools: {} }, instructions: "Vision Driven Design (VDD): an 8-phase, spec-driven development methodology with bi-directional traceability. Start with vdd_init, then vdd_vision (pass a freeform statement). Before each implementation session call vdd_get_next_task. Read-only tools that write nothing are vdd_trace, vdd_analyze, vdd_detect_environment, vdd_get_next_task, vdd_clarify, vdd_implement, and vdd_amend; other write tools overwrite their target artifacts unless their description says otherwise (vdd_validate writes only a new vdd/impact-report.generated.md without clobbering a hand-authored report)." } };
+    return { jsonrpc: "2.0", id, result: { protocolVersion: "2025-06-18", serverInfo: { name: "vdd", title: "Vision Driven Design", version: "1.8.0" }, capabilities: { tools: {} }, instructions: "Vision Driven Design (VDD): an 8-phase, spec-driven development methodology with bi-directional traceability. Start with vdd_init, then vdd_vision (pass a freeform statement). Before each implementation session call vdd_get_next_task. Read-only tools that write nothing are vdd_inspect, vdd_detect_environment, vdd_get_next_task, vdd_clarify, vdd_implement, and vdd_amend; other write tools overwrite their target artifacts unless their description says otherwise (vdd_validate writes only a new vdd/impact-report.generated.md without clobbering a hand-authored report)." } };
   }
 
   if (method === "tools/list") {
@@ -763,6 +773,7 @@ function handleJsonRpc(body) {
       capabilities: args.capabilities,
       researchFindings: args.researchFindings,
       artifactFiles: args.artifactFiles,
+      scope: args.scope,
     };
     const handlers = phaseHandlers(input);
     const handler = handlers[phaseKey];

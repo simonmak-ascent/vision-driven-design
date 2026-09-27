@@ -3,12 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { MCP_TOOL_PHASES, TOOL_ANNOTATIONS } from '../src/server.js';
 
 const DESTRUCTIVE = ['init', 'vision', 'strategize', 'tactics', 'specify', 'plan', 'tasks', 'clone'];
-const READ_ONLY = ['clarify', 'get-next-task', 'implement', 'trace', 'analyze', 'amend', 'detect-environment'];
+const READ_ONLY = ['clarify', 'get-next-task', 'implement', 'inspect', 'amend', 'detect-environment'];
 const OPEN_WORLD = ['strategize', 'clone'];
 
 describe('MCP server tool metadata (stdio + Streamable HTTP)', () => {
-  it('exposes 16 tools (e2e excluded)', () => {
-    expect(MCP_TOOL_PHASES).toHaveLength(16);
+  it('exposes 15 tools (e2e excluded; trace+analyze folded into inspect)', () => {
+    expect(MCP_TOOL_PHASES).toHaveLength(15);
   });
 
   it('has a title and annotations for every tool', () => {

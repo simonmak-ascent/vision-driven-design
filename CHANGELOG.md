@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.8.0] — 2026-09-27
+
+### Changed (MCP tool surface — 16 → 15 tools)
+- **`vdd_trace` and `vdd_analyze` folded into one read-only `vdd_inspect` tool** with a `scope` enum. `scope="project"` (default) returns the bidirectional V→S→T→SP→PL→TK traceability matrix; `scope="feature"` returns per-feature spec metrics (AC count, unresolved clarifications, placeholder density, plan/tasks presence). This follows the TDQS guidance to *fold variants that differ only by a parameter into one tool with an enum*, lifting Glama's **Tool Count Appropriateness** dimension from **3** (16–25 tools = "borderline/heavy") to **5** (3–15 tools = "well-scoped"), and sharpening disambiguation between the two overlapping inspectors.
+- The engine and CLI keep `vdd trace` / `vdd analyze` for backward compatibility; only the MCP surface changes (15 tools). Docs, badges, and counts updated (16 → 15 tools; 17 → 18 engine phase functions).
+
 ## [1.7.1] — 2026-09-27
 
 ### Fixed (graceful degradation for missing selector arguments)
