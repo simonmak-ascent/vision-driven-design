@@ -90,12 +90,12 @@ Each gate: Forward check (parent→children coverage) + Backward check (children
 
 ## MCP API
 
-**Endpoint**: `https://vdd.simonmak.com/api/sse`
-- GET: 16 tools + service info
+**Endpoint**: `https://vdd.simonmak.com/api/mcp` (Streamable HTTP)
+- POST: JSON-RPC 2.0 — `initialize` / `tools/list` / `tools/call` (15 tools)
 - POST: Phase result (validate: substantive drift/orphan/uncovered detection — a placeholder template does NOT pass)
 - Packages: `packages/vdd-engine` · `packages/vdd-mcp` · `packages/vdd-cli`
-- New: `vdd_e2e` — end-to-end full-chain execution in one call
-- New: `vdd_detect_environment` — report per-phase tool/MCP requirements + available capabilities
+- `vdd_inspect` — read-only: `scope=project` (traceability matrix) or `scope=feature` (spec metrics)
+- `vdd_detect_environment` — report per-phase tool/MCP requirements + available capabilities
 
 ## When NOT to Use VDD
 

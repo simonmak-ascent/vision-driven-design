@@ -3,7 +3,7 @@
   "name": "io.github.simonplmak-cloud/vision-driven-design",
   "title": "Vision Driven Design (VDD) MCP Server",
   "description": "Spec-driven development MCP server: 8 phases, bi-directional traceability, 7 quality gates.",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "repository": {
     "url": "https://github.com/simonplmak-cloud/vision-driven-design",
     "source": "github",

@@ -751,7 +751,7 @@ function handleJsonRpc(body) {
   const { method, params, id } = body || {};
 
   if (method === "initialize") {
-    return { jsonrpc: "2.0", id, result: { protocolVersion: "2025-06-18", serverInfo: { name: "vdd", title: "Vision Driven Design", version: "1.8.1" }, capabilities: { tools: {} }, instructions: "Vision Driven Design (VDD): an 8-phase, spec-driven development methodology with bi-directional traceability. Start with vdd_init, then vdd_vision (pass a freeform statement). Before each implementation session call vdd_get_next_task. Read-only tools that write nothing are vdd_inspect, vdd_detect_environment, vdd_get_next_task, vdd_clarify, vdd_implement, and vdd_amend; other write tools overwrite their target artifacts unless their description says otherwise (vdd_validate writes only a new vdd/impact-report.generated.md without clobbering a hand-authored report)." } };
+    return { jsonrpc: "2.0", id, result: { protocolVersion: "2025-06-18", serverInfo: { name: "vdd", title: "Vision Driven Design", version: "1.8.2" }, capabilities: { tools: {} }, instructions: "Vision Driven Design (VDD): an 8-phase, spec-driven development methodology with bi-directional traceability. Start with vdd_init, then vdd_vision (pass a freeform statement). Before each implementation session call vdd_get_next_task. Read-only tools that write nothing are vdd_inspect, vdd_detect_environment, vdd_get_next_task, vdd_clarify, vdd_implement, and vdd_amend; other write tools overwrite their target artifacts unless their description says otherwise (vdd_validate writes only a new vdd/impact-report.generated.md without clobbering a hand-authored report)." } };
   }
 
   if (method === "tools/list") {
@@ -958,7 +958,7 @@ const HTML = `<!DOCTYPE html>
     <h1><abbr title="Vision Driven Design">VDD</abbr> <abbr title="Model Context Protocol">MCP</abbr> Server</h1>
     <p>Public <abbr title="Application Programming Interface">API</abbr> for <abbr title="Vision Driven Design">VDD</abbr> — bi-directional traceability with full template generation.</p>
     <p>
-      <span class="badge">16 tools</span>
+      <span class="badge">15 tools</span>
       <span class="badge">108 checks</span>
       <span class="badge">7 gates</span>
       <span class="badge">e2e chain</span>

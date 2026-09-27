@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.8.2] — 2026-09-27
+
+### Fixed (SEO follow-up)
+- **`og.png` is served from the repo root**, not `public/` — Vercel's static root for this project is the repository root, so the 1280×640 social image previously 404'd. `robots.txt`/`sitemap.xml` were already at the root.
+- Removed the redundant `public/` copies; corrected the last stale "16 tools" badge on the hosted docs page, and the remaining SSE / old-count references in `constitution.md` and `references/quick-reference.md` (now describe the streamable-HTTP endpoint and 15 tools).
+
 ## [1.8.1] — 2026-09-27
 
 ### Changed (SEO & discoverability)
