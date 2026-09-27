@@ -7,6 +7,17 @@ import { PHASE_META, PHASE_NAMES } from '../../vdd-engine/src/meta.js';
 const require = createRequire(import.meta.url);
 const core = require('../../../api/_vdd-rpc.js') as {
   toolDefs: () => Array<{ name: string; title?: string; description: string; annotations?: Record<string, boolean> }>;
+  handleJsonRpc: (msg: unknown) => { result?: { content: Array<{ text: string }> } } | null;
+};
+
+const callTool = (name: string, args: Record<string, unknown> = {}) => {
+  const res = core.handleJsonRpc({
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'tools/call',
+    params: { name, arguments: args },
+  });
+  return JSON.parse(res!.result!.content[0].text) as { success: boolean; output?: { needsInput?: string[] } };
 };
 
 const DESTRUCTIVE = ['init', 'vision', 'strategize', 'tactics', 'specify', 'plan', 'tasks', 'clone'];
@@ -46,6 +57,27 @@ describe('hosted MCP tool surface (api/_vdd-rpc.js)', () => {
     for (const tool of tools) {
       expect(typeof tool.annotations?.openWorldHint, tool.name).toBe('boolean');
       expect(tool.annotations?.openWorldHint, tool.name).toBe(OPEN_WORLD.includes(phaseOf(tool.name)));
+    }
+  });
+
+  it('returns actionable success (not a hard error) when a tool is called with no arguments', () => {
+    const selectorTools = new Set([
+      'vdd_vision',
+      'vdd_specify',
+      'vdd_clarify',
+      'vdd_plan',
+      'vdd_tasks',
+      'vdd_get_next_task',
+      'vdd_analyze',
+      'vdd_implement',
+      'vdd_amend',
+    ]);
+    for (const tool of tools) {
+      const result = callTool(tool.name);
+      expect(result.success, tool.name).toBe(true);
+      if (selectorTools.has(tool.name)) {
+        expect(result.output?.needsInput?.length ?? 0, tool.name).toBeGreaterThan(0);
+      }
     }
   });
 

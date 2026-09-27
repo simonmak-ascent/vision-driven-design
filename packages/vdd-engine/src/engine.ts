@@ -35,6 +35,47 @@ async function writeArtifact(path: string, content: string): Promise<{ written: 
   }
 }
 
+// Graceful degradation: instead of hard-failing when a selector argument is
+// missing, return an actionable success payload. Agents (and the MCP reliability
+// probes) can then recover without a dead end.
+function needsInput(fields: string[], instruction: string, extra: Record<string, unknown> = {}): VddOutput {
+  return {
+    success: true,
+    artifact: 'Guidance — input required',
+    output: { needsInput: fields, instruction, ...extra },
+  };
+}
+
+async function listFeatureDirs(root: string): Promise<string[]> {
+  try {
+    return (await fs.readdir(root + '/vdd/specs', { withFileTypes: true }))
+      .filter((e) => e.isDirectory() && !e.name.startsWith('.'))
+      .map((e) => e.name)
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+// If no `feature` was passed, resolve it: auto-use the single spec directory when
+// there is exactly one; otherwise return guidance listing what is available.
+// Returns null when input.feature is (now) set, or a guidance VddOutput otherwise.
+async function withFeature(input: VddPhaseInput, root: string, tool: string): Promise<VddOutput | null> {
+  if (input.feature) return null;
+  const available = await listFeatureDirs(root);
+  if (available.length === 1) {
+    input.feature = available[0];
+    return null;
+  }
+  return needsInput(
+    ['feature'],
+    available.length > 1
+      ? `Multiple spec directories exist — pass feature=<name>. Available: ${available.join(', ')}.`
+      : `No spec directories under vdd/specs. Run /vdd:specify first (or pass feature=<name>), then re-run /vdd:${tool}.`,
+    { availableFeatures: available, tool },
+  );
+}
+
 // Phase 0: init
 async function init(_: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
   const artifact = ctx.projectRoot + '/constitution.md';
@@ -87,7 +128,7 @@ async function init(_: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
 
 // Phase 1: vision
 async function vision(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
-  if (!input.statement) return { success: false, error: 'statement is required' };
+  if (!input.statement) return needsInput(['statement'], 'Pass a freeform vision statement (1-3 paragraphs) as statement. Run /vdd:init first so constitution.md exists, then re-call /vdd:vision.');
   const artifact = ctx.projectRoot + '/vdd/vision.md';
   const escapedStatement = input.statement.replace(/`/g, '\\`');
   const content = '# Vision\n' + templateHeader((await chainContext(ctx.projectRoot)).vision) +
@@ -337,7 +378,7 @@ async function tactics(_: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
 // Phase 4: specify
 async function specify(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
   const id = input.feature || input.actionItemId || input.description;
-  if (!id) return { success: false, error: 'feature, actionItemId, or description required' };
+  if (!id) return needsInput(['feature', 'actionItemId', 'description'], 'Pass actionItemId (e.g. "A-001") or a freeform description to create a new spec; pass feature to name the spec directory.');
   const artifact = ctx.projectRoot + '/vdd/specs/' + id + '/spec.md';
   const content = '# [Feature Name]\n' + templateHeader((await chainContext(ctx.projectRoot)).tactics + ' → SP-<n>') +
     '## Tactical Origin\nImplements: `vdd/tactics.md` → Action Item [' + id + ']\n\n' +
@@ -374,7 +415,8 @@ async function specify(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput
 
 // Phase 4b: clarify
 async function clarify(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
-  if (!input.feature) return { success: false, error: 'feature is required' };
+  const missing = await withFeature(input, ctx.projectRoot, 'clarify');
+  if (missing) return missing;
   const specPath = ctx.projectRoot + '/vdd/specs/' + input.feature + '/spec.md';
   let specContent: string;
   try {
@@ -399,6 +441,7 @@ async function clarify(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput
     success: true,
     artifact: specPath,
     output: {
+      feature: input.feature,
       clarificationCount: questions.length,
       items: questions.length > 0 ? questions : ['No unresolved clarifications found.'],
       action: 'Resolve each [NEEDS CLARIFICATION] item, replace [e.g.] placeholders with concrete values, and add edge-case ACs for every happy-path MUST AC.',
@@ -408,7 +451,8 @@ async function clarify(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput
 
 // Phase 5: plan
 async function plan(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
-  if (!input.feature) return { success: false, error: 'feature is required' };
+  const missing = await withFeature(input, ctx.projectRoot, 'plan');
+  if (missing) return missing;
   const base = ctx.projectRoot + '/vdd/specs/' + input.feature;
   const specChain = (await readChain(base + '/spec.md')) ?? ((await chainContext(ctx.projectRoot)).tactics + ' → SP-<n>');
 
@@ -480,7 +524,8 @@ async function plan(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
 
 // Phase 6: tasks
 async function tasks(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
-  if (!input.feature) return { success: false, error: 'feature is required' };
+  const missing = await withFeature(input, ctx.projectRoot, 'tasks');
+  if (missing) return missing;
   const artifact = ctx.projectRoot + '/vdd/specs/' + input.feature + '/tasks.md';
   const planChain = (await readChain(ctx.projectRoot + '/vdd/specs/' + input.feature + '/plan.md')) ?? ((await chainContext(ctx.projectRoot)).tactics + ' → SP-<n> → PL-<n>');
   const content = '# Task List: [Feature Name]\n' + templateHeader(planChain + ' → TK-<n>') +
@@ -500,7 +545,8 @@ async function tasks(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> 
 
 // Phase 7a: get-next-task
 async function nextTask(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
-  if (!input.feature) return { success: false, error: 'feature is required' };
+  const missing = await withFeature(input, ctx.projectRoot, 'get-next-task');
+  if (missing) return missing;
   const tasksPath = ctx.projectRoot + '/vdd/specs/' + input.feature + '/tasks.md';
   let tasksContent: string;
   try {
@@ -521,7 +567,7 @@ async function nextTask(input: VddPhaseInput, ctx: VddContext): Promise<VddOutpu
 
 // Phase 7b: implement
 async function implement(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
-  if (!input.taskId) return { success: false, error: 'taskId is required' };
+  if (!input.taskId) return needsInput(['taskId'], 'Pass taskId (e.g. "TASK-003") — call /vdd:get-next-task to fetch the next uncompleted one, then re-call /vdd:implement.');
   return {
     success: true,
     artifact: 'Task ' + input.taskId + ' — ready for implementation',
@@ -712,7 +758,8 @@ async function trace(_: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
 
 // Cross-phase: analyze
 async function analyze(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
-  if (!input.feature) return { success: false, error: 'feature is required' };
+  const missing = await withFeature(input, ctx.projectRoot, 'analyze');
+  if (missing) return missing;
 
   const specPath = ctx.projectRoot + '/vdd/specs/' + input.feature + '/spec.md';
   let specContent: string;
@@ -748,7 +795,7 @@ async function analyze(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput
 
 // Cross-phase: amend
 async function amend(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
-  if (!input.description) return { success: false, error: 'description of change is required' };
+  if (!input.description) return needsInput(['description'], 'Pass the requirement change as description; the cascade plan is then returned.');
   return {
     success: true,
     artifact: 'Full chain updated from change point',
@@ -1508,6 +1555,7 @@ async function detectTargetStack(root: string): Promise<{ stack: Partial<CloneMa
 // Phase 7c: clone — normalize a target domain and run the full clone pipeline.
 async function clone(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
   const domain = input.description ?? input.statement ?? '';
+  if (!domain) return needsInput(['description'], 'Pass the target domain as description (bare domain, host, or URL); the clone pipeline then generates the dataset and manifest.');
   const normalized = normalizeDomain(domain);
   if ('code' in normalized) {
     return { success: false, error: normalized.code + ': ' + normalized.message };

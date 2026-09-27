@@ -2,12 +2,13 @@
 
 <a href="https://github.com/simonplmak-cloud/vision-driven-design/blob/main/LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
 <a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/phases-8-blueviolet" alt="8 Phases"></a>
-<a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/version-1.7.0-blue" alt="Version 1.7.0"></a>
+<a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/version-1.7.1-blue" alt="Version 1.7.1"></a>
 <a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/gates-7%20bidirectional-orange" alt="7 Bidirectional Gates"></a>
 <a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/checks-108-green" alt="108 Verification Checks"></a>
 <a href="https://vdd.simonmak.com"><img src="https://img.shields.io/badge/API-vdd.simonmak.com-0d7377" alt="MCP API"></a>
 <a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/built%20with-VDD-0d7377" alt="Built with VDD"></a>
 <a href="https://glama.ai/mcp/servers/simonplmak-cloud/vision-driven-design"><img src="https://glama.ai/mcp/servers/simonplmak-cloud/vision-driven-design/badges/score.svg" alt="Glama MCP tool-definition quality and maintenance score"></a>
+<a href="https://agentstatus.dev/mcp-index/vdd"><img src="https://wdmisgfkoimdpvvduebj.supabase.co/functions/v1/mcp-badge?slug=vdd" alt="Agent Status MCP reliability score"></a>
 
 **From vision to verified impact — an AI-native, fully autonomous software development methodology.**
 
@@ -228,6 +229,9 @@ Maintainer notes:
 - After tool-definition changes: sync the repository and run **Build & Release** in the Glama admin. Tool-level scores refresh on the next sweep; the server-level *coherence* score re-runs less often.
 - Also published to the [**Official MCP Registry**](https://registry.modelcontextprotocol.io) as `io.github.simonplmak-cloud/vision-driven-design` (manifest: `server.json`) — PulseMCP and other directories ingest from there.
 - Listed in the [`awesome-mcp-servers`](https://github.com/punkpeye/awesome-mcp-servers) community list under Developer Tools.
+- Listed on [**Agent Status**](https://agentstatus.dev/mcp-index/vdd) — an outside-in MCP reliability index that probes reach, catalog, and tool calls from real hosts (Cursor, Claude, VS Code, ChatGPT). The submission created the Free dashboard account; the score populates after the first probe.
+
+  <a href="https://agentstatus.dev/mcp-index/vdd"><img src="https://wdmisgfkoimdpvvduebj.supabase.co/functions/v1/mcp-badge?slug=vdd" alt="Agent Status MCP reliability score"></a>
 
 ### API Reference
 

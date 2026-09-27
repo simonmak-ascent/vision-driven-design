@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [1.7.1] — 2026-09-27
+
+### Fixed (graceful degradation for missing selector arguments)
+- **Selector-based tools no longer hard-fail when an argument is omitted.** `vdd_clarify`, `vdd_plan`, `vdd_tasks`, `vdd_get_next_task`, and `vdd_analyze` now **auto-select the only spec directory** when `feature` is omitted, and otherwise return an actionable `success: true` payload (`output.needsInput` + `availableFeatures` + a next step) instead of `{ success: false, error: "feature is required" }`. `vdd_implement` (`taskId`), `vdd_amend` (`description`), `vdd_vision` (`statement`), and `vdd_specify` (`actionItemId`/`description`) return the same guidance shape.
+- This removes a dead-end for agents that call a bare tool (e.g. a project-less `vdd_analyze`), and fixes the **Agent Status reliability index dropping to "Degraded"** — its probe calls read-only tools with no arguments, and 5 of our 7 read-only tools previously returned an error, scoring as functional failures (`soft_error_in_body:error=feature is required`). Applied in both the engine (`packages/vdd-engine`) and the hosted Vercel handler (`api/_vdd-rpc.js`), with regression tests.
+- Backward compatible: tools still accept and prefer an explicit `feature`/`taskId`/etc.
+
 ## [1.7.0] — 2026-09-27
 
 ### Removed (SSE transport retired)

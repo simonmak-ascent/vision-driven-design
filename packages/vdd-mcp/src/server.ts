@@ -104,7 +104,7 @@ const OUTPUT_SCHEMA = {
 export const MCP_TOOL_PHASES = PHASE_NAMES.filter((name) => name !== 'e2e');
 
 export function createVddMcpServer(): McpServer {
-    const server = new McpServer({ name: 'vdd', version: '1.7.0' });
+    const server = new McpServer({ name: 'vdd', version: '1.7.1' });
 
   for (const name of MCP_TOOL_PHASES) {
     const toolName = `vdd_${name.replace(/-/g, '_')}`;

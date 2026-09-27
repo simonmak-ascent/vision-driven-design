@@ -2,8 +2,39 @@
 // Shared by the Streamable HTTP endpoint (api/mcp.js). The leading underscore
 // keeps this file out of Vercel's /api route generation (it is not an endpoint).
 
+const fs = require("fs");
+
 const today = new Date().toISOString().split("T")[0];
 function hdr(chain) { return `Status: Draft\nVersion: 1.0\nLast updated: ${today}\n\n> Impact Chain: ${chain}\n\n`; }
+
+// Graceful degradation: when a selector argument is missing, return an actionable
+// success payload rather than a hard error, so agents (and MCP reliability probes)
+// can recover instead of dead-ending.
+function needsInput(fields, instruction, extra = {}) {
+  return { success: true, artifact: "Guidance — input required", output: { needsInput: fields, instruction, ...extra } };
+}
+function listFeatureDirs(root) {
+  try {
+    return fs.readdirSync(`${root}/vdd/specs`, { withFileTypes: true })
+      .filter((e) => e.isDirectory() && !e.name.startsWith("."))
+      .map((e) => e.name).sort();
+  } catch { return []; }
+}
+// Resolve a missing `feature`: auto-use the single spec directory when exactly one
+// exists; otherwise return guidance. Returns null when feat is set, else
+// { feature } or { guidance }.
+function resolveFeature(root, feat, tool) {
+  if (feat) return null;
+  const available = listFeatureDirs(root);
+  if (available.length === 1) return { feature: available[0] };
+  return {
+    guidance: needsInput(["feature"],
+      available.length > 1
+        ? `Multiple spec directories exist — pass feature=<name>. Available: ${available.join(", ")}.`
+        : `No spec directories under vdd/specs. Run /vdd:specify first (or pass feature=<name>), then re-run /vdd:${tool}.`,
+      { availableFeatures: available, tool }),
+  };
+}
 
 // ---------- Gate validation (G0–G7) — structural checks on template content ----------
 function hasSection(content, heading) {
@@ -386,7 +417,7 @@ function phaseHandlers(input) {
   const root = input.projectRoot || ".";
   const s = input.statement || "";
   const id = input.actionItemId || input.description || "";
-  const feat = input.feature || "";
+  let feat = input.feature || "";
   const tid = input.taskId || "";
   const desc = input.description || "";
   const availableTools = input.availableTools || input.capabilities || [];
@@ -398,7 +429,7 @@ function phaseHandlers(input) {
       return { success: true, artifact: `${root}/constitution.md`, template: `# Project Constitution\n${hdr("Phase 0 — Constitution (immutable)")}## Architecture Principles\n\n- [e.g., "API-first: all features expose a REST endpoint before any UI is built"]\n- [e.g., "Server Components by default; use client components only when required"]\n\n## Technology Stack\n\n| Layer | Choice | Notes |\n|-------|--------|-------|\n| Language | TypeScript 5.x | Strict mode, no \`any\` |\n| Runtime | Node.js 20+ | |\n| Framework | [e.g., Next.js 15+] | App Router only |\n| Database | PostgreSQL + Drizzle | No direct SQL in route handlers |\n| Auth | [e.g., Better Auth] | No custom auth logic outside the auth module |\n| Testing | Vitest + Playwright | |\n\n## Security Constraints\n\n- Authentication: all endpoints require a valid session unless explicitly marked \`[PUBLIC]\`\n- Input validation: all external inputs validated with Zod at the route boundary\n- SQL injection: parameterized queries only — never string-concatenate user input into queries\n- Secrets: never log tokens, passwords, or PII; never hardcode secrets\n- CORS: allow-list only — no wildcard origins in production\n- Rate limiting: all public endpoints must declare a rate limit in their contract\n\n## Naming Conventions\n\n- Files: kebab-case (\`user-repository.ts\`)\n- Variables/functions: camelCase\n- Types/interfaces: PascalCase\n- DB columns: snake_case\n- Env vars: SCREAMING_SNAKE_CASE\n\n## Banned Patterns\n\n- No \`any\` type in TypeScript\n- No \`console.log\` in production code (use logger)\n- No synchronous file I/O in request handlers\n\n## File Structure Rules\n\n\`\`\`\nsrc/\n  app/          # Routes and pages\n  components/   # Shared UI components\n  lib/          # Business logic and utilities\n  db/           # Schema, migrations, repositories\n  types/        # Shared TypeScript types\n\`\`\`\n\n## Domain Primitives\n- webapp\n- data-storage\n- [etl / infrastructure]\n\n## Open Questions / Deferred Decisions\n- [PENDING] [Decision 1]: [context and options]\n` };
     },
     vision() {
-      if (!s) return { success: false, error: "statement is required" };
+      if (!s) return needsInput(["statement"], "Pass a freeform vision statement (1-3 paragraphs) as statement. Run /vdd:init first so constitution.md exists, then re-call /vdd:vision.");
       const esc = s.replace(/`/g, "\\`");
       return { success: true, artifact: `${root}/vdd/vision.md`, template: `# Vision\n${hdr("V-001")}## Vision Statement\n> ${esc}\n\n[AI assistant: expand the above freeform statement into a structured vision.]\n\n## Impact Model\n### Goal\n[1 sentence — the measurable outcome this product aims to create]\n\n### Actors\n| Actor | Current State | Desired State | Benefit |\n|-------|--------------|---------------|---------|\n| [Primary user] | [Today] | [Future] | [Why better] |\n\n### Impacts\n| Impact ID | Description | Actor | Measurement |\n|-----------|-------------|-------|-------------|\n| I-001 | [Change] | [Actor] | [How to measure] |\n\n## Stakeholder Map\n| Role | Interest | Influence | Engagement Strategy |\n|------|----------|-----------|-------------------|\n| [User] | [What they care about] | High | [How to involve] |\n\n## Success Metrics\n### Lagging Indicators\n| Metric | Target | Measurement Method |\n|--------|--------|-------------------|\n| [e.g., Retention day 30] | [> 40%] | [Analytics + cohort] |\n\n### Leading Indicators\n| Metric | Target | Measurement Method |\n|--------|--------|-------------------|\n| [e.g., Activation rate] | [> 60%] | [Key journey completion] |\n\n## Constraints & Boundaries\n### Constraints\n- [Non-negotiable requirement]\n### Boundaries\n- [Explicitly out of scope]\n\n## Target Domains\n- [ ] WebApp\n- [ ] Data Storage\n- [ ] ETL\n- [ ] Infrastructure\n\n## S&T Assumptions (Vision → Strategy)\n**Necessity:** Why is Strategy-level research necessary?\n**Achievability:** Why is this Vision achievable?\n**Sufficiency:** Why is the Strategy approach sufficient?\n**Warnings:** What must go right / be avoided?\n` };
     },
@@ -426,15 +457,19 @@ function phaseHandlers(input) {
       return { success: true, artifact: `${root}/vdd/tactics.md`, template: `# Tactics\n${hdr("V-001 → S-002 → T-003")}## Strategy Reference\nDerived from: \`vdd/strategy.md\`\n\n## Codebase Audit\n### What Exists\n| Asset | Location | Purpose | Pillar Trace | Quality |\n|-------|----------|---------|-------------|---------|\n| [Module] | \`src/\` | [Purpose] | [Pillar] | Good/Refactor/Replace |\n\n### Technical Debt\n| Debt Item | Location | Severity | Strategy Impact |\n|-----------|----------|----------|----------------|\n| [e.g., No validation] | \`src/api/\` | High | Blocks security pillar |\n\n### Reusable Assets\n| Asset | Strategy Support | Reuse Effort |\n|-------|-----------------|-------------|\n| [e.g., Component lib] | Accelerates UI | Low |\n\n## Gap Analysis\n| Gap | Pillar Affected | Impact if Unaddressed |\n|-----|----------------|----------------------|\n| [e.g., No mobile layout] | Pillar 1 | Target inaccessible |\n\n## Prioritized Action Items\n| ID | Action Item | Priority | Pillar | Size | Deps |\n|----|------------|----------|--------|------|------|\n| A-001 | [Concrete action] | MUST | Pillar 1 | M | None |\n| A-002 | [Concrete action] | SHOULD | Pillar 2 | S | A-001 |\n\n## Dependency Map\n\`\`\`\nA-001 → A-002\n\`\`\`\n\n## Infrastructure Requirements\n| Requirement | Domain | Priority | Notes |\n|-------------|--------|----------|-------|\n| [e.g., CI/CD] | Infra | MUST | GitHub Actions |\n\n## S&T Assumptions (Tactics → Specs)\n**Necessity:** ...\n**Achievability:** ...\n**Sufficiency:** ...\n**Warnings:** ...\n` };
     },
     specify() {
-      if (!id) return { success: false, error: "actionItemId or description required" };
+      if (!id) return needsInput(["feature", "actionItemId", "description"], "Pass actionItemId (e.g. \"A-001\") or a freeform description to create a new spec; pass feature to name the spec directory.");
       return { success: true, artifact: `${root}/vdd/specs/${id}/spec.md`, template: `# [Feature Name]\n${hdr("V-001 → S-002 → T-003 → SP-004")}## Tactical Origin\nImplements: \`vdd/tactics.md\` → Action Item [${id}]\n\n## Overview\n[1-2 sentences. Reference which vision impact this serves.]\n\n## User Stories\n### Primary\nAs a [role], I want [goal] so that [benefit].\n\n## Boundaries\n**Always do:**\n- [e.g., "validate all inputs before processing"]\n\n**Ask first:**\n- [e.g., "adding a new database table not in this spec"]\n\n**Never do:**\n- [e.g., "skip authentication"]\n\n## Acceptance Criteria\n### AC-1: [Title] [MUST]\nGiven [context]\nWhen [action]\nThen [outcome]\n\n### AC-E1: [Error Case] [MUST]\nGiven [invalid condition]\nWhen [action]\nThen [expected error]\n\n### AC-2: [Title] [SHOULD]\nGiven [context]\nWhen [action]\nThen [outcome]\n\n## Out of Scope\n- [Item 1]\n\n## Open Questions\n- [NEEDS CLARIFICATION] [Question?]\n\n## Non-Functional Requirements\n- Performance: [e.g., "< 200ms at p95"]\n- Security: [e.g., "authenticated session required"]\n- Accessibility: [e.g., "WCAG 2.1 AA"]\n\n## Impact Verification\n- [e.g., AC-1 enables Impact I-001]\n\n## S&T Assumptions (Specs → Plan)\n**Necessity:** ...\n**Achievability:** ...\n**Sufficiency:** ...\n**Warnings:** ...\n` };
     },
     clarify() {
-      if (!feat) return { success: false, error: "feature is required" };
-      return { success: true, output: { clarificationCount: 0, action: "Resolve each [NEEDS CLARIFICATION] item, replace [e.g.] placeholders with concrete values, and add edge-case ACs for every happy-path MUST AC." } };
+      const rc = resolveFeature(root, feat, "clarify");
+      if (rc && rc.guidance) return rc.guidance;
+      if (rc && rc.feature) feat = rc.feature;
+      return { success: true, artifact: `Clarifications for ${feat}`, output: { feature: feat, clarificationCount: 0, action: "Resolve each [NEEDS CLARIFICATION] item, replace [e.g.] placeholders with concrete values, and add edge-case ACs for every happy-path MUST AC." } };
     },
     plan() {
-      if (!feat) return { success: false, error: "feature is required" };
+      const rp = resolveFeature(root, feat, "plan");
+      if (rp && rp.guidance) return rp.guidance;
+      if (rp && rp.feature) feat = rp.feature;
       const base = `${root}/vdd/specs/${feat}`;
       return { success: true, artifact: `${base}/plan.md`, files: {
         [`${base}/plan.md`]: `# Technical Plan\n${hdr("V-001 → S-002 → T-003 → SP-004 → PL-005")}## Spec Reference\nImplements: \`vdd/specs/${feat}/spec.md\`\n\n## Architecture Overview\n[High-level description. 3-5 sentences.]\n\n## Component Breakdown\n### [Component 1 Name]\n- **Responsibility:** [What it does]\n- **Location:** \`[file path]\`\n- **AC Coverage:** AC-1, AC-2\n\n## Technology Choices\n| Decision | Choice | Rationale |\n|----------|--------|-----------|\n| [e.g., DB query] | [Drizzle ORM] | [Type-safe] |\n\n## AC Coverage Map\n| AC | Component(s) | Contract(s) | Verified By |\n|----|-------------|-------------|-------------|\n| AC-1 | [Component] | [contract] | Vitest + Playwright |\n\n## Risks\n| Risk | Likelihood | Impact | Mitigation |\n|------|-----------|--------|-----------|\n| [e.g., API unavailable] | Low | High | Circuit breaker |\n\n## S&T Assumptions (Plan → Tasks)\n**Necessity:** ...\n**Achievability:** ...\n**Sufficiency:** ...\n**Warnings:** ...\n`,
@@ -443,15 +478,19 @@ function phaseHandlers(input) {
       } };
     },
     tasks() {
-      if (!feat) return { success: false, error: "feature is required" };
+      const rt = resolveFeature(root, feat, "tasks");
+      if (rt && rt.guidance) return rt.guidance;
+      if (rt && rt.feature) feat = rt.feature;
       return { success: true, artifact: `${root}/vdd/specs/${feat}/tasks.md`, template: `# Task List\n${hdr("V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006")}## Plan Reference\nImplements: \`vdd/specs/${feat}/plan.md\`\n\n## Tasks\n### Setup\n- [ ] **TASK-001** [S] Set up [module] skeleton\n  - Creates: \`[path]\`\n  - Depends on: none\n\n### Implementation\n- [ ] **TASK-002** [M] [P] Write tests for [component]\n  - Tests: AC-1, AC-2 from \`vdd/specs/${feat}/spec.md\`\n  - Depends on: TASK-001\n\n- [ ] **TASK-002b** [S] Write error-case tests for [component]\n  - Tests: AC-E1\n  - Depends on: TASK-002\n\n- [ ] **TASK-003** [M] Implement [component]\n  - Contract: \`contracts/[file].md\`\n  - Satisfies: AC-1, AC-2\n  - Depends on: TASK-002\n\n### Integration\n- [ ] **TASK-006** [L] Integration test\n  - Tests: AC-1 through AC-4\n  - Depends on: TASK-003\n\n## Legend\n- \`[S]\` < 1h, \`[M]\` 1-3h, \`[L]\` 3-6h, \`[P]\` Parallelizable\n` };
     },
     "get-next-task"() {
-      if (!feat) return { success: false, error: "feature is required" };
+      const rn = resolveFeature(root, feat, "get-next-task");
+      if (rn && rn.guidance) return rn.guidance;
+      if (rn && rn.feature) feat = rn.feature;
       return { success: true, artifact: "Read tasks.md to find the next uncompleted task. Run /vdd:get-next-task from a stdio/local MCP to get auto-detection." };
     },
     implement() {
-      if (!tid) return { success: false, error: "taskId is required" };
+      if (!tid) return needsInput(["taskId"], "Pass taskId (e.g. \"TASK-003\") — call /vdd:get-next-task to fetch the next uncompleted one, then re-call /vdd:implement.");
       return { success: true, artifact: `Ready: Task ${tid}`, output: { taskId: tid, instruction: "Load constitution.md + task description + spec/plan/contracts. Implement. Commit with traceable message." } };
     },
     validate() {
@@ -514,11 +553,13 @@ function phaseHandlers(input) {
       return { success: true, artifact: "Traceability matrix", chain: "V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006", files: [`${root}/vdd/vision.md`, `${root}/vdd/strategy.md`, `${root}/vdd/tactics.md`] };
     },
     analyze() {
-      if (!feat) return { success: false, error: "feature is required" };
+      const ra = resolveFeature(root, feat, "analyze");
+      if (ra && ra.guidance) return ra.guidance;
+      if (ra && ra.feature) feat = ra.feature;
       return { success: true, artifact: `Cross-artifact analysis for ${feat}`, output: { feature: feat, action: "Read spec.md, plan.md, tasks.md. Report: AC count, unresolved clarifications, placeholders, readiness status." } };
     },
     amend() {
-      if (!desc) return { success: false, error: "description of change is required" };
+      if (!desc) return needsInput(["description"], "Pass the requirement change as description; the cascade plan is then returned.");
       return { success: true, artifact: "Chain update plan", output: { change: desc, instructions: ["1. Identify highest affected level (V→S→T→SP→PL→TK)", "2. Update that artifact, cascade downward", "3. Re-run all affected gates (G1–G7)", "4. Commit each with [AMEND] marker"] } };
     },
     e2e() {
@@ -616,7 +657,7 @@ function phaseHandlers(input) {
     },
     clone() {
       const rawDomain = desc || s;
-      if (!rawDomain) return { success: false, error: "domain is required for clone (pass description or use `-clone <domain>`)" };
+      if (!rawDomain) return needsInput(["description"], "Pass the target domain as description (bare domain, host, or URL); the clone pipeline then generates the dataset and manifest.");
       const n = normalizeCloneDomain(rawDomain);
       if (n.error) return { success: false, error: n.error };
       const target = n.scheme + "://" + n.host;
@@ -700,7 +741,7 @@ function handleJsonRpc(body) {
   const { method, params, id } = body || {};
 
   if (method === "initialize") {
-    return { jsonrpc: "2.0", id, result: { protocolVersion: "2025-06-18", serverInfo: { name: "vdd", title: "Vision Driven Design", version: "1.7.0" }, capabilities: { tools: {} }, instructions: "Vision Driven Design (VDD): an 8-phase, spec-driven development methodology with bi-directional traceability. Start with vdd_init, then vdd_vision (pass a freeform statement). Before each implementation session call vdd_get_next_task. Read-only tools that write nothing are vdd_trace, vdd_analyze, vdd_detect_environment, vdd_get_next_task, vdd_clarify, vdd_implement, and vdd_amend; other write tools overwrite their target artifacts unless their description says otherwise (vdd_validate writes only a new vdd/impact-report.generated.md without clobbering a hand-authored report)." } };
+    return { jsonrpc: "2.0", id, result: { protocolVersion: "2025-06-18", serverInfo: { name: "vdd", title: "Vision Driven Design", version: "1.7.1" }, capabilities: { tools: {} }, instructions: "Vision Driven Design (VDD): an 8-phase, spec-driven development methodology with bi-directional traceability. Start with vdd_init, then vdd_vision (pass a freeform statement). Before each implementation session call vdd_get_next_task. Read-only tools that write nothing are vdd_trace, vdd_analyze, vdd_detect_environment, vdd_get_next_task, vdd_clarify, vdd_implement, and vdd_amend; other write tools overwrite their target artifacts unless their description says otherwise (vdd_validate writes only a new vdd/impact-report.generated.md without clobbering a hand-authored report)." } };
   }
 
   if (method === "tools/list") {
