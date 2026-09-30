@@ -1,0 +1,43 @@
+name: Sync MCP Registry Icons
+
+# The MCP Registry is versioned and only the publishing repo's GitHub OIDC
+# identity has edit permission, so icons in server.json can only be applied to
+# an existing version from Actions — not from a personal token (403).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  icons:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply server.json icons to the published version (OIDC)
+        run: |
+          set -euo pipefail
+          REG="https://registry.modelcontextprotocol.io/v0"
+          AUD="https://registry.modelcontextprotocol.io"
+
+          idtok=$(curl -sS -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${AUD}" | jq -r .value)
+          reg=$(curl -sS -X POST "$REG/auth/github-oidc" \
+            -H 'Content-Type: application/json' \
+            -d "{\"oidc_token\":\"$idtok\"}" | jq -r .registry_token)
+          test -n "$reg" && test "$reg" != "null"
+
+          enc() { python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1],safe=''))" "$1"; }
+          name=$(jq -r .name server.json)
+          ver=$(jq -r .version server.json)
+
+          curl -sS "$REG/servers/$(enc "$name")/versions/latest" > latest.json
+          jq --slurpfile s server.json '.server | del(._meta) | .icons = $s[0].icons' latest.json > body.json
+
+          echo "PUT $name@$ver"
+          curl -sS -X PUT "$REG/servers/$(enc "$name")/versions/$(enc "$ver")" \
+            -H "Authorization: Bearer $reg" \
+            -H 'Content-Type: application/json' \
+            --data @body.json | jq .
