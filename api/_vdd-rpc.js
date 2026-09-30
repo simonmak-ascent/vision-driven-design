@@ -754,9 +754,9 @@ function toolDefs() {
       properties: {
         statement: { type: "string", description: "Freeform input (required for vision)" },
         projectRoot: { type: "string", description: "Project root: directory that constitution.md and the vdd/ folder are written to and resolved against. Relative paths resolve from the current working directory; keep the same value across every phase.", default: "." },
-        actionItemId: { type: "string", description: "Tactical action item ID, format A-### (e.g., 'A-001')" },
-        feature: { type: "string", description: "Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., 'user-auth')" },
-        taskId: { type: "string", description: "Task ID to implement, format TASK-### (e.g., 'TASK-003')" },
+        actionItemId: { type: "string", description: "Tactical action item ID, format A-### (e.g., 'A-001'); must be an item id from vdd/tactics.md" },
+        feature: { type: "string", description: "Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., 'user-auth'); must reference a directory created earlier by vdd_specify" },
+        taskId: { type: "string", description: "Task ID to implement, format TASK-### (e.g., 'TASK-003'); must be an id listed in the feature's tasks.md (see vdd_get_next_task)" },
         description: { type: "string", description: "Freeform description input" },
         availableTools: { type: "array", items: { type: "string" }, description: "MCP/tool names available to the host agent (e.g., ['brave-search','perplexity','context7','gh_grep','playwright','filesystem'])" },
         capabilities: { type: "array", items: { type: "string" }, description: "Alias for availableTools" },

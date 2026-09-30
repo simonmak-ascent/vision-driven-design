@@ -8,11 +8,11 @@ import { PHASES, PHASE_NAMES, PHASE_META, PARAM_RELATIONSHIP_NOTES, type VddCont
 const projectRoot = z.string().default('.').describe('Project root: directory that constitution.md and the vdd/ folder are written to and resolved against. Relative paths resolve from the current working directory; keep the same value across every phase (default ".")');
 const statement = z.string().optional().describe('Freeform vision statement (required for vision)');
 const statementReq = z.string().describe('Freeform vision statement');
-const actionItemId = z.string().optional().describe('Tactical action item ID, format A-### (e.g., "A-001")');
-const feature = z.string().optional().describe('Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., "user-auth")');
-const featureReq = z.string().describe('Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., "user-auth")');
+const actionItemId = z.string().optional().describe('Tactical action item ID, format A-### (e.g., "A-001"); must be an item id from vdd/tactics.md');
+const feature = z.string().optional().describe('Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., "user-auth"); must reference a directory created earlier by vdd_specify');
+const featureReq = z.string().describe('Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., "user-auth"); must reference a directory created earlier by vdd_specify');
 const scope = z.enum(['project', 'feature']).optional().describe('Inspect scope: "project" (default) returns the traceability matrix; "feature" returns per-feature spec metrics (requires feature)');
-const taskId = z.string().describe('Task ID to implement, format TASK-### (e.g., "TASK-003")');
+const taskId = z.string().describe('Task ID to implement, format TASK-### (e.g., "TASK-003"); must be an id listed in the feature\'s tasks.md (see vdd_get_next_task)');
 const description = z.string().optional().describe('Freeform description input');
 const descriptionReq = z.string().describe('Description of the requirement change');
 const availableTools = z.array(z.string()).optional().describe('MCP/tool names available to the host agent (e.g., ["brave-search","perplexity","context7","gh_grep","playwright","filesystem"])');
