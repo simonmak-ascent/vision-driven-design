@@ -15,5 +15,14 @@
       "type": "streamable-http",
       "url": "https://vdd.simonmak.com/api/mcp"
     }
+  ],
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/simonplmak-cloud/vision-driven-design/main/docs/social-preview.svg",
+      "mimeType": "image/svg+xml",
+      "sizes": [
+        "any"
+      ]
+    }
   ]
 }
