@@ -1,0 +1,23 @@
+{
+  "$schema": "https://glama.ai/mcp/schemas/server.json",
+  "maintainers": ["simonplmak-cloud"],
+  "name": "vision-driven-design",
+  "description": "Spec-driven development MCP server: 8 phases, bi-directional V→S→T→SP→PL→TK traceability, and 7 quality gates for AI-assisted development.",
+  "repository": "https://github.com/simonplmak-cloud/vision-driven-design",
+  "license": "MIT",
+  "runtime": "node",
+  "installInstructions": {
+    "npm": "npx -y @simonmak-ascent/mcp",
+    "remote": "https://vdd.simonmak.com/api/mcp"
+  },
+  "categories": ["developer-tools", "research-and-data", "education-and-learning-tools"],
+  "keywords": [
+    "vdd",
+    "vision-driven-design",
+    "spec-driven-development",
+    "traceability",
+    "quality-gates",
+    "mcp",
+    "model-context-protocol"
+  ]
+}
