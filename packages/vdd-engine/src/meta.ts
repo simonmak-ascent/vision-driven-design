@@ -294,3 +294,25 @@ export function domainPrimersForTargets(targetDomains: string[]): DomainPrimer[]
     return normalized.has(p.condition);
   });
 }
+
+// Non-obvious cross-parameter facts the JSON schema does not carry, so agents
+// know how parameters interact across the pipeline. Appended to each phase's
+// tool description by the MCP surfaces (stdio and hosted). Feeds Glama's
+// "Parameter Semantics" dimension beyond schema coverage.
+export const PARAM_RELATIONSHIP_NOTES: Partial<Record<PhaseName, string>> = {
+  init: ' Parameter relationships: projectRoot defaults to "." and must be the same root every later phase resolves against.',
+  vision: ' Parameter relationships: statement must be freeform prose (1-3 paragraphs), not a title; projectRoot must match the root used by vdd_init.',
+  strategize: ' Parameter relationships: availableTools and capabilities are aliases (pass one); the first call returns research-subagent dispatch specs and a second call carrying researchFindings synthesizes strategy.md.',
+  tactics: ' Parameter relationships: projectRoot must match the root used by vdd_init, vdd_vision, and vdd_strategize; requires vdd/strategy.md to exist.',
+  specify: ' Parameter relationships: feature names the vdd/specs/<feature>/ directory and must match the feature passed to vdd_clarify, vdd_plan, and vdd_tasks; actionItemId is the A-### id from tactics.md and is optional when authoring from a freeform description.',
+  clarify: ' Parameter relationships: feature must be the exact spec directory name created by vdd_specify.',
+  plan: ' Parameter relationships: feature must match the value passed to vdd_specify and vdd_tasks.',
+  tasks: ' Parameter relationships: feature must match the value passed to vdd_plan.',
+  'get-next-task': ' Parameter relationships: feature must match the spec directory; the returned taskId (TASK-###) is the argument to vdd_implement.',
+  implement: ' Parameter relationships: taskId comes from vdd_get_next_task (format TASK-###); projectRoot must match the root used by earlier phases.',
+  validate: ' Parameter relationships: feature narrows the check to one spec; artifactFiles maps artifact path to content for serverless runs and is omitted when resolving against a local projectRoot. Choose vdd_validate for the release-readiness gate report; use vdd_inspect for the traceability matrix or per-feature spec metrics.',
+  inspect: ' Parameter relationships: scope="feature" requires feature, while scope="project" (the default) ignores it; projectRoot must match the root used by earlier phases. Choose vdd_inspect for the traceability matrix or per-feature metrics; use vdd_validate for the gate report.',
+  amend: ' Parameter relationships: description is the requirement change to cascade through the artifact chain; projectRoot must match the root used by earlier phases.',
+  clone: ' Parameter relationships: description is the target domain and statement is the desired outcome (both optional); maxPages, timeoutMs, concurrency, crawl, and browser tune the crawl and refresh=true bypasses a cached dataset.',
+  'detect-environment': ' Parameter relationships: availableTools and capabilities are aliases; omit both to get the per-phase requirements without a present/missing comparison.',
+};

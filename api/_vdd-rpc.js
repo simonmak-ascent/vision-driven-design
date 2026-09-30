@@ -701,6 +701,26 @@ const PHASE_META = {
 
 const PHASE_NAMES = ["init","vision","strategize","tactics","specify","clarify","plan","tasks","get-next-task","implement","validate","inspect","amend","clone","detect-environment"];
 
+// Cross-parameter notes appended to each tool description — mirrors
+// packages/vdd-engine/src/meta.ts PARAM_RELATIONSHIP_NOTES (keep in sync).
+const PARAM_RELATIONSHIP_NOTES = {
+  init: ' Parameter relationships: projectRoot defaults to "." and must be the same root every later phase resolves against.',
+  vision: ' Parameter relationships: statement must be freeform prose (1-3 paragraphs), not a title; projectRoot must match the root used by vdd_init.',
+  strategize: ' Parameter relationships: availableTools and capabilities are aliases (pass one); the first call returns research-subagent dispatch specs and a second call carrying researchFindings synthesizes strategy.md.',
+  tactics: ' Parameter relationships: projectRoot must match the root used by vdd_init, vdd_vision, and vdd_strategize; requires vdd/strategy.md to exist.',
+  specify: ' Parameter relationships: feature names the vdd/specs/<feature>/ directory and must match the feature passed to vdd_clarify, vdd_plan, and vdd_tasks; actionItemId is the A-### id from tactics.md and is optional when authoring from a freeform description.',
+  clarify: ' Parameter relationships: feature must be the exact spec directory name created by vdd_specify.',
+  plan: ' Parameter relationships: feature must match the value passed to vdd_specify and vdd_tasks.',
+  tasks: ' Parameter relationships: feature must match the value passed to vdd_plan.',
+  "get-next-task": ' Parameter relationships: feature must match the spec directory; the returned taskId (TASK-###) is the argument to vdd_implement.',
+  implement: ' Parameter relationships: taskId comes from vdd_get_next_task (format TASK-###); projectRoot must match the root used by earlier phases.',
+  validate: ' Parameter relationships: feature narrows the check to one spec; artifactFiles maps artifact path to content for serverless runs and is omitted when resolving against a local projectRoot. Choose vdd_validate for the release-readiness gate report; use vdd_inspect for the traceability matrix or per-feature spec metrics.',
+  inspect: ' Parameter relationships: scope="feature" requires feature, while scope="project" (the default) ignores it; projectRoot must match the root used by earlier phases. Choose vdd_inspect for the traceability matrix or per-feature metrics; use vdd_validate for the gate report.',
+  amend: ' Parameter relationships: description is the requirement change to cascade through the artifact chain; projectRoot must match the root used by earlier phases.',
+  clone: ' Parameter relationships: description is the target domain and statement is the desired outcome (both optional); maxPages, timeoutMs, concurrency, crawl, and browser tune the crawl and refresh=true bypasses a cached dataset.',
+  "detect-environment": ' Parameter relationships: availableTools and capabilities are aliases; omit both to get the per-phase requirements without a present/missing comparison.',
+};
+
 // MCP annotation hints — mirrors packages/vdd-mcp/src/server.ts TOOL_ANNOTATIONS
 // (keep in sync). They describe the tool's OWN filesystem effect: read-only tools
 // write nothing; destructiveHint is true only for tools that overwrite an existing
@@ -727,7 +747,7 @@ function toolDefs() {
   return PHASE_NAMES.map((name) => ({
     name: `vdd_${name.replace(/-/g, "_")}`,
     title: TOOL_ANNOTATIONS[name]?.title,
-    description: PHASE_META[name] || `VDD Phase: ${name}`,
+    description: (PHASE_META[name] || `VDD Phase: ${name}`) + (PARAM_RELATIONSHIP_NOTES[name] || ""),
     annotations: TOOL_ANNOTATIONS[name]?.annotations,
     inputSchema: {
       type: "object",

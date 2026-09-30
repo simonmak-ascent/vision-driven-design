@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { z } from 'zod';
-import { PHASES, PHASE_NAMES, PHASE_META, type VddContext, type VddPhaseInput } from '@simonmak-ascent/engine';
+import { PHASES, PHASE_NAMES, PHASE_META, PARAM_RELATIONSHIP_NOTES, type VddContext, type VddPhaseInput } from '@simonmak-ascent/engine';
 
 // Shared field definitions, then a per-phase input schema so each tool advertises
 // only the parameters it actually reads (feeds Glama's "Parameter Semantics" score).
@@ -115,7 +115,7 @@ export function createVddMcpServer(): McpServer {
       toolName,
       {
         title: toolMeta?.title,
-        description: meta?.description ?? `VDD Phase: ${name}`,
+        description: (meta?.description ?? `VDD Phase: ${name}`) + (PARAM_RELATIONSHIP_NOTES[name] ?? ''),
         inputSchema: PHASE_INPUT_SCHEMAS[name],
         outputSchema: OUTPUT_SCHEMA,
         annotations: toolMeta?.annotations,

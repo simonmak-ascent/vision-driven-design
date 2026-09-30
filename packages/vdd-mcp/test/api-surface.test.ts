@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import { describe, expect, it } from 'vitest';
 
-import { PHASE_META, PHASE_NAMES } from '../../vdd-engine/src/meta.js';
+import { PARAM_RELATIONSHIP_NOTES, PHASE_META, PHASE_NAMES } from '../../vdd-engine/src/meta.js';
 
 // The Vercel handler is plain CommonJS at the repo root (not a workspace package).
 const require = createRequire(import.meta.url);
@@ -87,7 +87,10 @@ describe('hosted MCP tool surface (api/_vdd-rpc.js)', () => {
     for (const tool of tools) {
       const phase = phaseOf(tool.name);
       expect(phases.has(phase), tool.name).toBe(true);
-      expect(tool.description, tool.name).toBe(PHASE_META[phase as keyof typeof PHASE_META].description);
+      expect(tool.description, tool.name).toBe(
+        PHASE_META[phase as keyof typeof PHASE_META].description +
+          (PARAM_RELATIONSHIP_NOTES[phase as keyof typeof PARAM_RELATIONSHIP_NOTES] ?? ''),
+      );
     }
   });
 });

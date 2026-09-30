@@ -24,6 +24,7 @@ export type { VddPhaseFn } from './types.js';
 export {
   PHASE_NAMES,
   PHASE_META,
+  PARAM_RELATIONSHIP_NOTES,
   TOOL_REQUIREMENTS,
   TOOL_KEYS,
   RESEARCH_SUBAGENTS,
