@@ -1,0 +1,42 @@
+name: MCP Tool Definition Quality
+
+on:
+  pull_request:
+    paths:
+      - "packages/vdd-engine/src/meta.ts"
+      - "packages/vdd-mcp/**"
+      - "api/_vdd-rpc.js"
+  push:
+    branches: [main]
+    paths:
+      - "packages/vdd-engine/src/meta.ts"
+      - "packages/vdd-mcp/**"
+      - "api/_vdd-rpc.js"
+
+permissions:
+  contents: read
+
+jobs:
+  tdqs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install workspace dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build engine + MCP server
+        run: pnpm --filter @simonmak-ascent/engine build && pnpm --filter @simonmak-ascent/mcp build
+
+      # Deterministic stages only (context signals, hard gates, shadow prefilter).
+      # The model-graded `score` runs on Glama's sweep and needs an API key.
+      - name: Lint the MCP tool surface (Glama TDQS)
+        run: npx --yes mcp-tdqs@0.2.0 lint --command "node packages/vdd-mcp/dist/stdio.js" --fail-on error
