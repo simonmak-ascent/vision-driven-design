@@ -5,23 +5,23 @@ import { PHASES, PHASE_NAMES, PHASE_META, PARAM_RELATIONSHIP_NOTES, type VddCont
 
 // Shared field definitions, then a per-phase input schema so each tool advertises
 // only the parameters it actually reads (feeds Glama's "Parameter Semantics" score).
-const projectRoot = z.string().default('.').describe('Project root: directory that constitution.md and the vdd/ folder are written to and resolved against (default ".")');
+const projectRoot = z.string().default('.').describe('Project root: directory that constitution.md and the vdd/ folder are written to and resolved against. Relative paths resolve from the current working directory; keep the same value across every phase (default ".")');
 const statement = z.string().optional().describe('Freeform vision statement (required for vision)');
 const statementReq = z.string().describe('Freeform vision statement');
-const actionItemId = z.string().optional().describe('Tactical action item ID (e.g., "A-001")');
-const feature = z.string().optional().describe('Feature name (spec directory name)');
-const featureReq = z.string().describe('Feature name (spec directory name)');
+const actionItemId = z.string().optional().describe('Tactical action item ID, format A-### (e.g., "A-001")');
+const feature = z.string().optional().describe('Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., "user-auth")');
+const featureReq = z.string().describe('Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., "user-auth")');
 const scope = z.enum(['project', 'feature']).optional().describe('Inspect scope: "project" (default) returns the traceability matrix; "feature" returns per-feature spec metrics (requires feature)');
-const taskId = z.string().describe('Task ID to implement (e.g., "TASK-003")');
+const taskId = z.string().describe('Task ID to implement, format TASK-### (e.g., "TASK-003")');
 const description = z.string().optional().describe('Freeform description input');
 const descriptionReq = z.string().describe('Description of the requirement change');
 const availableTools = z.array(z.string()).optional().describe('MCP/tool names available to the host agent (e.g., ["brave-search","perplexity","context7","gh_grep","playwright","filesystem"])');
 const capabilities = z.array(z.string()).optional().describe('Alias for availableTools');
-const researchFindings = z.string().optional().describe('Consolidated research subagent findings to synthesize into strategy.md');
-const artifactFiles = z.record(z.string(), z.string()).optional().describe('Map of artifact path → content for serverless validate/drift detection');
-const maxPages = z.number().int().positive().optional().describe('Clone: max pages to crawl (default 200)');
-const timeoutMs = z.number().int().positive().optional().describe('Clone: per-request timeout in ms');
-const concurrency = z.number().int().positive().optional().describe('Clone: concurrent crawl workers (default 8)');
+const researchFindings = z.string().optional().describe('Consolidated research subagent findings to synthesize into strategy.md (effect only on the second strategize call)');
+const artifactFiles = z.record(z.string(), z.string()).optional().describe('Map of vdd/-relative artifact path → full file text, for serverless validate/drift detection where the tool cannot read the filesystem');
+const maxPages = z.number().int().positive().optional().describe('Clone: max pages to crawl, 1-5000 (default 200)');
+const timeoutMs = z.number().int().positive().optional().describe('Clone: per-request timeout in ms, 1000-60000 (default 10000)');
+const concurrency = z.number().int().positive().optional().describe('Clone: concurrent crawl workers, 1-16; above ~16 risks tripping the target site rate limit (default 8)');
 const crawl = z.boolean().optional().describe('Clone: run the crawl (default true)');
 const browser = z.boolean().optional().describe('Clone: run browser/static capture (default true)');
 const refresh = z.boolean().optional().describe('Clone: force re-crawl, ignore a fresh cached dataset');
