@@ -14,3 +14,6 @@ packages/*/node_modules/
 
 # Local tool artifacts
 .playwright-mcp/
+
+# Local reference screenshots
+hkex-ref.png
