@@ -699,6 +699,8 @@ const PHASE_META = {
   "detect-environment": "VDD Environment Detection: Report which tools/MCPs each VDD phase requires vs treats as optional — across the 8-phase pipeline (init through validate) plus the cross-phase helpers (amend, clone, inspect, get-next-task) — and which of the host agent availableTools are present vs missing. Read-only; returns a capability report without modifying files. Run before vdd_strategize to plan research-subagent dispatch, or when a phase fails for lack of a tool; to inspect artifacts instead of capabilities use vdd_inspect. Returns a fixed-shape capability report; tool-name matching is normalized, so pass names as your host exposes them.",
 };
 
+const SERVER_VERSION = "1.9.0";
+
 const PHASE_NAMES = ["init","vision","strategize","tactics","specify","clarify","plan","tasks","get-next-task","implement","validate","inspect","amend","clone","detect-environment"];
 
 // Cross-parameter notes appended to each tool description — mirrors
@@ -743,35 +745,149 @@ const TOOL_ANNOTATIONS = {
   "detect-environment": { title: "Detect Environment", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
 };
 
+// Per-phase input schemas — mirrors packages/vdd-mcp/src/server.ts PHASE_INPUT_SCHEMAS
+// (keep in sync; packages/vdd-mcp/test/api-surface.test.ts asserts parity). Each tool
+// advertises only the parameters it reads, so agents are not offered irrelevant fields.
+const P = {
+  projectRoot: { type: "string", default: ".", description: "Project root: directory that constitution.md and the vdd/ folder are written to and resolved against. Relative paths resolve from the current working directory; keep the same value across every phase (default \".\")" },
+  statement: { type: "string", description: "Freeform vision statement (required for vision)" },
+  statementReq: { type: "string", description: "Freeform vision statement" },
+  actionItemId: { type: "string", description: "Tactical action item ID, format A-### (e.g., \"A-001\"); must be an item id from vdd/tactics.md" },
+  feature: { type: "string", description: "Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., \"user-auth\"); must reference a directory created earlier by vdd_specify" },
+  scope: { type: "string", enum: ["project", "feature"], description: "Inspect scope: \"project\" (default) returns the traceability matrix; \"feature\" returns per-feature spec metrics (requires feature)" },
+  taskId: { type: "string", description: "Task ID to implement, format TASK-### (e.g., \"TASK-003\"); must be an id listed in the feature's tasks.md (see vdd_get_next_task)" },
+  description: { type: "string", description: "Freeform description input" },
+  descriptionReq: { type: "string", description: "Description of the requirement change" },
+  availableTools: { type: "array", items: { type: "string" }, description: "MCP/tool names available to the host agent (e.g., [\"brave-search\",\"perplexity\",\"context7\",\"gh_grep\",\"playwright\",\"filesystem\"])" },
+  capabilities: { type: "array", items: { type: "string" }, description: "Alias for availableTools" },
+  researchFindings: { type: "string", description: "Consolidated research subagent findings to synthesize into strategy.md (effect only on the second strategize call)" },
+  artifactFiles: { type: "object", additionalProperties: { type: "string" }, description: "Map of vdd/-relative artifact path → full file text, for serverless validate/drift detection where the tool cannot read the filesystem" },
+  // Crawl tuning applies to the local stdio server; the hosted endpoint returns the
+  // clone plan without crawling, so it accepts and ignores these fields.
+  maxPages: { type: "integer", exclusiveMinimum: 0, description: "Clone: max pages to crawl, 1-5000 (default 200). Local stdio server only; ignored by the hosted endpoint" },
+  timeoutMs: { type: "integer", exclusiveMinimum: 0, description: "Clone: per-request timeout in ms, 1000-60000 (default 10000). Local stdio server only; ignored by the hosted endpoint" },
+  concurrency: { type: "integer", exclusiveMinimum: 0, description: "Clone: concurrent crawl workers, 1-16 (default 8). Local stdio server only; ignored by the hosted endpoint" },
+  crawl: { type: "boolean", description: "Clone: run the crawl (default true). Local stdio server only; ignored by the hosted endpoint" },
+  browser: { type: "boolean", description: "Clone: run browser/static capture (default true). Local stdio server only; ignored by the hosted endpoint" },
+  refresh: { type: "boolean", description: "Clone: force re-crawl, ignore a fresh cached dataset. Local stdio server only; ignored by the hosted endpoint" },
+};
+
+// [propertyName, sharedFieldKey, required]
+const PHASE_FIELDS = {
+  init: [["projectRoot", "projectRoot"]],
+  vision: [["statement", "statementReq", true], ["projectRoot", "projectRoot"]],
+  strategize: [["availableTools", "availableTools"], ["capabilities", "capabilities"], ["researchFindings", "researchFindings"], ["projectRoot", "projectRoot"]],
+  tactics: [["projectRoot", "projectRoot"]],
+  specify: [["feature", "feature"], ["actionItemId", "actionItemId"], ["description", "description"], ["projectRoot", "projectRoot"]],
+  clarify: [["feature", "feature", true], ["projectRoot", "projectRoot"]],
+  plan: [["feature", "feature", true], ["projectRoot", "projectRoot"]],
+  tasks: [["feature", "feature", true], ["projectRoot", "projectRoot"]],
+  "get-next-task": [["feature", "feature", true], ["projectRoot", "projectRoot"]],
+  implement: [["taskId", "taskId", true], ["projectRoot", "projectRoot"]],
+  validate: [["feature", "feature"], ["artifactFiles", "artifactFiles"], ["projectRoot", "projectRoot"]],
+  inspect: [["scope", "scope"], ["feature", "feature"], ["projectRoot", "projectRoot"]],
+  amend: [["description", "descriptionReq", true], ["projectRoot", "projectRoot"]],
+  clone: [["description", "description"], ["statement", "statement"], ["maxPages", "maxPages"], ["timeoutMs", "timeoutMs"], ["concurrency", "concurrency"], ["crawl", "crawl"], ["browser", "browser"], ["refresh", "refresh"], ["projectRoot", "projectRoot"]],
+  "detect-environment": [["availableTools", "availableTools"], ["capabilities", "capabilities"], ["projectRoot", "projectRoot"]],
+};
+
+function inputSchemaFor(name) {
+  const properties = {};
+  const required = [];
+  for (const [prop, key, req] of PHASE_FIELDS[name] || []) {
+    properties[prop] = P[key];
+    if (req) required.push(prop);
+  }
+  const schema = { type: "object", properties };
+  if (required.length) schema.required = required;
+  return schema;
+}
+
+// Documented result shape — mirrors packages/vdd-mcp/src/server.ts OUTPUT_SCHEMA.
+const OUTPUT_SCHEMA = {
+  type: "object",
+  properties: {
+    success: { type: "boolean", description: "Whether the phase completed successfully" },
+    artifact: { type: "string", description: "Primary artifact produced or returned" },
+    gateResult: {
+      type: "object",
+      description: "Quality-gate result, when the phase runs a gate",
+      properties: {
+        passed: { type: "boolean", description: "Whether the quality gate passed" },
+        checks: { type: "number", description: "Number of checks run" },
+        total: { type: "number", description: "Total number of checks" },
+      },
+    },
+    output: { type: "object", additionalProperties: true, description: "Additional structured phase output" },
+    error: { type: "string", description: "Error message when the phase fails" },
+    _phase: { type: "string", description: "VDD phase that produced this result" },
+  },
+  required: ["success"],
+};
+
 function toolDefs() {
   return PHASE_NAMES.map((name) => ({
     name: `vdd_${name.replace(/-/g, "_")}`,
     title: TOOL_ANNOTATIONS[name]?.title,
     description: (PHASE_META[name] || `VDD Phase: ${name}`) + (PARAM_RELATIONSHIP_NOTES[name] || ""),
     annotations: TOOL_ANNOTATIONS[name]?.annotations,
-    inputSchema: {
-      type: "object",
-      properties: {
-        statement: { type: "string", description: "Freeform input (required for vision)" },
-        projectRoot: { type: "string", description: "Project root: directory that constitution.md and the vdd/ folder are written to and resolved against. Relative paths resolve from the current working directory; keep the same value across every phase.", default: "." },
-        actionItemId: { type: "string", description: "Tactical action item ID, format A-### (e.g., 'A-001'); must be an item id from vdd/tactics.md" },
-        feature: { type: "string", description: "Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., 'user-auth'); must reference a directory created earlier by vdd_specify" },
-        taskId: { type: "string", description: "Task ID to implement, format TASK-### (e.g., 'TASK-003'); must be an id listed in the feature's tasks.md (see vdd_get_next_task)" },
-        description: { type: "string", description: "Freeform description input" },
-        availableTools: { type: "array", items: { type: "string" }, description: "MCP/tool names available to the host agent (e.g., ['brave-search','perplexity','context7','gh_grep','playwright','filesystem'])" },
-        capabilities: { type: "array", items: { type: "string" }, description: "Alias for availableTools" },
-        researchFindings: { type: "string", description: "Consolidated research subagent findings to synthesize into strategy.md (effect only on the second strategize call)" },
-        artifactFiles: { type: "object", additionalProperties: { type: "string" }, description: "Map of vdd/-relative artifact path → full file text, for serverless validate/drift detection where the tool cannot read the filesystem" },
-      },
-    },
+    inputSchema: inputSchemaFor(name),
+    outputSchema: OUTPUT_SCHEMA,
   }));
+}
+
+// Guided workflows — mirrors packages/vdd-mcp/src/prompts.ts (keep in sync).
+const PROMPTS = [
+  {
+    name: "start_vdd_project",
+    title: "Start a VDD project",
+    description: "Run the VDD chain from a vision statement to a test-first task list, gate by gate.",
+    arguments: [
+      { name: "vision", description: "Freeform 1-3 paragraph vision: who it is for, the change you want, how you will measure it.", required: true },
+      { name: "projectRoot", description: "Project root to write constitution.md and vdd/ into (default \".\").", required: false },
+    ],
+    text: (a) => `Use the Vision Driven Design (VDD) tools to take this vision to a validated task list.\n\nVision:\n${a.vision}\n\nUse projectRoot="${a.projectRoot || "."}" on every call.\n1. vdd_detect_environment with your availableTools, and note any missing tools.\n2. vdd_init.\n3. vdd_vision with statement = the vision above.\n4. vdd_strategize with availableTools; run the research subagents it returns, then call it again with researchFindings.\n5. vdd_tactics.\n6. vdd_specify with actionItemId for the top Must-have item from vdd/tactics.md (use a kebab-case feature name).\n7. vdd_clarify with that feature; resolve every item it returns, then edit the spec.\n8. vdd_plan, then vdd_tasks, for the same feature.\n9. vdd_validate.\n\nAfter each step, report the gate result. Stop and ask me when a gate fails or an input is ambiguous.`,
+  },
+  {
+    name: "implement_next_task",
+    title: "Implement the next VDD task",
+    description: "Pick the next uncompleted task for a feature, implement it test-first, and keep traceability.",
+    arguments: [
+      { name: "feature", description: "Spec directory name under vdd/specs/ (kebab-case).", required: true },
+      { name: "projectRoot", description: "Project root (default \".\").", required: false },
+    ],
+    text: (a) => `Implement the next task for feature "${a.feature}" with Vision Driven Design (projectRoot="${a.projectRoot || "."}").\n1. vdd_get_next_task with feature="${a.feature}".\n2. vdd_implement with the returned taskId; follow its instruction exactly.\n3. Write the failing test first, then the code, then run the tests.\n4. Commit using the impact-chain commit-message format vdd_implement returned, and tick the task in tasks.md.\n5. vdd_inspect with scope="feature" and feature="${a.feature}" to confirm coverage.\n\nDo one task only, then stop and summarise what changed.`,
+  },
+  {
+    name: "change_requirement",
+    title: "Change a requirement",
+    description: "Cascade a requirement change down the V→S→T→SP→PL→TK chain and re-run the affected gates.",
+    arguments: [
+      { name: "change", description: "The requirement change, in plain language.", required: true },
+      { name: "projectRoot", description: "Project root (default \".\").", required: false },
+    ],
+    text: (a) => `Apply this requirement change with Vision Driven Design (projectRoot="${a.projectRoot || "."}"):\n\n${a.change}\n\n1. vdd_amend with description = the change above.\n2. Apply its ordered steps from the highest affected level downward; edit each artifact yourself.\n3. Re-run the gates it lists with vdd_validate.\n4. vdd_inspect (scope="project") to confirm no orphaned or drifting links.\n\nShow me the cascade plan before editing anything.`,
+  },
+];
+
+function listPrompts() {
+  return PROMPTS.map(({ name, title, description, arguments: args }) => ({ name, title, description, arguments: args }));
+}
+
+function getPrompt(name, args = {}) {
+  const prompt = PROMPTS.find((p) => p.name === name);
+  if (!prompt) throw Object.assign(new Error(`Unknown prompt: ${name}`), { code: -32602 });
+  for (const arg of prompt.arguments) {
+    if (arg.required && !args[arg.name]) throw Object.assign(new Error(`prompt '${name}' requires argument '${arg.name}'`), { code: -32602 });
+  }
+  return { description: prompt.description, messages: [{ role: "user", content: { type: "text", text: prompt.text(args) } }] };
 }
 
 function handleJsonRpc(body) {
   const { method, params, id } = body || {};
 
   if (method === "initialize") {
-    return { jsonrpc: "2.0", id, result: { protocolVersion: "2025-06-18", serverInfo: { name: "vdd", title: "Vision Driven Design", version: "1.8.2" }, capabilities: { tools: {} }, instructions: "Vision Driven Design (VDD): an 8-phase, spec-driven development methodology with bi-directional traceability. Start with vdd_init, then vdd_vision (pass a freeform statement). Before each implementation session call vdd_get_next_task. Read-only tools that write nothing are vdd_inspect, vdd_detect_environment, vdd_get_next_task, vdd_clarify, vdd_implement, and vdd_amend; other write tools overwrite their target artifacts unless their description says otherwise (vdd_validate writes only a new vdd/impact-report.generated.md without clobbering a hand-authored report)." } };
+    return { jsonrpc: "2.0", id, result: { protocolVersion: "2025-06-18", serverInfo: { name: "vdd", title: "Vision Driven Design", version: SERVER_VERSION }, capabilities: { tools: { listChanged: false }, prompts: { listChanged: false } }, instructions: "Vision Driven Design (VDD): an 8-phase, spec-driven development methodology with bi-directional traceability. Start with vdd_init, then vdd_vision (pass a freeform statement). Before each implementation session call vdd_get_next_task. Read-only tools that write nothing are vdd_inspect, vdd_detect_environment, vdd_get_next_task, vdd_clarify, vdd_implement, and vdd_amend; other write tools overwrite their target artifacts unless their description says otherwise (vdd_validate writes only a new vdd/impact-report.generated.md without clobbering a hand-authored report). For a guided run, use the prompts start_vdd_project, implement_next_task or change_requirement." } };
   }
 
   if (method === "tools/list") {
@@ -802,11 +918,24 @@ function handleJsonRpc(body) {
     }
     try {
       const result = handler.call(handlers);
-      return { jsonrpc: "2.0", id, result: { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] } };
+      const structured = { ...result, _phase: phaseKey };
+      return { jsonrpc: "2.0", id, result: { content: [{ type: "text", text: JSON.stringify(result, null, 2) }], structuredContent: structured } };
     } catch (err) {
       return { jsonrpc: "2.0", id, error: { code: -32603, message: `Internal error: ${err.message}` } };
     }
   }
+
+  if (method === "ping") return { jsonrpc: "2.0", id, result: {} };
+  if (method === "prompts/list") return { jsonrpc: "2.0", id, result: { prompts: listPrompts() } };
+  if (method === "prompts/get") {
+    try {
+      return { jsonrpc: "2.0", id, result: getPrompt(params?.name, params?.arguments || {}) };
+    } catch (err) {
+      return { jsonrpc: "2.0", id, error: { code: err.code || -32603, message: err.message } };
+    }
+  }
+  if (method === "resources/list") return { jsonrpc: "2.0", id, result: { resources: [] } };
+  if (method === "resources/templates/list") return { jsonrpc: "2.0", id, result: { resourceTemplates: [] } };
 
   if (method === "notifications/initialised" || method === "notifications/initialized") return null;
   return { jsonrpc: "2.0", id, error: { code: -32601, message: `Method not found: ${method}` } };
@@ -1037,5 +1166,8 @@ const HTML = `<!DOCTYPE html>
 // endpoint (api/mcp.js) reuses both; the docs page is served there for browsers.
 module.exports.handleJsonRpc = handleJsonRpc;
 module.exports.toolDefs = toolDefs;
+module.exports.listPrompts = listPrompts;
+module.exports.getPrompt = getPrompt;
+module.exports.SERVER_VERSION = SERVER_VERSION;
 module.exports.isBrowser = isBrowser;
 module.exports.html = HTML;

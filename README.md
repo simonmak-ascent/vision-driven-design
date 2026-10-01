@@ -2,7 +2,7 @@
 
 <a href="https://github.com/simonplmak-cloud/vision-driven-design/blob/main/LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
 <a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/phases-8-blueviolet" alt="8 Phases"></a>
-<a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/version-1.8.2-blue" alt="Version 1.8.2"></a>
+<a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/version-1.9.0-blue" alt="Version 1.9.0"></a>
 <a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/gates-7%20bidirectional-orange" alt="7 Bidirectional Gates"></a>
 <a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/checks-108-green" alt="108 Verification Checks"></a>
 <a href="https://vdd.simonmak.com"><img src="https://img.shields.io/badge/API-vdd.simonmak.com-0d7377" alt="MCP API"></a>
@@ -208,13 +208,18 @@ VDD is available as a public MCP server at `https://vdd.simonmak.com` — 15 too
 
 **Any Streamable HTTP client** (Smithery, Claude Code, …) — MCP server URL: `https://vdd.simonmak.com/api/mcp`
 
-### MCP Tools (16)
+### MCP Tools (15)
 
 `vdd_init`, `vdd_vision`, `vdd_strategize`, `vdd_tactics`, `vdd_specify`, `vdd_clarify`, `vdd_plan`, `vdd_tasks`, `vdd_get_next_task`, `vdd_implement`, `vdd_validate`, `vdd_inspect`, `vdd_amend`, `vdd_clone`, `vdd_detect_environment`.
 
 The one-call `e2e` shortcut is not an MCP tool (it duplicates the phase sequence); use the CLI `vdd e2e "vision"` instead.
 
 All tools accept: `statement`, `projectRoot`, `actionItemId`, `feature`, `taskId`, `description`, `availableTools`, `capabilities`, `researchFindings`, `artifactFiles`.
+
+
+### MCP Prompts (3)
+
+`start_vdd_project` (vision → validated task list), `implement_next_task` (one test-first task with traceability) and `change_requirement` (cascade a change and re-run the gates). Available on the stdio server and the hosted endpoint.
 
 ### MCP Registry (Glama)
 
