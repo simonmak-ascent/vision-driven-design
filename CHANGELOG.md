@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [1.9.0] — 2026-10-01
+
+### Added (MCP coverage)
+- **MCP prompts** on both the stdio server and the hosted endpoint: `start_vdd_project`, `implement_next_task` and `change_requirement`, guided runs of the phase chain.
+- Hosted endpoint answers `ping`, `prompts/list`, `prompts/get`, `resources/list` and `resources/templates/list` instead of returning method-not-found.
+- `server.json` now lists the `@simonmak-ascent/mcp` npm package (stdio), so registry clients can install it locally as well as use the remote endpoint.
+
+### Fixed (hosted endpoint parity)
+- The hosted `tools/list` gave all 15 tools one shared 10-field input schema. Each tool now advertises only the parameters it reads, with the same `required` fields as the stdio server, and `vdd_inspect` finally advertises `scope`.
+- Hosted tools now declare an `outputSchema` and return `structuredContent` (tagged with `_phase`), matching the stdio server.
+- `serverInfo.version` is 1.9.0 everywhere (the hosted endpoint said 1.8.2 while `server.json` said 1.8.3).
+
 ### Fixed (social preview asset)
 - `docs/social-preview.svg` said **"113 Checks"**; corrected to the canonical **108**. Regenerated `og.png` (1280×640 PNG) from it so the Open Graph/Twitter image and the GitHub repository social preview show the correct count.
 

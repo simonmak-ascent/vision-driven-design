@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/server';
 import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { z } from 'zod';
 import { PHASES, PHASE_NAMES, PHASE_META, PARAM_RELATIONSHIP_NOTES, type VddContext, type VddPhaseInput } from '@simonmak-ascent/engine';
+import { PROMPTS } from './prompts.js';
 
 // Shared field definitions, then a per-phase input schema so each tool advertises
 // only the parameters it actually reads (feeds Glama's "Parameter Semantics" score).
@@ -26,7 +27,7 @@ const crawl = z.boolean().optional().describe('Clone: run the crawl (default tru
 const browser = z.boolean().optional().describe('Clone: run browser/static capture (default true)');
 const refresh = z.boolean().optional().describe('Clone: force re-crawl, ignore a fresh cached dataset');
 
-const PHASE_INPUT_SCHEMAS: Record<string, Record<string, z.ZodType>> = {
+export const PHASE_INPUT_SCHEMAS: Record<string, Record<string, z.ZodType>> = {
   init: { projectRoot },
   vision: { statement: statementReq, projectRoot },
   strategize: { availableTools, capabilities, researchFindings, projectRoot },
@@ -105,7 +106,7 @@ export const MCP_TOOL_PHASES = PHASE_NAMES.filter(
 );
 
 export function createVddMcpServer(): McpServer {
-    const server = new McpServer({ name: 'vdd', version: '1.8.2' });
+    const server = new McpServer({ name: 'vdd', title: 'Vision Driven Design', version: '1.9.0' });
 
   for (const name of MCP_TOOL_PHASES) {
     const toolName = `vdd_${name.replace(/-/g, '_')}`;
@@ -152,6 +153,21 @@ export function createVddMcpServer(): McpServer {
           structuredContent: structured as Record<string, unknown>,
         };
       }
+    );
+  }
+
+  for (const prompt of PROMPTS) {
+    const shape: Record<string, z.ZodType> = {};
+    for (const arg of prompt.arguments) {
+      shape[arg.name] = arg.required ? z.string().describe(arg.description) : z.string().optional().describe(arg.description);
+    }
+    server.registerPrompt(
+      prompt.name,
+      { title: prompt.title, description: prompt.description, argsSchema: z.object(shape) },
+      (args: Record<string, unknown>) => ({
+        description: prompt.description,
+        messages: [{ role: 'user' as const, content: { type: 'text' as const, text: prompt.text(args as Record<string, string | undefined>) } }],
+      }),
     );
   }
 
