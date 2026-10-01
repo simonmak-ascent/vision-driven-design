@@ -1,0 +1,31 @@
+# Vision Driven Design (VDD)
+
+> Open-source (MIT) spec-driven development methodology and MCP server for AI coding agents. VDD turns a human vision statement into a fully traced delivery chain across 8 phases and 7 quality gates, with bi-directional Vision → Strategy → Tactics → Specs → Plan → Tasks (V→S→T→SP→PL→TK) traceability. Works with Claude Code, Cursor, OpenCode, VS Code and other MCP clients.
+
+## Connect
+
+- Hosted MCP endpoint (Streamable HTTP, no API key): https://vdd.simonmak.com/api/mcp
+- Local stdio server: `npx -y @simonmak-ascent/mcp`
+- Official MCP Registry name: `io.github.simonplmak-cloud/vision-driven-design`
+- Glama listing: https://glama.ai/mcp/servers/simonplmak-cloud/vision-driven-design
+- Context7 library ID: `/simonplmak-cloud/vision-driven-design`
+
+## MCP tools (15)
+
+- `vdd_init`: Phase 0, write constitution.md (run first)
+- `vdd_vision`, `vdd_strategize`, `vdd_tactics`: Phases 1-3, vision, research-backed strategy, codebase audit
+- `vdd_specify`, `vdd_clarify`: Phase 4, specs with Given/When/Then acceptance criteria, then clarification
+- `vdd_plan`, `vdd_tasks`: Phases 5-6, technical blueprint and test-first task list
+- `vdd_get_next_task`, `vdd_implement`: Phase 7, next task and implementation instructions (host agent edits code)
+- `vdd_validate`: Phase 8, traceability matrix, drift and orphan detection, 7 gates
+- `vdd_inspect`: read-only project or feature inspection
+- `vdd_amend`: plan a requirement-change cascade through the chain
+- `vdd_clone`: capture a target domain into a clone dataset and manifest
+- `vdd_detect_environment`: report required vs available host tools per phase
+
+## Docs
+
+- [Website](https://vdd.simonmak.com/)
+- [README and quick start](https://github.com/simonplmak-cloud/vision-driven-design#readme)
+- [Agent skill (SKILL.md)](https://github.com/simonplmak-cloud/vision-driven-design/blob/main/SKILL.md)
+- [npm package](https://www.npmjs.com/package/@simonmak-ascent/mcp)

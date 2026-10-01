@@ -373,6 +373,14 @@ Built on:
 - **NASA Systems Engineering** — bidirectional traceability and verification chains
 - **CMMI Requirements Management** — bidirectional traceability of requirements
 
+## Use with Context7
+
+Up-to-date Vision Driven Design documentation is indexed on [Context7](https://context7.com/simonplmak-cloud/vision-driven-design), so coding agents can pull it into context on demand. With the Context7 MCP server or `ctx7` CLI installed, name the library in your prompt:
+
+```text
+use library /simonplmak-cloud/vision-driven-design for API and docs
+```
+
 ## License
 
 MIT — see [LICENSE.md](LICENSE.md)
