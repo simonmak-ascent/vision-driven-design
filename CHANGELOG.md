@@ -108,7 +108,7 @@
   - **`generate-manifest.ts` (A-008)** bundles dataset + model + collections + design system + page map + deploy config into a machine-readable `vdd/clone-manifest.json` for a host `vdd-clone` skill.
   - **`clone_scaffold_site`** AI tool emitted (6 tools total).
   - **`scripts/vdd-clone-scaffold.mjs`** — host-side scaffold generator: emits a buildable Next.js (App Router) + Payload 3.69 + self-hosted Postgres project (collections, localization, admin/REST routes, token-faithful frontend, `docker-compose.yml`, seed script) from `vdd/clone-manifest.json`.
-  - **`references/clone-playbook.md`** — end-to-end runbook (scaffold → build on SWAS → self-hosted deploy → seed → fidelity audit). A standalone `vdd-clone` skill wraps it for the host agent.
+  - **`references/clone-playbook.md`** — end-to-end runbook (scaffold → build on the build box → self-hosted deploy → seed → fidelity audit). A standalone `vdd-clone` skill wraps it for the host agent.
   - **Faithful UI capture** (`capture.ts`) — captures the full rendered UI instead of CSS variables only: serialized stylesheet rules (media queries preserved), `@font-face` sources, rendered region HTML (header/nav/hero/main/footer), real `@media` breakpoints, and JS-driven layout metrics (header/logo height, header position).
   - **Token-faithful scaffold** — `vdd-clone-scaffold.mjs` re-emits the captured CSS (webpack-safe `public/captured.css`, `url()` hotlink-rewritten), renders captured region HTML, seeds real crawled content (`src/seed-data.json`), and injects layout normalization for page-builder sizes.
   - **Inline SVG favicon** on the landing page + MCP HTML page (eliminates the `/favicon.ico` 404).

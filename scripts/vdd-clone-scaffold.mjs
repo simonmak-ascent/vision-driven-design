@@ -664,5 +664,5 @@ console.log(`collections: ${collections.map((c) => c.slug).join(', ') || '(none)
 console.log(`locales: ${locales.map((l) => l.code).join(', ') || '(none)'}`);
 console.log('next steps:');
 console.log('  1. cp .env.example .env  (set PAYLOAD_SECRET)');
-console.log('  2. pnpm install && pnpm build   (on SWAS: cs run)');
+console.log('  2. pnpm install && pnpm build   (on the build box if building remotely)');
 console.log('  3. docker compose up -d  (self-hosted Postgres + app)');

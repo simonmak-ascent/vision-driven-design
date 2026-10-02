@@ -1673,7 +1673,7 @@ async function clone(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> 
     '## Migrations (audit)\n\n| Entity | Up | Down |\n|---|---|---|\n' + (migrationRows || '| (none) | — | — |') + '\n\n' +
     '## Routes (contract)\n\n| Method | Path | Summary |\n|---|---|---|\n' + (routeRows || '| (none) | — | — |') + '\n\n' +
     '## Live Site\n\n' + (pipeline.manifest
-      ? `Scaffold manifest emitted at \`vdd/clone-manifest.json\` (${collectionCount} collections, ${pageCount} pages). To make it live, run the \`vdd-clone\` skill: scaffold a Next.js + Payload + Postgres app **at the project root**, then \`docker compose\` + \`cs tunnel\`.\n\n`
+      ? `Scaffold manifest emitted at \`vdd/clone-manifest.json\` (${collectionCount} collections, ${pageCount} pages). To make it live, run the \`vdd-clone\` skill: scaffold a Next.js + Payload + Postgres app **at the project root**, then \`docker compose\` + an SSH tunnel.\n\n`
       : 'No manifest generated (no crawled dataset).\n\n') +
     '## AI Tools\n\n| Name | Description |\n|---|---|\n' + (toolRows || '| (none) | — |') + '\n';
 
@@ -1721,7 +1721,7 @@ async function clone(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> 
       crawlSkipped: pipeline.crawlSkipped,
       browserSkipped: pipeline.browserSkipped,
       deploy: pipeline.manifest
-        ? 'Run the `vdd-clone` skill to scaffold a Next.js + Payload + Postgres app at the project root (`.`) from vdd/clone-manifest.json, then `docker compose up` on SWAS and expose via `cs tunnel`.'
+        ? 'Run the `vdd-clone` skill to scaffold a Next.js + Payload + Postgres app at the project root (`.`) from vdd/clone-manifest.json, then `docker compose up` on the build box and expose it via an SSH tunnel.'
         : 'No manifest to deploy — the crawl produced no dataset.',
     },
   };

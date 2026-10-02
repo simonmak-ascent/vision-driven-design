@@ -55,33 +55,32 @@ region HTML), `docker-compose.yml`, a seed script, and `src/seed-data.json`
 cp .env.example .env          # set PAYLOAD_SECRET
 ```
 
-### 3. Build (on the SWAS box — never locally)
+### 3. Build (on a remote build box — never locally)
 
 ```
-cs provision   # first time: clone + install deps
-cs run "pnpm install && pnpm build"
+ssh <build-box> 'cd <repo> && pnpm install && pnpm build'
 ```
 
 ### 4. Deploy (self-hosted, open source — no managed DB)
 
 ```
-cs run "docker compose up -d --build"
+ssh <build-box> 'cd <repo> && docker compose up -d --build'
 ```
 
 `docker-compose.yml` runs `postgres:16-alpine` (open source) on host **5433** +
-the app on host **3001** (port 3000 on the box is taken by Browserless). Payload
+the app on host **3001** (port 3000 is reserved for the Browserless container). Payload
 auto-migrates on first boot; the seed script populates the first page.
 
 Access the live clone locally:
 
 ```
-ssh -N -L 3001:localhost:3001 workbench   # then open http://localhost:3001
+ssh -N -L 3001:localhost:3001 <build-box>   # then open http://localhost:3001
 ```
 
 ### 5. Seed content
 
 ```
-cs run "env DATABASE_URI=postgres://clone:clone@localhost:5433/clone PAYLOAD_SECRET=<secret> pnpm run seed"
+ssh <build-box> 'cd <repo> && env DATABASE_URI=postgres://clone:clone@localhost:5433/clone PAYLOAD_SECRET=<secret> pnpm run seed'
 ```
 
 ### 6. Fidelity audit
@@ -105,7 +104,7 @@ Checkout Sessions (see `stripe-best-practices` skill); do not hardcode keys.
 
 ## Verification checklist
 
-- [ ] `pnpm build` passes on SWAS
+- [ ] `pnpm build` passes on the build box
 - [ ] `docker compose up` starts postgres + app; `/admin` loads
 - [ ] `/api/pages` (REST) returns seeded pages
 - [ ] All 3 locales render (e.g. `/en`, `/tc`, `/sc`)
