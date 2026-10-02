@@ -38,10 +38,6 @@
     "CHANGELOG.md",
     "CODE_OF_CONDUCT.md",
     "LICENSE",
-    "LICENSE.md",
-    "LICENSE-CONTENT.md",
-    "SECURITY.md",
-    "GITHUB_SETUP.md",
-    "VERCEL_PROTECTION_FIX.md"
+    "SECURITY.md"
   ]
 }

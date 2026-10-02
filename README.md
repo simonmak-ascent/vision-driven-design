@@ -1,14 +1,13 @@
 # Vision Driven Design
 
-<a href="https://github.com/simonplmak-cloud/vision-driven-design/blob/main/LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
-<a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/phases-8-blueviolet" alt="8 Phases"></a>
-<a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/version-1.9.0-blue" alt="Version 1.9.0"></a>
-<a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/gates-7%20bidirectional-orange" alt="7 Bidirectional Gates"></a>
-<a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/checks-108-green" alt="108 Verification Checks"></a>
-<a href="https://vdd.simonmak.com"><img src="https://img.shields.io/badge/API-vdd.simonmak.com-0d7377" alt="MCP API"></a>
-<a href="https://github.com/simonplmak-cloud/vision-driven-design"><img src="https://img.shields.io/badge/built%20with-VDD-0d7377" alt="Built with VDD"></a>
-<a href="https://glama.ai/mcp/servers/simonplmak-cloud/vision-driven-design"><img src="https://glama.ai/mcp/servers/simonplmak-cloud/vision-driven-design/badges/score.svg" alt="Glama MCP tool-definition quality and maintenance score"></a>
-<a href="https://agentstatus.dev/mcp-index/vdd"><img src="https://wdmisgfkoimdpvvduebj.supabase.co/functions/v1/mcp-badge?slug=vdd" alt="Agent Status MCP reliability score"></a>
+[![VDD Quality Gates](https://github.com/simonplmak-cloud/vision-driven-design/actions/workflows/vdd-quality-gates.yml/badge.svg)](https://github.com/simonplmak-cloud/vision-driven-design/actions/workflows/vdd-quality-gates.yml)
+[![MCP Tool Definition Quality](https://github.com/simonplmak-cloud/vision-driven-design/actions/workflows/tdqs.yml/badge.svg)](https://github.com/simonplmak-cloud/vision-driven-design/actions/workflows/tdqs.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.9.0-blue)](https://github.com/simonplmak-cloud/vision-driven-design/releases)
+[![MCP tools](https://img.shields.io/badge/MCP-15%20tools-4CAF50)](https://vdd.simonmak.com/api/mcp)
+[![API](https://img.shields.io/badge/API-vdd.simonmak.com-0d7377)](https://vdd.simonmak.com)
+[![Glama MCP](https://glama.ai/mcp/servers/simonplmak-cloud/vision-driven-design/badges/score.svg)](https://glama.ai/mcp/servers/simonplmak-cloud/vision-driven-design)
+[![Agent Status](https://wdmisgfkoimdpvvduebj.supabase.co/functions/v1/mcp-badge?slug=vdd)](https://agentstatus.dev/mcp-index/vdd)
 
 **From vision to verified impact — an AI-native, fully autonomous software development methodology.**
 
@@ -321,7 +320,7 @@ VDD is benchmarked against NASA SE, CMMI REQM, DO-178C, IEC 62304, DORA, ISO 291
 ├── constitution.md                  # Project constitution (dogfooded)
 ├── CHANGELOG.md                     # Versioned change history
 ├── CONTRIBUTING.md                  # Contribution guidelines
-├── LICENSE.md                       # MIT
+├── LICENSE                         # MIT
 ├── index.html                       # GitHub Pages landing page
 ├── pnpm-workspace.yaml              # Workspace config
 ├── package.json                     # Root package (Vercel + workspace)
@@ -369,7 +368,7 @@ VDD is benchmarked against NASA SE, CMMI REQM, DO-178C, IEC 62304, DORA, ISO 291
     └── workflows/
 ```
 
-## Credits
+## Acknowledgements
 
 Built on:
 - **Goldratt's Strategy-and-Tactic Tree** — recursive decomposition at every phase
@@ -388,4 +387,8 @@ use library /simonplmak-cloud/vision-driven-design for API and docs
 
 ## License
 
-MIT — see [LICENSE.md](LICENSE.md)
+MIT — see [LICENSE](LICENSE).
+
+---
+
+If this saves you time, a ⭐ on GitHub helps others find it.
