@@ -1,12 +1,12 @@
 # Vision Driven Design
 
-[![VDD Quality Gates](https://github.com/simonplmak-cloud/vision-driven-design/actions/workflows/vdd-quality-gates.yml/badge.svg)](https://github.com/simonplmak-cloud/vision-driven-design/actions/workflows/vdd-quality-gates.yml)
-[![MCP Tool Definition Quality](https://github.com/simonplmak-cloud/vision-driven-design/actions/workflows/tdqs.yml/badge.svg)](https://github.com/simonplmak-cloud/vision-driven-design/actions/workflows/tdqs.yml)
+[![VDD Quality Gates](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/vdd-quality-gates.yml/badge.svg)](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/vdd-quality-gates.yml)
+[![MCP Tool Definition Quality](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/tdqs.yml/badge.svg)](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/tdqs.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.9.0-blue)](https://github.com/simonplmak-cloud/vision-driven-design/releases)
+[![Version](https://img.shields.io/badge/version-1.9.0-blue)](https://github.com/simonmak-ascent/vision-driven-design/releases)
 [![MCP tools](https://img.shields.io/badge/MCP-15%20tools-4CAF50)](https://vdd.simonmak.com/api/mcp)
 [![API](https://img.shields.io/badge/API-vdd.simonmak.com-0d7377)](https://vdd.simonmak.com)
-[![Glama MCP](https://glama.ai/mcp/servers/simonplmak-cloud/vision-driven-design/badges/score.svg)](https://glama.ai/mcp/servers/simonplmak-cloud/vision-driven-design)
+[![Glama MCP](https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design/badges/score.svg)](https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design)
 [![Agent Status](https://wdmisgfkoimdpvvduebj.supabase.co/functions/v1/mcp-badge?slug=vdd)](https://agentstatus.dev/mcp-index/vdd)
 
 > **From vision to verified impact** — an AI-native, fully autonomous software development methodology.
@@ -54,7 +54,7 @@ graph LR
 
 ```bash
 # One-line install
-curl -sSL https://raw.githubusercontent.com/simonplmak-cloud/vision-driven-design/main/scripts/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/simonmak-ascent/vision-driven-design/main/scripts/install.sh | bash
 ```
 
 Then in your project:
@@ -131,15 +131,15 @@ V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006 → commit
 
 ```bash
 # OpenCode
-git clone https://github.com/simonplmak-cloud/vision-driven-design.git \
+git clone https://github.com/simonmak-ascent/vision-driven-design.git \
   ~/.config/opencode/skills/vision-driven-design/
 
 # Claude Code
-git clone https://github.com/simonplmak-cloud/vision-driven-design.git \
+git clone https://github.com/simonmak-ascent/vision-driven-design.git \
   ~/.claude/skills/vision-driven-design/
 
 # Cursor
-git clone https://github.com/simonplmak-cloud/vision-driven-design.git \
+git clone https://github.com/simonmak-ascent/vision-driven-design.git \
   .cursor/skills/vision-driven-design/
 ```
 
@@ -149,7 +149,7 @@ To run the MCP server locally (stdio) instead of the hosted endpoint:
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/simonplmak-cloud/vision-driven-design.git
+git clone https://github.com/simonmak-ascent/vision-driven-design.git
 
 # 2. Install deps + build the TypeScript packages
 cd vision-driven-design
@@ -222,16 +222,16 @@ All tools accept: `statement`, `projectRoot`, `actionItemId`, `feature`, `taskId
 
 ### MCP Registry (Glama)
 
-The server is listed on [Glama](https://glama.ai/mcp/servers/simonplmak-cloud/vision-driven-design), which builds it from source and publishes a hosted remote endpoint plus a **Tool Definition Quality Score** and maintenance rating:
+The server is listed on [Glama](https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design), which builds it from source and publishes a hosted remote endpoint plus a **Tool Definition Quality Score** and maintenance rating:
 
-<a href="https://glama.ai/mcp/servers/simonplmak-cloud/vision-driven-design"><img src="https://glama.ai/mcp/servers/simonplmak-cloud/vision-driven-design/badges/card.svg" alt="Glama quality and maintenance score"></a>
+<a href="https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design"><img src="https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design/badges/card.svg" alt="Glama quality and maintenance score"></a>
 
 Maintainer notes:
 
 - `glama.json` (repo root) is Glama's registry file. Its [schema](https://glama.ai/mcp/schemas/server.json) consumes exactly one field — `maintainers`. Build/transport/description metadata belongs in `package.json` and this README, **not** here; Glama ignores it.
 - Glama generates its own container build from the stdio entrypoint (`packages/vdd-mcp/dist/stdio.js`), wrapped with `mcp-proxy`. The root `Dockerfile` is for **self-hosting** the Streamable HTTP server, not for Glama.
 - After tool-definition changes: sync the repository and run **Build & Release** in the Glama admin. Tool-level scores refresh on the next sweep; the server-level *coherence* score re-runs less often.
-- Also published to the [**Official MCP Registry**](https://registry.modelcontextprotocol.io) as `io.github.simonplmak-cloud/vision-driven-design` (manifest: `server.json`) — PulseMCP and other directories ingest from there.
+- Also published to the [**Official MCP Registry**](https://registry.modelcontextprotocol.io) as `io.github.simonmak-ascent/vision-driven-design` (manifest: `server.json`) — PulseMCP and other directories ingest from there.
 - Listed in the [`awesome-mcp-servers`](https://github.com/punkpeye/awesome-mcp-servers) community list under Developer Tools.
 - Listed on [**Agent Status**](https://agentstatus.dev/mcp-index/vdd) — an outside-in MCP reliability index that probes reach, catalog, and tool calls from real hosts (Cursor, Claude, VS Code, ChatGPT). The submission created the Free dashboard account; the score populates after the first probe.
 
@@ -379,10 +379,10 @@ Built on:
 
 ## Use with Context7
 
-Up-to-date Vision Driven Design documentation is indexed on [Context7](https://context7.com/simonplmak-cloud/vision-driven-design), so coding agents can pull it into context on demand. With the Context7 MCP server or `ctx7` CLI installed, name the library in your prompt:
+Up-to-date Vision Driven Design documentation is indexed on [Context7](https://context7.com/simonmak-ascent/vision-driven-design), so coding agents can pull it into context on demand. With the Context7 MCP server or `ctx7` CLI installed, name the library in your prompt:
 
 ```text
-use library /simonplmak-cloud/vision-driven-design for API and docs
+use library /simonmak-ascent/vision-driven-design for API and docs
 ```
 
 ## License
@@ -391,6 +391,6 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-By [Simon Mak](https://github.com/simonplmak-cloud).
+By [Simon Mak](https://github.com/simonmak-ascent).
 
 If this saves you time, a ⭐ on GitHub helps others find it.

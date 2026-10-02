@@ -17,7 +17,7 @@ import { normalizeDomain } from './normalize-domain.js';
 import { probeCms } from './probe-cms.js';
 
 const ASSET_EXT = /\.(png|jpe?g|gif|svg|webp|ico|css|js|json|xml|pdf|zip|mp4|webm|woff2?|ttf|eot|html)$/i;
-const UA = 'vdd-clone/1.0 (+https://github.com/simonplmak-cloud/vision-driven-design)';
+const UA = 'vdd-clone/1.0 (+https://github.com/simonmak-ascent/vision-driven-design)';
 
 // Paths that are never editorial content — feeds, WP plumbing, WooCommerce,
 // and static-tour surfaces.

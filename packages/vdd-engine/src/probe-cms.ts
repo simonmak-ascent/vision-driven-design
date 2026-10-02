@@ -5,7 +5,7 @@
 
 import type { CmsContentType, CmsDescriptor, CmsTaxonomy, I18nLocale } from './clone-types.js';
 
-const UA = 'vdd-clone/1.0 (+https://github.com/simonplmak-cloud/vision-driven-design)';
+const UA = 'vdd-clone/1.0 (+https://github.com/simonmak-ascent/vision-driven-design)';
 
 interface RawWpType {
   slug?: string;

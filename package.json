@@ -19,10 +19,10 @@
   "homepage": "https://vdd.simonmak.com",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/simonplmak-cloud/vision-driven-design.git"
+    "url": "git+https://github.com/simonmak-ascent/vision-driven-design.git"
   },
   "license": "MIT",
-  "author": "simonplmak-cloud",
+  "author": "simonmak-ascent",
   "private": true,
   "scripts": {
     "build": "mkdir -p public && cp index.html public/",

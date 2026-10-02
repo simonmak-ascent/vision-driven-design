@@ -17,7 +17,7 @@
 import type { CaptureBundle, FontFaceRef, LayoutMetrics, RegionCapture } from './clone-types.js';
 
 const PROBE_WIDTHS = [320, 768, 1440];
-const UA = 'vdd-clone/1.0 (+https://github.com/simonplmak-cloud/vision-driven-design)';
+const UA = 'vdd-clone/1.0 (+https://github.com/simonmak-ascent/vision-driven-design)';
 
 // Loose structural view of a CSS rule so we can read subtype-specific members
 // (media wrappers, @font-face, style declarations) without casting to `any`.

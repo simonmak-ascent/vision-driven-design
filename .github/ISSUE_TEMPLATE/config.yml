@@ -1,7 +1,7 @@
 blank_issues_enabled: true
 contact_links:
   - name: VDD Documentation
-    url: https://github.com/simonplmak-cloud/vision-driven-design/tree/main/references
+    url: https://github.com/simonmak-ascent/vision-driven-design/tree/main/references
     about: Read the reference docs before opening an issue.
   - name: OpenCode Skills Documentation
     url: https://opencode.ai/docs/skills/

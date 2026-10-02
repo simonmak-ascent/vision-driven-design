@@ -23,12 +23,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/simonplmak-cloud/vision-driven-design.git",
+    "url": "git+https://github.com/simonmak-ascent/vision-driven-design.git",
     "directory": "packages/vdd-cli"
   },
-  "homepage": "https://github.com/simonplmak-cloud/vision-driven-design#commands",
-  "bugs": { "url": "https://github.com/simonplmak-cloud/vision-driven-design/issues" },
-  "author": "simonplmak-cloud",
+  "homepage": "https://github.com/simonmak-ascent/vision-driven-design#commands",
+  "bugs": { "url": "https://github.com/simonmak-ascent/vision-driven-design/issues" },
+  "author": "simonmak-ascent",
   "scripts": { "build": "tsc", "check": "tsc --noEmit" },
   "dependencies": {
     "@simonmak-ascent/engine": "workspace:^",

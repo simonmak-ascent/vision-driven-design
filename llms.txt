@@ -6,9 +6,9 @@
 
 - Hosted MCP endpoint (Streamable HTTP, no API key): https://vdd.simonmak.com/api/mcp
 - Local stdio server: `npx -y @simonmak-ascent/mcp`
-- Official MCP Registry name: `io.github.simonplmak-cloud/vision-driven-design`
-- Glama listing: https://glama.ai/mcp/servers/simonplmak-cloud/vision-driven-design
-- Context7 library ID: `/simonplmak-cloud/vision-driven-design`
+- Official MCP Registry name: `io.github.simonmak-ascent/vision-driven-design`
+- Glama listing: https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design
+- Context7 library ID: `/simonmak-ascent/vision-driven-design`
 
 ## MCP tools (15)
 
@@ -26,6 +26,6 @@
 ## Docs
 
 - [Website](https://vdd.simonmak.com/)
-- [README and quick start](https://github.com/simonplmak-cloud/vision-driven-design#readme)
-- [Agent skill (SKILL.md)](https://github.com/simonplmak-cloud/vision-driven-design/blob/main/SKILL.md)
+- [README and quick start](https://github.com/simonmak-ascent/vision-driven-design#readme)
+- [Agent skill (SKILL.md)](https://github.com/simonmak-ascent/vision-driven-design/blob/main/SKILL.md)
 - [npm package](https://www.npmjs.com/package/@simonmak-ascent/mcp)

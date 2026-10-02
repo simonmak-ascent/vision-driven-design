@@ -13,7 +13,7 @@ generate_opencode() {
     return
   fi
   echo "[INSTALL] OpenCode: Cloning VDD skill..."
-  git clone https://github.com/simonplmak-cloud/vision-driven-design.git "$dest"
+  git clone https://github.com/simonmak-ascent/vision-driven-design.git "$dest"
 }
 
 generate_claude() {
@@ -27,7 +27,7 @@ generate_claude() {
   if [ -d "$HOME/.config/opencode/skills/vision-driven-design" ]; then
     ln -sf "$HOME/.config/opencode/skills/vision-driven-design" "$dest"
   else
-    git clone https://github.com/simonplmak-cloud/vision-driven-design.git "$dest"
+    git clone https://github.com/simonmak-ascent/vision-driven-design.git "$dest"
   fi
 }
 
@@ -50,7 +50,7 @@ You are operating under the Vision Driven Design methodology.
 Reference the project constitution at `constitution.md` for immutable constraints.
 All VDD artifacts live under `vdd/`.
 Follow the 8-phase chain: Vision → Strategy → Tactics → Specs → Plan → Tasks → Implement → Validate.
-For full documentation, see: https://github.com/simonplmak-cloud/vision-driven-design
+For full documentation, see: https://github.com/simonmak-ascent/vision-driven-design
 RULES
 }
 

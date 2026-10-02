@@ -967,7 +967,7 @@ const HTML = `<!DOCTYPE html>
 <meta name="twitter:description" content="Public MCP server (streamable HTTP, no API key): 15 tools, 8 phases, 7 quality gates, bi-directional traceability for AI coding agents.">
 <meta name="twitter:image" content="https://vdd.simonmak.com/og.png">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Vision Driven Design MCP Server","alternateName":"VDD MCP Server","description":"Spec-driven development MCP server: 8 phases, bi-directional V→S→T→SP→PL→TK traceability, 7 quality gates.","url":"https://vdd.simonmak.com/api/mcp","applicationCategory":"DeveloperApplication","operatingSystem":"Any","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"sameAs":["https://github.com/simonplmak-cloud/vision-driven-design","https://www.npmjs.com/package/@simonmak-ascent/mcp"]}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Vision Driven Design MCP Server","alternateName":"VDD MCP Server","description":"Spec-driven development MCP server: 8 phases, bi-directional V→S→T→SP→PL→TK traceability, 7 quality gates.","url":"https://vdd.simonmak.com/api/mcp","applicationCategory":"DeveloperApplication","operatingSystem":"Any","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"sameAs":["https://github.com/simonmak-ascent/vision-driven-design","https://www.npmjs.com/package/@simonmak-ascent/mcp"]}
 </script>
 <style>
   /* Dark theme (default) — all contrast >= 7:1 (WCAG 2.2 AAA) */
@@ -1136,8 +1136,8 @@ const HTML = `<!DOCTYPE html>
     <p><strong>Claude Desktop</strong> — <code>claude_desktop_config.json</code>:</p>
     <pre>"vdd": { "command": "npx", "args": ["-y", "@simonmak-ascent/mcp"], "type": "stdio" }</pre>
     <div class="cta-group">
-      <a class="cta" href="https://github.com/simonplmak-cloud/vision-driven-design">GitHub repository</a>
-      <a class="cta secondary" href="https://github.com/simonplmak-cloud/vision-driven-design/blob/main/SKILL.md#command-reference">Command reference</a>
+      <a class="cta" href="https://github.com/simonmak-ascent/vision-driven-design">GitHub repository</a>
+      <a class="cta secondary" href="https://github.com/simonmak-ascent/vision-driven-design/blob/main/SKILL.md#command-reference">Command reference</a>
     </div>
   </section>
   <section aria-labelledby="usage-heading">
@@ -1155,7 +1155,7 @@ const HTML = `<!DOCTYPE html>
   </section>
 </main>
 <footer>
-  <p><a href="https://github.com/simonplmak-cloud/vision-driven-design">Vision Driven Design</a> is licensed under the <abbr title="Massachusetts Institute of Technology">MIT</abbr> license.</p>
+  <p><a href="https://github.com/simonmak-ascent/vision-driven-design">Vision Driven Design</a> is licensed under the <abbr title="Massachusetts Institute of Technology">MIT</abbr> license.</p>
   <p>Methodology: Goldratt Strategy &amp; Tactics · Impact Mapping · NASA Systems Engineering · <abbr title="Capability Maturity Model Integration">CMMI</abbr></p>
 </footer>
 <script>(function(){var b=document.getElementById("theme-toggle");if(!b)return;function s(){var l=document.documentElement.getAttribute("data-theme")==="light";b.textContent=l?"Dark mode":"Light mode";b.setAttribute("aria-label",l?"Switch to dark mode":"Switch to light mode");}b.addEventListener("click",function(){var l=document.documentElement.getAttribute("data-theme")==="light";if(l){document.documentElement.removeAttribute("data-theme");}else{document.documentElement.setAttribute("data-theme","light");}try{localStorage.setItem("vdd-theme",l?"dark":"light");}catch(e){}s();});s();})();</script>

@@ -2,7 +2,7 @@
   "name": "@simonmak-ascent/mcp",
   "version": "1.9.0",
   "description": "Vision Driven Design MCP server — 15 tools for bi-directional traceability across an 8-phase, spec-driven development chain (Vision → Strategy → Tactics → Spec → Plan → Tasks) with 7 quality gates.",
-  "mcpName": "io.github.simonplmak-cloud/vision-driven-design",
+  "mcpName": "io.github.simonmak-ascent/vision-driven-design",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -32,12 +32,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/simonplmak-cloud/vision-driven-design.git",
+    "url": "git+https://github.com/simonmak-ascent/vision-driven-design.git",
     "directory": "packages/vdd-mcp"
   },
-  "homepage": "https://github.com/simonplmak-cloud/vision-driven-design#mcp-api",
-  "bugs": { "url": "https://github.com/simonplmak-cloud/vision-driven-design/issues" },
-  "author": "simonplmak-cloud",
+  "homepage": "https://github.com/simonmak-ascent/vision-driven-design#mcp-api",
+  "bugs": { "url": "https://github.com/simonmak-ascent/vision-driven-design/issues" },
+  "author": "simonmak-ascent",
   "scripts": { "build": "tsc", "check": "tsc --noEmit" },
   "dependencies": {
     "@simonmak-ascent/engine": "workspace:^",

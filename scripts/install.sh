@@ -1,6 +1,6 @@
 #!/bin/bash
 # VDD One-Line Installer
-# Usage: curl -sSL https://raw.githubusercontent.com/simonplmak-cloud/vision-driven-design/main/scripts/install.sh | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/simonmak-ascent/vision-driven-design/main/scripts/install.sh | bash
 
 set -euo pipefail
 
@@ -9,7 +9,7 @@ echo "║  Vision Driven Design — Installer   ║"
 echo "╚══════════════════════════════════════╝"
 echo ""
 
-REPO="https://github.com/simonplmak-cloud/vision-driven-design.git"
+REPO="https://github.com/simonmak-ascent/vision-driven-design.git"
 SKILL_DIR="$HOME/.config/opencode/skills/vision-driven-design"
 
 # Clone VDD skill
