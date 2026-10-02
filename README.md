@@ -9,7 +9,7 @@
 [![Glama MCP](https://glama.ai/mcp/servers/simonplmak-cloud/vision-driven-design/badges/score.svg)](https://glama.ai/mcp/servers/simonplmak-cloud/vision-driven-design)
 [![Agent Status](https://wdmisgfkoimdpvvduebj.supabase.co/functions/v1/mcp-badge?slug=vdd)](https://agentstatus.dev/mcp-index/vdd)
 
-**From vision to verified impact — an AI-native, fully autonomous software development methodology.**
+> **From vision to verified impact** — an AI-native, fully autonomous software development methodology.
 
 Provide a human vision statement. The AI autonomously researches, audits your codebase, generates specs and plans, implements, and validates — with **bi-directional verification** at every junction to ensure nothing is missed or invented.
 
