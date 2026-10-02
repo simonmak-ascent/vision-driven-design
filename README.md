@@ -73,7 +73,7 @@ The AI handles the rest — researching, auditing, generating specs, planning, i
 
 ```bash
 # Want human gates? Add to constitution.md:
-## VDD Mode: gated
+## VDD Mode: Gated
 ```
 
 ---
