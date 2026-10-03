@@ -699,7 +699,7 @@ const PHASE_META = {
   "detect-environment": "VDD Environment Detection: Report which tools/MCPs each VDD phase requires vs treats as optional — across the 8-phase pipeline (init through validate) plus the cross-phase helpers (amend, clone, inspect, get-next-task) — and which of the host agent availableTools are present vs missing. Read-only; returns a capability report without modifying files. Run before vdd_strategize to plan research-subagent dispatch, or when a phase fails for lack of a tool; to inspect artifacts instead of capabilities use vdd_inspect. Returns a fixed-shape capability report; tool-name matching is normalized, so pass names as your host exposes them.",
 };
 
-const SERVER_VERSION = "1.9.0";
+const SERVER_VERSION = "1.9.2";
 
 const PHASE_NAMES = ["init","vision","strategize","tactics","specify","clarify","plan","tasks","get-next-task","implement","validate","inspect","amend","clone","detect-environment"];
 
