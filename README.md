@@ -3,9 +3,10 @@
 [![VDD Quality Gates](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/vdd-quality-gates.yml/badge.svg)](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/vdd-quality-gates.yml)
 [![MCP Tool Definition Quality](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/tdqs.yml/badge.svg)](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/tdqs.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.simonmak--ascent%2Fvision--driven--design-4CAF50)](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.simonmak-ascent/vision-driven-design)
 [![Version](https://img.shields.io/badge/version-1.9.2-blue)](https://github.com/simonmak-ascent/vision-driven-design/releases)
 [![MCP tools](https://img.shields.io/badge/MCP-15%20tools-4CAF50)](https://vdd.simonmak.com/api/mcp)
-[![API](https://img.shields.io/badge/API-vdd.simonmak.com-0d7377)](https://vdd.simonmak.com)
+[![API](https://img.shields.io/badge/API-vdd.simonmak.com-006b7d)](https://vdd.simonmak.com)
 [![Glama MCP](https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design/badges/score.svg)](https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design)
 [![Agent Status](https://wdmisgfkoimdpvvduebj.supabase.co/functions/v1/mcp-badge?slug=vdd)](https://agentstatus.dev/mcp-index/vdd)
 
