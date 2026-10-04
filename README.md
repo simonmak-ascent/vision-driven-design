@@ -109,6 +109,47 @@ Every code commit traces back to the original vision statement:
 V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006 → commit
 ```
 
+### The pipeline and its 7 gates
+
+```mermaid
+flowchart TB
+    C["Phase 0 · Constitution<br/>constitution.md"] --> V["Phase 1 · Vision<br/>vision.md"]
+    V -.->|G1| S["Phase 2 · Strategy<br/>strategy.md"]
+    S -.->|G2| T["Phase 3 · Tactics<br/>tactics.md"]
+    T -.->|G3| SP["Phase 4 · Specs<br/>spec.md"]
+    SP -.->|G4| PL["Phase 5 · Plan<br/>plan.md · data-model · contracts"]
+    PL -.->|G5| TK["Phase 6 · Tasks<br/>tasks.md"]
+    TK -.->|G6| I["Phase 7 · Implement<br/>code + per-task commits"]
+    I -.->|G7| VA["Phase 8 · Validate<br/>impact-report.md"]
+```
+
+### Bi-directional traceability
+
+Each gate checks **forward** (parent → children) and **backward** (children → parent),
+108 checks in total.
+
+```mermaid
+flowchart LR
+    subgraph F["Forward: intent → code"]
+      direction LR
+      V1["Vision V-*"] --> S1["Strategy S-*"] --> T1["Tactics T-*"] --> SP1["Spec SP-*"] --> PL1["Plan PL-*"] --> TK1["Tasks TK-*"] --> C1["Commit"]
+    end
+    subgraph B["Backward: code → intent"]
+      direction LR
+      C2["Commit"] --> TK2["Tasks TK-*"] --> PL2["Plan PL-*"] --> SP2["Spec SP-*"] --> T2["Tactics T-*"] --> S2["Strategy S-*"] --> V2["Vision V-*"]
+    end
+```
+
+### Change cascade
+
+```mermaid
+flowchart TB
+    CH["Requirement change<br/>/vdd:amend"] --> FIND["Find the highest affected level"]
+    FIND --> U1["Update Vision"] --> U2["Update Strategy"] --> U3["Update Tactics"] --> U4["Update Specs"] --> U5["Update Plan"] --> U6["Update Tasks"]
+    U6 --> REG["Re-run affected gates G1–G7"]
+    REG --> IMPL["Re-implement only the changed tasks"]
+```
+
 ---
 
 ## Commands
