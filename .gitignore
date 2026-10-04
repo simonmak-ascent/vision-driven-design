@@ -17,3 +17,8 @@ packages/*/node_modules/
 
 # Local reference screenshots
 hkex-ref.png
+
+# Environment files — never commit secrets
+.env
+.env.*
+!.env.example

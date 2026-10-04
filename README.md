@@ -55,7 +55,10 @@ graph LR
 
 ---
 
-## Quick Start
+## Quick Start (≤ 5 minutes)
+
+**Fastest path:** no install — connect an MCP client to the hosted endpoint
+`https://vdd.simonmak.com/api/mcp` (Streamable HTTP); or run the one-line install below.
 
 ```bash
 # One-line install
