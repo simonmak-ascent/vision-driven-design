@@ -3,13 +3,16 @@ import { randomUUID } from 'node:crypto';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/server';
 import { createVddMcpServer } from './server.js';
 
-const PORT = Number(process.env.PORT ?? 3000);
-
 // Streamable-HTTP entrypoint. Exposes the same 16 VDD MCP tools over the MCP
 // Streamable HTTP transport so any remote client can connect on a TCP port —
 // used when self-hosting the server. (Glama builds its own container from the
 // stdio entrypoint; it does not use this one.)
-export async function startHttpServer(): Promise<void> {
+//
+// Returns the underlying http.Server so callers (and tests) can read the bound
+// port and close it. PORT is read per-call so tests can pass 0 for an ephemeral
+// port.
+export async function startHttpServer(): Promise<http.Server> {
+  const PORT = Number(process.env.PORT ?? 3000);
   const mcpServer = createVddMcpServer();
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: () => randomUUID(),
@@ -63,4 +66,8 @@ export async function startHttpServer(): Promise<void> {
   });
 
   await new Promise<void>((resolve) => httpServer.listen(PORT, resolve));
+  const address = httpServer.address();
+  const actualPort = typeof address === 'object' && address ? address.port : PORT;
+  console.log(`VDD MCP Streamable HTTP listening on http://localhost:${actualPort}/`);
+  return httpServer;
 }

@@ -11,6 +11,10 @@
 
 ### Security
 - Public endpoint hardening: request body cap (512 KB) and batch cap (50); `artifactFiles` allowlist with traversal/absolute-path rejection and 64-file / 256 KB limits; the hosted handler no longer imports `fs`.
+- The production project now has a Vercel WAF rate-limit rule on the MCP path (120 requests / 60 s per IP).
+
+### Added (tests)
+- Streamable-HTTP transport integration test (`packages/vdd-mcp/test/http-transport.test.ts`): boots the HTTP entrypoint on an ephemeral port and asserts `initialize` (session id), `tools/list` (15), and a tool call. `startHttpServer()` now returns the `http.Server` so callers can read the bound port and close it.
 
 ### Added (docs)
 - `.env.example`, `docs/deployment.md`, and an expanded `SECURITY.md` threat model; README gains a "Hosted vs local (filesystem)" section.
