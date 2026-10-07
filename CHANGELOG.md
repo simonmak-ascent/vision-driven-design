@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Changed (hosted endpoint — agent-delegation)
+- **The hosted endpoint no longer claims writes it cannot perform.** It is stateless and has no filesystem: artifact-producing phases return `persisted: false` and a `writeTargets` list, and phases that need project content (`vdd_tactics`, `vdd_clarify`, `vdd_get_next_task`, `vdd_inspect`, `vdd_validate`, `vdd_implement`) return a **delegation envelope** instead of a static string or a fabricated matrix. Re-call the same tool with `artifactFiles` (and `codebaseAudit` for tactics) to receive the real result — the delegation contract now also covers the local engine.
+- Hosted tool annotations are truthful: all 15 tools are `readOnlyHint: true`, `openWorldHint: false` (the endpoint writes nothing and fetches nothing), distinct from the stdio server, which does write.
+
+### Added (engine)
+- The local engine (stdio/CLI) accepts `artifactFiles` (and `codebaseAudit` for `vdd_tactics`) as a fallback for `vdd_clarify`, `vdd_get_next_task`, `vdd_implement`, and `vdd_tactics`, so content-driven runs match the hosted endpoint. Every phase result now carries `mode: "local"`; write phases carry `persisted: true`.
+
+### Security
+- Public endpoint hardening: request body cap (512 KB) and batch cap (50); `artifactFiles` allowlist with traversal/absolute-path rejection and 64-file / 256 KB limits; the hosted handler no longer imports `fs`.
+
+### Added (docs)
+- `.env.example`, `docs/deployment.md`, and an expanded `SECURITY.md` threat model; README gains a "Hosted vs local (filesystem)" section.
+
 ## [1.9.0] — 2026-10-01
 
 ### Added (MCP coverage)

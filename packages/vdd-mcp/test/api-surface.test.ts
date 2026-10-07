@@ -10,20 +10,32 @@ const core = require('../../../api/_vdd-rpc.js') as {
   handleJsonRpc: (msg: unknown) => { result?: { content: Array<{ text: string }> } } | null;
 };
 
-const callTool = (name: string, args: Record<string, unknown> = {}) => {
+type ToolResult = {
+  success: boolean;
+  mode?: string;
+  persisted?: boolean;
+  delegation?: { id?: string; nextTool?: string; expectedReturn?: Record<string, unknown> };
+  output?: {
+    needsInput?: string[];
+    clarificationCount?: number;
+    items?: string[];
+    writeTargets?: string[];
+    [key: string]: unknown;
+  };
+};
+
+const callTool = (name: string, args: Record<string, unknown> = {}): ToolResult => {
   const res = core.handleJsonRpc({
     jsonrpc: '2.0',
     id: 1,
     method: 'tools/call',
     params: { name, arguments: args },
   });
-  return JSON.parse(res!.result!.content[0].text) as { success: boolean; output?: { needsInput?: string[] } };
+  return JSON.parse(res!.result!.content[0].text) as ToolResult;
 };
 
-const DESTRUCTIVE = ['init', 'vision', 'strategize', 'tactics', 'specify', 'plan', 'tasks', 'clone'];
 // MCP surface folds trace + analyze into `inspect`; e2e is CLI-only.
 const MCP_PHASES = PHASE_NAMES.filter((name) => !['e2e', 'trace', 'analyze'].includes(name));
-const OPEN_WORLD = ['strategize', 'clone'];
 
 const phaseOf = (name: string) => name.replace(/^vdd_/, '').replace(/_/g, '-');
 const toolName = (phase: string) => `vdd_${phase.replace(/-/g, '_')}`;
@@ -43,23 +55,34 @@ describe('hosted MCP tool surface (api/_vdd-rpc.js)', () => {
     }
   });
 
-  it('classifies destructive writers vs read-only tools', () => {
-    for (const phase of DESTRUCTIVE) {
-      expect(byName.get(toolName(phase))?.annotations?.destructiveHint, phase).toBe(true);
-      expect(byName.get(toolName(phase))?.annotations?.readOnlyHint, phase).toBeUndefined();
+  it('annotates every hosted tool as read-only and not open-world (it delegates, never writes/fetches)', () => {
+    for (const tool of tools) {
+      expect(tool.annotations?.readOnlyHint, tool.name).toBe(true);
+      expect(tool.annotations?.destructiveHint, tool.name).not.toBe(true);
+      expect(tool.annotations?.openWorldHint, tool.name).toBe(false);
     }
-    expect(byName.get(toolName('clarify'))?.annotations?.readOnlyHint).toBe(true);
-    expect(byName.get(toolName('implement'))?.annotations?.readOnlyHint).toBe(true);
-    expect(byName.get(toolName('amend'))?.annotations?.readOnlyHint).toBe(true);
-    expect(byName.get(toolName('inspect'))?.annotations?.readOnlyHint).toBe(true);
-    expect(byName.get(toolName('validate'))?.annotations?.destructiveHint).toBe(false);
   });
 
-  it('marks openWorldHint on every tool, true only for strategize and clone', () => {
-    for (const tool of tools) {
-      expect(typeof tool.annotations?.openWorldHint, tool.name).toBe('boolean');
-      expect(tool.annotations?.openWorldHint, tool.name).toBe(OPEN_WORLD.includes(phaseOf(tool.name)));
+  it('returns a delegation envelope (not a static string) for filesystem-dependent tools called without content', () => {
+    const readTools = ['vdd_clarify', 'vdd_get_next_task', 'vdd_inspect', 'vdd_validate'];
+    for (const name of readTools) {
+      const result = callTool(name, name === 'vdd_clarify' || name === 'vdd_get_next_task' ? { feature: 'demo' } : {});
+      expect(result.mode, name).toBe('hosted-delegated');
+      expect(result.delegation?.nextTool, name).toBeTruthy();
     }
+  });
+
+  it('parses supplied artifactFiles instead of delegating', () => {
+    const spec = ['# Demo', '', '## Acceptance Criteria', '', '### AC-1: Do a thing [MUST]', 'Given a', 'When b', 'Then c', '', '[NEEDS CLARIFICATION] Which scope?', '- [e.g., "example"]'].join('\n');
+    const result = callTool('vdd_clarify', { feature: 'demo', artifactFiles: { 'vdd/specs/demo/spec.md': spec } });
+    expect(result.mode).toBe('hosted-delegated');
+    expect(result.output?.clarificationCount ?? 0).toBeGreaterThan(0);
+  });
+
+  it('marks artifact-producing tools persisted:false with writeTargets', () => {
+    const result = callTool('vdd_init', {});
+    expect(result.persisted).toBe(false);
+    expect((result.output?.writeTargets ?? []).length).toBeGreaterThan(0);
   });
 
   it('returns actionable success (not a hard error) when a tool is called with no arguments', () => {
@@ -143,5 +166,59 @@ describe('hosted ↔ stdio parity (schemas, prompts, version)', async () => {
   it('reports the package version in serverInfo', () => {
     expect(hosted.SERVER_VERSION).toBe(pkg.version);
     expect(rpc('initialize')?.result?.serverInfo?.version).toBe(pkg.version);
+  });
+
+  it('keeps server.json version in sync with the package', () => {
+    const serverJson = require('../../../server.json') as { version: string };
+    expect(serverJson.version).toBe(pkg.version);
+  });
+});
+
+// Anti-drift guard: the hosted handler (api/_vdd-rpc.js) and the real engine
+// (packages/vdd-engine) must agree when given the same supplied content. This is
+// the exact failure mode of the original "hosted fork can't read fs" bug.
+describe('engine ↔ hosted parity on supplied content', async () => {
+  const { PHASES } = await import('../../vdd-engine/src/engine.js');
+  const spec = [
+    '# Demo', '', '## Acceptance Criteria', '',
+    '### AC-1: Do a thing [MUST]', 'Given a', 'When b', 'Then c', '',
+    '[NEEDS CLARIFICATION] Which scope?', '- [e.g., "example"]',
+  ].join('\n');
+  const tasks = [
+    '# Tasks', '', '## Tasks', '',
+    '- [x] **TASK-001** [S] done', '- [ ] **TASK-002** [M] next one', '- [ ] **TASK-003** [M] later',
+  ].join('\n');
+  const ctx = { projectRoot: '/tmp/vdd-parity-nonexistent', mode: 'auto' as const };
+
+  it('clarify agrees on the number of unresolved items', async () => {
+    const hosted = callTool('vdd_clarify', { feature: 'demo', artifactFiles: { 'vdd/specs/demo/spec.md': spec } });
+    const engine = await PHASES.clarify(
+      { feature: 'demo', artifactFiles: { 'vdd/specs/demo/spec.md': spec }, json: false },
+      ctx,
+    );
+    expect(hosted.output?.clarificationCount).toBe((engine.output as { clarificationCount?: number } | undefined)?.clarificationCount);
+  });
+
+  it('get-next-task agrees on the next task line', async () => {
+    const hosted = callTool('vdd_get_next_task', { feature: 'demo', artifactFiles: { 'vdd/specs/demo/tasks.md': tasks } });
+    const engine = await PHASES['get-next-task'](
+      { feature: 'demo', artifactFiles: { 'vdd/specs/demo/tasks.md': tasks }, json: false },
+      ctx,
+    );
+    expect(hosted.artifact).toBe(engine.artifact);
+    expect(hosted.artifact).toContain('TASK-002');
+  });
+
+  it('rejects traversal / out-of-allowlist artifactFiles keys', () => {
+    const result = callTool('vdd_clarify', {
+      feature: 'demo',
+      artifactFiles: {
+        '../../etc/passwd': 'x',
+        '/abs/path': 'x',
+        'vdd/specs/demo/spec.md': '[NEEDS CLARIFICATION] keep me',
+      },
+    });
+    // Only the allowlisted key is accepted, so exactly one item is parsed.
+    expect(result.output?.clarificationCount).toBe(1);
   });
 });
