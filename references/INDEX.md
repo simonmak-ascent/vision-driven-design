@@ -8,7 +8,7 @@ Navigation map for all VDD reference files.
 - SKILL.md — Overview, commands, workflow
 - README.md — GitHub landing page
 - quick-reference.md — One-page cheat sheet
-- Tutorial — vdd/docs/tutorial.md
+- Quick start — README.md
 
 ### Templates
 - All 11 artifact templates — artifact-templates.md
