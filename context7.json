@@ -13,6 +13,7 @@
     "Run `vdd_init` first (writes constitution.md), then follow the phase order vdd_vision → vdd_strategize → vdd_tactics → vdd_specify → vdd_clarify → vdd_plan → vdd_tasks → vdd_get_next_task → vdd_implement → vdd_validate.",
     "Use the same `projectRoot` for every phase; later phases resolve artifacts under vdd/ against it.",
     "vdd_get_next_task, vdd_implement, vdd_clarify, vdd_inspect and vdd_amend are read-only: they return instructions and the host agent performs the file edits and commits.",
+    "The hosted endpoint is stateless with no filesystem: filesystem-dependent tools return a delegation envelope — re-call the same tool with artifactFiles (and codebaseAudit for vdd_tactics) for the real result, or run the local stdio server (npx -y @simonmak-ascent/mcp).",
     "To change an existing constitution or requirement, use vdd_amend to plan the downward V→S→T→SP→PL→TK cascade instead of re-running earlier phases.",
     "Run vdd_detect_environment before vdd_strategize to check which host tools each phase requires."
   ],

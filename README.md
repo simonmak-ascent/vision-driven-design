@@ -262,7 +262,16 @@ VDD is available as a public MCP server at `https://vdd.simonmak.com` — 15 too
 
 The one-call `e2e` shortcut is not an MCP tool (it duplicates the phase sequence); use the CLI `vdd e2e "vision"` instead.
 
-All tools accept: `statement`, `projectRoot`, `actionItemId`, `feature`, `taskId`, `description`, `availableTools`, `capabilities`, `researchFindings`, `artifactFiles`.
+Each tool advertises only the parameters it reads. Shared inputs include `statement`, `projectRoot`, `actionItemId`, `feature`, `taskId`, `description`, and `availableTools`/`capabilities` (aliases) plus `researchFindings`. Filesystem-dependent tools additionally accept `artifactFiles` (path→content) — and `vdd_tactics` accepts `codebaseAudit` — for the hosted endpoint.
+
+### Hosted vs local (filesystem)
+
+The hosted endpoint (`https://vdd.simonmak.com/api/mcp`) is **stateless and has no filesystem**. It returns artifacts and, for filesystem-dependent phases, a **delegation envelope** for the calling agent to execute locally:
+
+- Artifact-producing phases (`vdd_init`, `vdd_vision`, `vdd_strategize`, `vdd_tactics`, `vdd_specify`, `vdd_plan`, `vdd_tasks`, `vdd_validate`, `vdd_clone`) return their content with `persisted: false` and a `writeTargets` list — the agent writes them.
+- Read phases (`vdd_tactics`, `vdd_clarify`, `vdd_get_next_task`, `vdd_inspect`, `vdd_validate`, `vdd_implement`) return a `delegation` envelope when given no content; re-call the **same tool** with `artifactFiles` (and `codebaseAudit` for tactics) to receive the real result.
+
+For direct read/write of a local project, run the **local stdio server** instead — `npx -y @simonmak-ascent/mcp` (see [Local MCP](#local-mcp-from-source)). It performs real filesystem I/O and returns `mode: "local"`, `persisted: true`.
 
 
 ### MCP Prompts (3)

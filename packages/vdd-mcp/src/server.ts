@@ -19,7 +19,8 @@ const descriptionReq = z.string().describe('Description of the requirement chang
 const availableTools = z.array(z.string()).optional().describe('MCP/tool names available to the host agent (e.g., ["brave-search","perplexity","context7","gh_grep","playwright","filesystem"])');
 const capabilities = z.array(z.string()).optional().describe('Alias for availableTools');
 const researchFindings = z.string().optional().describe('Consolidated research subagent findings to synthesize into strategy.md (effect only on the second strategize call)');
-const artifactFiles = z.record(z.string(), z.string()).optional().describe('Map of vdd/-relative artifact path → full file text, for serverless validate/drift detection where the tool cannot read the filesystem');
+const artifactFiles = z.record(z.string(), z.string()).optional().describe('Map of vdd/-relative artifact path → full file text, for the hosted (stateless) endpoint, which cannot read the caller filesystem; without it the tool returns a delegation envelope');
+const codebaseAudit = z.string().optional().describe('Repo scan (directory tree, manifests, modules, debt) produced by the host agent, for tactics on the hosted (stateless) endpoint which cannot scan the repo itself');
 const maxPages = z.number().int().positive().optional().describe('Clone: max pages to crawl, 1-5000 (default 200)');
 const timeoutMs = z.number().int().positive().optional().describe('Clone: per-request timeout in ms, 1000-60000 (default 10000)');
 const concurrency = z.number().int().positive().optional().describe('Clone: concurrent crawl workers, 1-16; above ~16 risks tripping the target site rate limit (default 8)');
@@ -31,15 +32,15 @@ export const PHASE_INPUT_SCHEMAS: Record<string, Record<string, z.ZodType>> = {
   init: { projectRoot },
   vision: { statement: statementReq, projectRoot },
   strategize: { availableTools, capabilities, researchFindings, projectRoot },
-  tactics: { projectRoot },
+  tactics: { projectRoot, artifactFiles, codebaseAudit },
   specify: { feature, actionItemId, description, projectRoot },
-  clarify: { feature: featureReq, projectRoot },
+  clarify: { feature: featureReq, artifactFiles, projectRoot },
   plan: { feature: featureReq, projectRoot },
   tasks: { feature: featureReq, projectRoot },
-  'get-next-task': { feature: featureReq, projectRoot },
-  implement: { taskId, projectRoot },
+  'get-next-task': { feature: featureReq, artifactFiles, projectRoot },
+  implement: { taskId, artifactFiles, projectRoot },
   validate: { feature, artifactFiles, projectRoot },
-  inspect: { scope, feature, projectRoot },
+  inspect: { scope, feature, artifactFiles, projectRoot },
   amend: { description: descriptionReq, projectRoot },
   clone: { description, statement, maxPages, timeoutMs, concurrency, crawl, browser, refresh, projectRoot },
   'detect-environment': { availableTools, capabilities, projectRoot },
@@ -133,6 +134,7 @@ export function createVddMcpServer(): McpServer {
           capabilities: params.capabilities as string[] | undefined,
           researchFindings: params.researchFindings as string | undefined,
           artifactFiles: params.artifactFiles as Record<string, string> | undefined,
+          codebaseAudit: params.codebaseAudit as string | undefined,
           maxPages: params.maxPages as number | undefined,
           timeoutMs: params.timeoutMs as number | undefined,
           concurrency: params.concurrency as number | undefined,

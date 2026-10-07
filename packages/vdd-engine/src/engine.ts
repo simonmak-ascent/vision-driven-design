@@ -310,8 +310,9 @@ async function auditRepo(root: string): Promise<AuditFacts> {
   return facts;
 }
 
-async function tactics(_: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
+async function tactics(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
   const artifact = ctx.projectRoot + '/vdd/tactics.md';
+  const providedAudit = (input.codebaseAudit || '').trim();
   const audit = await auditRepo(ctx.projectRoot);
   const detectedStack = [
     '### Auto-Detected Stack',
@@ -334,7 +335,7 @@ async function tactics(_: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
 
   const content = '# Tactics\n' + templateHeader((await chainContext(ctx.projectRoot)).tactics) +
     '## Strategy Reference\nDerived from: `vdd/strategy.md`\n\n' +
-    '## Codebase Audit\n\n' + detectedStack +
+    '## Codebase Audit\n\n' + (providedAudit ? '### Provided Codebase Audit\n\n' + providedAudit + '\n\n' : '') + detectedStack +
     '### What Exists\n\n| Asset | Location | Purpose | Strategic Pillar Trace | Quality |\n' +
     '|-------|----------|---------|----------------------|---------|\n' +
     '| [e.g., User auth module] | `src/auth/` | [What it does] | [Which pillar] | Good / Needs Refactor / Replace |\n' +
@@ -418,11 +419,17 @@ async function clarify(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput
   const missing = await withFeature(input, ctx.projectRoot, 'clarify');
   if (missing) return missing;
   const specPath = ctx.projectRoot + '/vdd/specs/' + input.feature + '/spec.md';
+  const relSpec = 'vdd/specs/' + input.feature + '/spec.md';
   let specContent: string;
-  try {
-    specContent = await fs.readFile(specPath, 'utf-8');
-  } catch {
-    return { success: false, error: 'Spec file not found: ' + specPath };
+  const suppliedSpec = input.artifactFiles?.[relSpec];
+  if (suppliedSpec != null) {
+    specContent = suppliedSpec;
+  } else {
+    try {
+      specContent = await fs.readFile(specPath, 'utf-8');
+    } catch {
+      return { success: false, error: 'Spec file not found: ' + specPath };
+    }
   }
 
   const questions: string[] = [];
@@ -548,11 +555,17 @@ async function nextTask(input: VddPhaseInput, ctx: VddContext): Promise<VddOutpu
   const missing = await withFeature(input, ctx.projectRoot, 'get-next-task');
   if (missing) return missing;
   const tasksPath = ctx.projectRoot + '/vdd/specs/' + input.feature + '/tasks.md';
+  const relTasks = 'vdd/specs/' + input.feature + '/tasks.md';
   let tasksContent: string;
-  try {
-    tasksContent = await fs.readFile(tasksPath, 'utf-8');
-  } catch {
-    return { success: false, error: 'tasks.md not found at ' + tasksPath + '. Run /vdd:tasks first.' };
+  const suppliedTasks = input.artifactFiles?.[relTasks];
+  if (suppliedTasks != null) {
+    tasksContent = suppliedTasks;
+  } else {
+    try {
+      tasksContent = await fs.readFile(tasksPath, 'utf-8');
+    } catch {
+      return { success: false, error: 'tasks.md not found at ' + tasksPath + '. Run /vdd:tasks first.' };
+    }
   }
 
   const lines = tasksContent.split('\n');
@@ -568,12 +581,25 @@ async function nextTask(input: VddPhaseInput, ctx: VddContext): Promise<VddOutpu
 // Phase 7b: implement
 async function implement(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
   if (!input.taskId) return needsInput(['taskId'], 'Pass taskId (e.g. "TASK-003") — call /vdd:get-next-task to fetch the next uncompleted one, then re-call /vdd:implement.');
+  // Embed the task line when tasks.md content is supplied (hosted/agent-delegated
+  // runs, where the server cannot read the project filesystem).
+  let taskLine: string | undefined;
+  const files = input.artifactFiles || {};
+  for (const [key, value] of Object.entries(files)) {
+    if (/tasks\.md$/.test(key)) {
+      for (const line of String(value).split('\n')) {
+        if (line.includes('**' + input.taskId + '**')) { taskLine = line.trim(); break; }
+      }
+      if (taskLine) break;
+    }
+  }
   return {
     success: true,
     artifact: 'Task ' + input.taskId + ' — ready for implementation',
     output: {
       taskId: input.taskId,
       instruction: 'Load constitution.md, the task description from tasks.md, relevant spec, plan, and contracts. Implement the task. Commit with: feat(scope): ' + input.taskId + ' → [ac-id] → [tactical-item-id]',
+      ...(taskLine ? { task: taskLine } : {}),
     },
   };
 }
@@ -1727,8 +1753,26 @@ async function clone(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> 
   };
 }
 
-export const PHASES: Record<string, VddPhaseFn> = {
+const RAW_PHASES: Record<string, VddPhaseFn> = {
   init, vision, strategize, tactics, specify, clarify,
   plan, tasks, 'get-next-task': nextTask, implement, validate, trace, analyze, inspect, amend, e2e, clone,
   'detect-environment': detectEnvironmentPhase,
 };
+
+// Phases that produce artifacts on the local filesystem.
+const WRITE_PHASE_NAMES = new Set(['init', 'vision', 'strategize', 'tactics', 'specify', 'plan', 'tasks', 'validate', 'clone']);
+
+// Annotate every result with how it was produced. The local engine reads/writes
+// the real filesystem; write phases report persisted:true on success, the clear
+// counterpart to the hosted (delegated) endpoint's persisted:false.
+export const PHASES: Record<string, VddPhaseFn> = Object.fromEntries(
+  Object.entries(RAW_PHASES).map(([name, fn]) => [
+    name,
+    (async (input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> => {
+      const result = await fn(input, ctx);
+      if (!result || typeof result !== 'object') return result;
+      const base = { ...result, mode: 'local' as const };
+      return WRITE_PHASE_NAMES.has(name) ? { ...base, persisted: !!result.success } : base;
+    }) as VddPhaseFn,
+  ]),
+);

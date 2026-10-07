@@ -2,8 +2,6 @@
 // Shared by the Streamable HTTP endpoint (api/mcp.js). The leading underscore
 // keeps this file out of Vercel's /api route generation (it is not an endpoint).
 
-const fs = require("fs");
-
 const today = new Date().toISOString().split("T")[0];
 function hdr(chain) { return `Status: Draft\nVersion: 1.0\nLast updated: ${today}\n\n> Impact Chain: ${chain}\n\n`; }
 
@@ -13,19 +11,17 @@ function hdr(chain) { return `Status: Draft\nVersion: 1.0\nLast updated: ${today
 function needsInput(fields, instruction, extra = {}) {
   return { success: true, artifact: "Guidance — input required", output: { needsInput: fields, instruction, ...extra } };
 }
-function listFeatureDirs(root) {
-  try {
-    return fs.readdirSync(`${root}/vdd/specs`, { withFileTypes: true })
-      .filter((e) => e.isDirectory() && !e.name.startsWith("."))
-      .map((e) => e.name).sort();
-  } catch { return []; }
+// The hosted endpoint has no filesystem: spec directories are derived from the
+// caller-supplied artifactFiles (see listFeaturesFromFiles), never read from disk.
+function listFeatureDirs() {
+  return [];
 }
 // Resolve a missing `feature`: auto-use the single spec directory when exactly one
 // exists; otherwise return guidance. Returns null when feat is set, else
 // { feature } or { guidance }.
-function resolveFeature(root, feat, tool) {
+function resolveFeature(root, feat, tool, availableOverride) {
   if (feat) return null;
-  const available = listFeatureDirs(root);
+  const available = availableOverride || listFeatureDirs(root);
   if (available.length === 1) return { feature: available[0] };
   return {
     guidance: needsInput(["feature"],
@@ -413,6 +409,157 @@ function normalizeCloneDomain(raw) {
   return { scheme, host };
 }
 
+// ---------- Hosted delegation (stateless) ----------
+// The hosted endpoint has no filesystem: when a phase needs project content it
+// returns a delegation envelope for the calling agent to execute locally, then
+// accepts the content back via artifactFiles/codebaseAudit and returns the real
+// result. Write phases return their artifacts marked persisted:false.
+const HOSTED_MODE = "hosted-delegated";
+// Phases that produce artifacts. On the hosted endpoint these write nothing, so
+// their result is wrapped with persisted:false + writeTargets + a write delegation.
+const WRITE_PHASES = new Set(["init", "vision", "strategize", "specify", "plan", "tasks", "tactics", "validate", "clone"]);
+const MAX_ARTIFACT_FILES = 64;
+const MAX_ARTIFACT_BYTES = 262144; // 256 KB total across all artifactFiles
+const ALLOWED_ARTIFACT_PREFIXES = ["constitution.md", "vdd/", "specs/", "references/", "domain-primers/"];
+
+function isAllowedArtifactPath(p) {
+  if (typeof p !== "string" || p.length === 0 || p.length > 512) return false;
+  const norm = p.replace(/^\.\//, "");
+  if (norm.startsWith("/") || norm.includes("\\") || /^[a-zA-Z]:/.test(norm)) return false;
+  if (norm.split("/").includes("..")) return false;
+  return ALLOWED_ARTIFACT_PREFIXES.some((pre) => norm === pre || norm.startsWith(pre));
+}
+
+function sanitizeArtifactFiles(raw) {
+  const files = {};
+  const rejected = [];
+  let total = 0;
+  let count = 0;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { files, rejected };
+  for (const key of Object.keys(raw)) {
+    const value = raw[key];
+    if (!isAllowedArtifactPath(key) || typeof value !== "string") { rejected.push(key); continue; }
+    if (count >= MAX_ARTIFACT_FILES || total + value.length > MAX_ARTIFACT_BYTES) { rejected.push(key); continue; }
+    files[key.replace(/^\.\//, "")] = value;
+    total += value.length;
+    count++;
+  }
+  return { files, rejected };
+}
+
+function listFeaturesFromFiles(files) {
+  const set = new Set();
+  for (const k of Object.keys(files || {})) {
+    const m = k.match(/^vdd\/specs\/([^/]+)\//);
+    if (m) set.add(m[1]);
+  }
+  return [...set].sort();
+}
+
+function makeDelegation(kind, goal, requiredTools, expectedReturn, writeTargets, nextTool) {
+  return {
+    id: "deleg-" + kind + "-" + Math.random().toString(36).slice(2, 10),
+    goal,
+    kind,
+    promptTemplate: goal,
+    requiredTools,
+    expectedReturn,
+    writeTargets,
+    nextTool,
+  };
+}
+
+function delegationResult(kind, goal, requiredTools, expectedReturn, extra = {}, writeTargets, nextTool) {
+  return {
+    success: true,
+    artifact: "Guidance — delegation required",
+    mode: HOSTED_MODE,
+    persisted: false,
+    output: {
+      hosted: "no-filesystem",
+      needsInput: ["artifactFiles"],
+      instruction: "This stateless endpoint cannot read or write the project. Re-call with artifactFiles (and codebaseAudit for tactics) so it can return the real result, or run the phase on a filesystem-capable host (local stdio server, CLI, or CI).",
+      ...extra,
+    },
+    delegation: makeDelegation(kind, goal, requiredTools, expectedReturn, writeTargets, nextTool || "vdd_" + kind.replace(/-/g, "_")),
+  };
+}
+
+// Mark a write-phase result as delegated-not-persisted and attach its write targets.
+function writeEnvelope(result) {
+  const artifact = result.artifact;
+  const targets = result.files
+    ? Object.keys(result.files)
+    : artifact && !artifact.startsWith("Guidance") ? [artifact] : [];
+  return {
+    ...result,
+    mode: HOSTED_MODE,
+    persisted: false,
+    output: {
+      ...(result.output || {}),
+      writeTargets: targets,
+      note: "Hosted endpoint performed no filesystem I/O: write the returned artifact(s) to writeTargets (repo-relative).",
+    },
+    delegation: makeDelegation("write", "Write the returned artifact(s) into the project", ["filesystem"], { artifactFiles: "the returned template/files written to writeTargets" }, targets, "vdd_validate"),
+  };
+}
+
+// Mirror of the engine's clarify scan (packages/vdd-engine/src/engine.ts).
+function parseClarify(spec) {
+  const questions = [];
+  for (const line of String(spec || "").split("\n")) {
+    if (line.includes("[NEEDS CLARIFICATION]")) questions.push(line.trim());
+    if (line.includes("[e.g.") && line.includes("]")) questions.push("  Template placeholder → " + line.trim());
+  }
+  return questions;
+}
+
+// Mirror of the engine's get-next-task scan.
+function parseNextTask(tasks) {
+  for (const line of String(tasks || "").split("\n")) {
+    if (line.startsWith("- [ ] **TASK-")) return line.trim();
+  }
+  return "All tasks completed.";
+}
+
+// Mirror of the engine's analyze (feature scope).
+function analyzeFeature(files, feature) {
+  const base = "vdd/specs/" + feature;
+  const spec = files[base + "/spec.md"];
+  if (spec == null) return null;
+  const acCount = (spec.match(/### AC-/g) || []).length;
+  const unresolved = (spec.match(/\[NEEDS CLARIFICATION\]/g) || []).length;
+  const placeholders = (spec.match(/\[e\.g\./g) || []).length;
+  const planExists = files[base + "/plan.md"] != null;
+  const tasksExist = files[base + "/tasks.md"] != null;
+  return {
+    feature,
+    spec: { path: base + "/spec.md", acCount, unresolved, placeholders },
+    plan: { exists: planExists, path: base + "/plan.md" },
+    tasks: { exist: tasksExist, path: base + "/tasks.md" },
+    status: unresolved > 0 || placeholders > 10
+      ? "NEEDS_WORK: unresolved clarifications or excessive placeholders"
+      : planExists && tasksExist ? "READY" : "INCOMPLETE: generate plan and tasks",
+  };
+}
+
+// Mirror of the engine's trace (project scope).
+function traceProject(files) {
+  const paths = [
+    { level: "Constitution", path: "constitution.md" },
+    { level: "Vision", path: "vdd/vision.md" },
+    { level: "Strategy", path: "vdd/strategy.md" },
+    { level: "Tactics", path: "vdd/tactics.md" },
+  ];
+  const nodes = paths.map((p) => {
+    const c = files[p.path];
+    const m = c ? String(c).match(/> Impact Chain:\s*(.+)/) : null;
+    return { level: p.level, path: p.path, exists: c != null, impactChain: m ? m[1].trim() : null };
+  });
+  const specDirs = listFeaturesFromFiles(files);
+  return { nodes, specDirs };
+}
+
 function phaseHandlers(input) {
   const root = input.projectRoot || ".";
   const s = input.statement || "";
@@ -422,7 +569,8 @@ function phaseHandlers(input) {
   const desc = input.description || "";
   const availableTools = input.availableTools || input.capabilities || [];
   const researchFindings = (input.researchFindings || "").trim();
-  const artifactFiles = input.artifactFiles || {};
+  const { files: artifactFiles } = sanitizeArtifactFiles(input.artifactFiles);
+  const codebaseAudit = (input.codebaseAudit || "").trim();
 
   return {
     init() {
@@ -454,17 +602,27 @@ function phaseHandlers(input) {
       };
     },
     tactics() {
-      return { success: true, artifact: `${root}/vdd/tactics.md`, template: `# Tactics\n${hdr("V-001 → S-002 → T-003")}## Strategy Reference\nDerived from: \`vdd/strategy.md\`\n\n## Codebase Audit\n### What Exists\n| Asset | Location | Purpose | Pillar Trace | Quality |\n|-------|----------|---------|-------------|---------|\n| [Module] | \`src/\` | [Purpose] | [Pillar] | Good/Refactor/Replace |\n\n### Technical Debt\n| Debt Item | Location | Severity | Strategy Impact |\n|-----------|----------|----------|----------------|\n| [e.g., No validation] | \`src/api/\` | High | Blocks security pillar |\n\n### Reusable Assets\n| Asset | Strategy Support | Reuse Effort |\n|-------|-----------------|-------------|\n| [e.g., Component lib] | Accelerates UI | Low |\n\n## Gap Analysis\n| Gap | Pillar Affected | Impact if Unaddressed |\n|-----|----------------|----------------------|\n| [e.g., No mobile layout] | Pillar 1 | Target inaccessible |\n\n## Prioritized Action Items\n| ID | Action Item | Priority | Pillar | Size | Deps |\n|----|------------|----------|--------|------|------|\n| A-001 | [Concrete action] | MUST | Pillar 1 | M | None |\n| A-002 | [Concrete action] | SHOULD | Pillar 2 | S | A-001 |\n\n## Dependency Map\n\`\`\`\nA-001 → A-002\n\`\`\`\n\n## Infrastructure Requirements\n| Requirement | Domain | Priority | Notes |\n|-------------|--------|----------|-------|\n| [e.g., CI/CD] | Infra | MUST | GitHub Actions |\n\n## S&T Assumptions (Tactics → Specs)\n**Necessity:** ...\n**Achievability:** ...\n**Sufficiency:** ...\n**Warnings:** ...\n` };
+      if (!codebaseAudit && artifactFiles["vdd/strategy.md"] == null) {
+        return delegationResult("audit", "Scan the repository and return a codebase audit (directory tree, manifests, modules, technical debt); also pass vdd/strategy.md", ["filesystem"], { codebaseAudit: "repo scan summary", artifactFiles: { "vdd/strategy.md": "full strategy.md text" } }, undefined, "vdd_tactics");
+      }
+      const auditBlock = codebaseAudit ? "## Provided Codebase Audit\n" + codebaseAudit + "\n\n" : "";
+      return { success: true, artifact: `${root}/vdd/tactics.md`, template: auditBlock + `# Tactics\n${hdr("V-001 → S-002 → T-003")}## Strategy Reference\nDerived from: \`vdd/strategy.md\`\n\n## Codebase Audit\n### What Exists\n| Asset | Location | Purpose | Pillar Trace | Quality |\n|-------|----------|---------|-------------|---------|\n| [Module] | \`src/\` | [Purpose] | [Pillar] | Good/Refactor/Replace |\n\n### Technical Debt\n| Debt Item | Location | Severity | Strategy Impact |\n|-----------|----------|----------|----------------|\n| [e.g., No validation] | \`src/api/\` | High | Blocks security pillar |\n\n### Reusable Assets\n| Asset | Strategy Support | Reuse Effort |\n|-------|-----------------|-------------|\n| [e.g., Component lib] | Accelerates UI | Low |\n\n## Gap Analysis\n| Gap | Pillar Affected | Impact if Unaddressed |\n|-----|----------------|----------------------|\n| [e.g., No mobile layout] | Pillar 1 | Target inaccessible |\n\n## Prioritized Action Items\n| ID | Action Item | Priority | Pillar | Size | Deps |\n|----|------------|----------|--------|------|------|\n| A-001 | [Concrete action] | MUST | Pillar 1 | M | None |\n| A-002 | [Concrete action] | SHOULD | Pillar 2 | S | A-001 |\n\n## Dependency Map\n\`\`\`\nA-001 → A-002\n\`\`\`\n\n## Infrastructure Requirements\n| Requirement | Domain | Priority | Notes |\n|-------------|--------|----------|-------|\n| [e.g., CI/CD] | Infra | MUST | GitHub Actions |\n\n## S&T Assumptions (Tactics → Specs)\n**Necessity:** ...\n**Achievability:** ...\n**Sufficiency:** ...\n**Warnings:** ...\n` };
     },
     specify() {
       if (!id) return needsInput(["feature", "actionItemId", "description"], "Pass actionItemId (e.g. \"A-001\") or a freeform description to create a new spec; pass feature to name the spec directory.");
       return { success: true, artifact: `${root}/vdd/specs/${id}/spec.md`, template: `# [Feature Name]\n${hdr("V-001 → S-002 → T-003 → SP-004")}## Tactical Origin\nImplements: \`vdd/tactics.md\` → Action Item [${id}]\n\n## Overview\n[1-2 sentences. Reference which vision impact this serves.]\n\n## User Stories\n### Primary\nAs a [role], I want [goal] so that [benefit].\n\n## Boundaries\n**Always do:**\n- [e.g., "validate all inputs before processing"]\n\n**Ask first:**\n- [e.g., "adding a new database table not in this spec"]\n\n**Never do:**\n- [e.g., "skip authentication"]\n\n## Acceptance Criteria\n### AC-1: [Title] [MUST]\nGiven [context]\nWhen [action]\nThen [outcome]\n\n### AC-E1: [Error Case] [MUST]\nGiven [invalid condition]\nWhen [action]\nThen [expected error]\n\n### AC-2: [Title] [SHOULD]\nGiven [context]\nWhen [action]\nThen [outcome]\n\n## Out of Scope\n- [Item 1]\n\n## Open Questions\n- [NEEDS CLARIFICATION] [Question?]\n\n## Non-Functional Requirements\n- Performance: [e.g., "< 200ms at p95"]\n- Security: [e.g., "authenticated session required"]\n- Accessibility: [e.g., "WCAG 2.1 AA"]\n\n## Impact Verification\n- [e.g., AC-1 enables Impact I-001]\n\n## S&T Assumptions (Specs → Plan)\n**Necessity:** ...\n**Achievability:** ...\n**Sufficiency:** ...\n**Warnings:** ...\n` };
     },
     clarify() {
-      const rc = resolveFeature(root, feat, "clarify");
+      const rc = resolveFeature(root, feat, "clarify", listFeaturesFromFiles(artifactFiles));
       if (rc && rc.guidance) return rc.guidance;
       if (rc && rc.feature) feat = rc.feature;
-      return { success: true, artifact: `Clarifications for ${feat}`, output: { feature: feat, clarificationCount: 0, action: "Resolve each [NEEDS CLARIFICATION] item, replace [e.g.] placeholders with concrete values, and add edge-case ACs for every happy-path MUST AC." } };
+      const specKey = `vdd/specs/${feat}/spec.md`;
+      const spec = artifactFiles[specKey];
+      if (spec == null) {
+        return delegationResult("clarify", `Read ${specKey} and return the unresolved [NEEDS CLARIFICATION] markers, [e.g.] placeholders, and edge-case AC gaps`, ["filesystem"], { artifactFiles: { [specKey]: "full spec.md text" } }, { feature: feat });
+      }
+      const items = parseClarify(spec);
+      return { success: true, mode: HOSTED_MODE, artifact: specKey, output: { feature: feat, clarificationCount: items.length, items: items.length > 0 ? items : ["No unresolved clarifications found."], action: "Resolve each [NEEDS CLARIFICATION] item, replace [e.g.] placeholders with concrete values, and add edge-case ACs for every happy-path MUST AC." } };
     },
     plan() {
       const rp = resolveFeature(root, feat, "plan");
@@ -484,14 +642,34 @@ function phaseHandlers(input) {
       return { success: true, artifact: `${root}/vdd/specs/${feat}/tasks.md`, template: `# Task List\n${hdr("V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006")}## Plan Reference\nImplements: \`vdd/specs/${feat}/plan.md\`\n\n## Tasks\n### Setup\n- [ ] **TASK-001** [S] Set up [module] skeleton\n  - Creates: \`[path]\`\n  - Depends on: none\n\n### Implementation\n- [ ] **TASK-002** [M] [P] Write tests for [component]\n  - Tests: AC-1, AC-2 from \`vdd/specs/${feat}/spec.md\`\n  - Depends on: TASK-001\n\n- [ ] **TASK-002b** [S] Write error-case tests for [component]\n  - Tests: AC-E1\n  - Depends on: TASK-002\n\n- [ ] **TASK-003** [M] Implement [component]\n  - Contract: \`contracts/[file].md\`\n  - Satisfies: AC-1, AC-2\n  - Depends on: TASK-002\n\n### Integration\n- [ ] **TASK-006** [L] Integration test\n  - Tests: AC-1 through AC-4\n  - Depends on: TASK-003\n\n## Legend\n- \`[S]\` < 1h, \`[M]\` 1-3h, \`[L]\` 3-6h, \`[P]\` Parallelizable\n` };
     },
     "get-next-task"() {
-      const rn = resolveFeature(root, feat, "get-next-task");
+      const rn = resolveFeature(root, feat, "get-next-task", listFeaturesFromFiles(artifactFiles));
       if (rn && rn.guidance) return rn.guidance;
       if (rn && rn.feature) feat = rn.feature;
-      return { success: true, artifact: "Read tasks.md to find the next uncompleted task. Run /vdd:get-next-task from a stdio/local MCP to get auto-detection." };
+      const tasksKey = `vdd/specs/${feat}/tasks.md`;
+      const tasks = artifactFiles[tasksKey];
+      if (tasks == null) {
+        return delegationResult("read", `Read ${tasksKey} and return its contents so the next uncompleted task can be identified`, ["filesystem"], { artifactFiles: { [tasksKey]: "full tasks.md text" } }, { feature: feat });
+      }
+      const task = parseNextTask(tasks);
+      return { success: true, mode: HOSTED_MODE, artifact: task, output: { feature: feat, task } };
     },
     implement() {
       if (!tid) return needsInput(["taskId"], "Pass taskId (e.g. \"TASK-003\") — call /vdd:get-next-task to fetch the next uncompleted one, then re-call /vdd:implement.");
-      return { success: true, artifact: `Ready: Task ${tid}`, output: { taskId: tid, instruction: "Load constitution.md + task description + spec/plan/contracts. Implement. Commit with traceable message." } };
+      const hasContent = Object.keys(artifactFiles).length > 0;
+      const instruction = `Load constitution.md, the task description from tasks.md, relevant spec, plan, and contracts. Implement. Commit with: feat(scope): ${tid} → [ac-id] → [tactical-item-id]`;
+      if (!hasContent) {
+        return delegationResult("implement", `Read the project artifacts and implement task ${tid}`, ["filesystem"], { artifactFiles: { "constitution.md": "...", "vdd/specs/<feature>/spec.md": "...", "vdd/specs/<feature>/plan.md": "...", "vdd/specs/<feature>/tasks.md": "..." } }, { taskId: tid });
+      }
+      let taskText = null;
+      for (const [k, v] of Object.entries(artifactFiles)) {
+        if (/tasks\.md$/.test(k)) {
+          for (const line of String(v).split("\n")) {
+            if (line.includes(`**${tid}**`)) { taskText = line.trim(); break; }
+          }
+          if (taskText) break;
+        }
+      }
+      return { success: true, mode: HOSTED_MODE, artifact: `Ready: Task ${tid}`, output: { taskId: tid, instruction, ...(taskText ? { task: taskText } : {}) } };
     },
     validate() {
       const featureDir = feat || "feature-1";
@@ -522,6 +700,9 @@ function phaseHandlers(input) {
       }
       const total = canonical.length;
       const hasAny = Object.keys(artifactFiles).length > 0;
+      if (!hasAny) {
+        return delegationResult("read", "Read the vdd/ artifacts (constitution.md, vdd/vision.md, vdd/strategy.md, vdd/tactics.md, vdd/specs/**/spec.md|plan.md|tasks.md, contracts) and return them so validate can run drift/orphan/substance checks", ["filesystem"], { artifactFiles: { "constitution.md": "...", "vdd/vision.md": "...", "vdd/strategy.md": "...", "vdd/tactics.md": "...", "vdd/specs/<feature>/spec.md": "..." } }, { feature: featureDir }, undefined, "vdd_validate");
+      }
       const substancePassed = placeholders === 0 && uncovered.length === 0 && drift.length === 0 && present === total;
       const driftRows = drift.length ? drift.map((d) => `| ${d.artifact} | ${d.type} | ${d.detail} |`).join("\n") : "| (none found) | — | — |";
       const uncoveredRows = uncovered.length ? uncovered.map((k) => `| ${k} | missing artifact |`).join("\n") : "| (none found) | — |";
@@ -560,13 +741,22 @@ function phaseHandlers(input) {
     },
     inspect() {
       const scope = input.scope || (feat ? "feature" : "project");
-      if (scope !== "feature") {
-        return { success: true, artifact: "Traceability matrix", chain: "V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006", files: [`${root}/vdd/vision.md`, `${root}/vdd/strategy.md`, `${root}/vdd/tactics.md`] };
+      if (scope === "feature") {
+        const ri = resolveFeature(root, feat, "inspect", listFeaturesFromFiles(artifactFiles));
+        if (ri && ri.guidance) return ri.guidance;
+        if (ri && ri.feature) feat = ri.feature;
+        const analysis = analyzeFeature(artifactFiles, feat);
+        if (analysis == null) {
+          const specKey = `vdd/specs/${feat}/spec.md`;
+          return delegationResult("read", `Read ${specKey} (plus plan.md, tasks.md) and return them for per-feature metrics`, ["filesystem"], { artifactFiles: { [specKey]: "full spec.md text", [`vdd/specs/${feat}/plan.md`]: "full plan.md text", [`vdd/specs/${feat}/tasks.md`]: "full tasks.md text" } }, { feature: feat, scope: "feature" });
+        }
+        return { success: true, mode: HOSTED_MODE, artifact: `Cross-artifact analysis for ${feat}`, output: analysis };
       }
-      const ri = resolveFeature(root, feat, "inspect");
-      if (ri && ri.guidance) return ri.guidance;
-      if (ri && ri.feature) feat = ri.feature;
-      return { success: true, artifact: `Cross-artifact analysis for ${feat}`, output: { feature: feat, scope: "feature", action: "Read spec.md, plan.md, tasks.md. Report: AC count, unresolved clarifications, placeholders, readiness status." } };
+      if (Object.keys(artifactFiles).length === 0) {
+        return delegationResult("read", "Read the vdd/ artifacts (constitution.md, vdd/vision.md, vdd/strategy.md, vdd/tactics.md, vdd/specs/**) and return them for the traceability matrix", ["filesystem"], { artifactFiles: { "constitution.md": "...", "vdd/vision.md": "...", "vdd/strategy.md": "...", "vdd/tactics.md": "..." } }, undefined, "vdd_inspect");
+      }
+      const t = traceProject(artifactFiles);
+      return { success: true, mode: HOSTED_MODE, artifact: "Traceability matrix", output: { chain: "V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006 → [commits]", nodes: t.nodes, specDirs: t.specDirs } };
     },
     amend() {
       if (!desc) return needsInput(["description"], "Pass the requirement change as description; the cascade plan is then returned.");
@@ -709,40 +899,44 @@ const PARAM_RELATIONSHIP_NOTES = {
   init: ' Parameter relationships: projectRoot defaults to "." and must be the same root every later phase resolves against.',
   vision: ' Parameter relationships: statement must be freeform prose (1-3 paragraphs), not a title; projectRoot must match the root used by vdd_init.',
   strategize: ' Parameter relationships: availableTools and capabilities are aliases (pass one); researchFindings only has an effect on the second call.',
-  tactics: ' Parameter relationships: projectRoot must match the root used by vdd_init, vdd_vision, and vdd_strategize; requires vdd/strategy.md to exist.',
+  tactics: ' Parameter relationships: projectRoot must match the root used by vdd_init, vdd_vision, and vdd_strategize; requires vdd/strategy.md to exist. On the hosted (stateless) endpoint the tool cannot scan the repo itself: pass artifactFiles ({"vdd/strategy.md": "..."}) plus codebaseAudit (the repo scan produced by the host agent) to receive the audit; without them it returns a delegation envelope.',
   specify: ' Parameter relationships: feature names the vdd/specs/<feature>/ directory and must match the feature passed to vdd_clarify, vdd_plan, and vdd_tasks; actionItemId is the A-### id from tactics.md and is optional when authoring from a freeform description.',
-  clarify: ' Parameter relationships: feature must be the exact spec directory name created by vdd_specify.',
+  clarify: ' Parameter relationships: feature must be the exact spec directory name created by vdd_specify. On the hosted (stateless) endpoint, pass artifactFiles ({"vdd/specs/<feature>/spec.md": "..."}) so the tool can scan the spec and return the real markers; without it the tool returns a delegation envelope.',
   plan: ' Parameter relationships: feature must match the value passed to vdd_specify and vdd_tasks.',
   tasks: ' Parameter relationships: feature must match the value passed to vdd_plan.',
-  "get-next-task": ' Parameter relationships: feature must match the spec directory; the returned taskId (TASK-###) is the argument to vdd_implement.',
-  implement: ' Parameter relationships: taskId comes from vdd_get_next_task (format TASK-###); projectRoot must match the root used by earlier phases.',
-  validate: ' Parameter relationships: feature narrows the check to one spec; artifactFiles maps artifact path to content for serverless runs and is omitted when resolving against a local projectRoot.',
-  inspect: ' Parameter relationships: scope="feature" requires feature, while scope="project" (the default) ignores it; projectRoot must match the root used by earlier phases.',
+  "get-next-task": ' Parameter relationships: feature must match the spec directory; the returned taskId (TASK-###) is the argument to vdd_implement. On the hosted (stateless) endpoint, pass artifactFiles ({"vdd/specs/<feature>/tasks.md": "..."}) so the tool returns the real next uncompleted task; without it the tool returns a delegation envelope.',
+  implement: ' Parameter relationships: taskId comes from vdd_get_next_task (format TASK-###); projectRoot must match the root used by earlier phases. On the hosted (stateless) endpoint, pass artifactFiles (constitution.md, spec.md, plan.md, contracts/, tasks.md) so the tool can embed the real task text and its AC/contract links; without it the tool returns a delegation envelope.',
+  validate: ' Parameter relationships: feature narrows the check to one spec; artifactFiles maps artifact path to content for serverless runs and is omitted when resolving against a local projectRoot. On the hosted (stateless) endpoint, pass artifactFiles (the vdd/ artifacts) so the tool can run drift/orphan/substance checks; without it the tool returns a delegation envelope.',
+  inspect: ' Parameter relationships: scope="feature" requires feature, while scope="project" (the default) ignores it; projectRoot must match the root used by earlier phases. On the hosted (stateless) endpoint, pass artifactFiles (path→content for the vdd/ artifacts) so the tool computes the real matrix/metrics; without it the tool returns a delegation envelope.',
   amend: ' Parameter relationships: description is the requirement change to cascade through the artifact chain; projectRoot must match the root used by earlier phases.',
   clone: ' Parameter relationships: description is the target domain and statement is the desired outcome (both optional); maxPages, timeoutMs, concurrency, crawl, and browser tune the crawl and refresh=true bypasses a cached dataset.',
   "detect-environment": ' Parameter relationships: availableTools and capabilities are aliases; omit both to get the per-phase requirements without a present/missing comparison.',
 };
 
-// MCP annotation hints — mirrors packages/vdd-mcp/src/server.ts TOOL_ANNOTATIONS
-// (keep in sync). They describe the tool's OWN filesystem effect: read-only tools
-// write nothing; destructiveHint is true only for tools that overwrite an existing
-// artifact; open-world tools reach external systems (web research, cloning).
+// MCP annotation hints for the HOSTED endpoint. Unlike the stdio server
+// (packages/vdd-mcp/src/server.ts TOOL_ANNOTATIONS, where write phases really do
+// overwrite artifacts and strategize/clone reach the network), the hosted
+// endpoint is stateless: it writes nothing and fetches nothing — it returns
+// artifacts and delegation envelopes. Its annotations truthfully say so; the
+// stdio↔hosted parity test therefore compares schemas and descriptions, not
+// annotation values (the two transports have genuinely different side effects).
+const HOSTED_ANNOTATIONS = { readOnlyHint: true, idempotentHint: true, openWorldHint: false };
 const TOOL_ANNOTATIONS = {
-  init: { title: "Initialize Constitution", annotations: { destructiveHint: true, openWorldHint: false } },
-  vision: { title: "Expand Vision", annotations: { destructiveHint: true, openWorldHint: false } },
-  strategize: { title: "Research Strategy", annotations: { destructiveHint: true, openWorldHint: true } },
-  tactics: { title: "Audit Tactics", annotations: { destructiveHint: true, openWorldHint: false } },
-  specify: { title: "Generate Spec", annotations: { destructiveHint: true, openWorldHint: false } },
-  clarify: { title: "Clarify Spec", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
-  plan: { title: "Generate Plan", annotations: { destructiveHint: true, openWorldHint: false } },
-  tasks: { title: "Generate Tasks", annotations: { destructiveHint: true, openWorldHint: false } },
-  "get-next-task": { title: "Get Next Task", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
-  implement: { title: "Implement Task", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
-  validate: { title: "Validate Impact", annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false } },
-  inspect: { title: "Inspect Project", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
-  amend: { title: "Amend Requirements", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
-  clone: { title: "Clone Website", annotations: { destructiveHint: true, openWorldHint: true } },
-  "detect-environment": { title: "Detect Environment", annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
+  init: { title: "Initialize Constitution", annotations: HOSTED_ANNOTATIONS },
+  vision: { title: "Expand Vision", annotations: HOSTED_ANNOTATIONS },
+  strategize: { title: "Research Strategy", annotations: HOSTED_ANNOTATIONS },
+  tactics: { title: "Audit Tactics", annotations: HOSTED_ANNOTATIONS },
+  specify: { title: "Generate Spec", annotations: HOSTED_ANNOTATIONS },
+  clarify: { title: "Clarify Spec", annotations: HOSTED_ANNOTATIONS },
+  plan: { title: "Generate Plan", annotations: HOSTED_ANNOTATIONS },
+  tasks: { title: "Generate Tasks", annotations: HOSTED_ANNOTATIONS },
+  "get-next-task": { title: "Get Next Task", annotations: HOSTED_ANNOTATIONS },
+  implement: { title: "Implement Task", annotations: HOSTED_ANNOTATIONS },
+  validate: { title: "Validate Impact", annotations: HOSTED_ANNOTATIONS },
+  inspect: { title: "Inspect Project", annotations: HOSTED_ANNOTATIONS },
+  amend: { title: "Amend Requirements", annotations: HOSTED_ANNOTATIONS },
+  clone: { title: "Clone Website", annotations: HOSTED_ANNOTATIONS },
+  "detect-environment": { title: "Detect Environment", annotations: HOSTED_ANNOTATIONS },
 };
 
 // Per-phase input schemas — mirrors packages/vdd-mcp/src/server.ts PHASE_INPUT_SCHEMAS
@@ -761,7 +955,8 @@ const P = {
   availableTools: { type: "array", items: { type: "string" }, description: "MCP/tool names available to the host agent (e.g., [\"brave-search\",\"perplexity\",\"context7\",\"gh_grep\",\"playwright\",\"filesystem\"])" },
   capabilities: { type: "array", items: { type: "string" }, description: "Alias for availableTools" },
   researchFindings: { type: "string", description: "Consolidated research subagent findings to synthesize into strategy.md (effect only on the second strategize call)" },
-  artifactFiles: { type: "object", additionalProperties: { type: "string" }, description: "Map of vdd/-relative artifact path → full file text, for serverless validate/drift detection where the tool cannot read the filesystem" },
+  artifactFiles: { type: "object", additionalProperties: { type: "string" }, description: "Map of vdd/-relative artifact path → full file text, for the hosted (stateless) endpoint, which cannot read the caller filesystem; without it the tool returns a delegation envelope" },
+  codebaseAudit: { type: "string", description: "Repo scan (directory tree, manifests, modules, debt) produced by the host agent, for tactics on the hosted (stateless) endpoint which cannot scan the repo itself" },
   // Crawl tuning applies to the local stdio server; the hosted endpoint returns the
   // clone plan without crawling, so it accepts and ignores these fields.
   maxPages: { type: "integer", exclusiveMinimum: 0, description: "Clone: max pages to crawl, 1-5000 (default 200). Local stdio server only; ignored by the hosted endpoint" },
@@ -777,15 +972,15 @@ const PHASE_FIELDS = {
   init: [["projectRoot", "projectRoot"]],
   vision: [["statement", "statementReq", true], ["projectRoot", "projectRoot"]],
   strategize: [["availableTools", "availableTools"], ["capabilities", "capabilities"], ["researchFindings", "researchFindings"], ["projectRoot", "projectRoot"]],
-  tactics: [["projectRoot", "projectRoot"]],
+  tactics: [["projectRoot", "projectRoot"], ["artifactFiles", "artifactFiles"], ["codebaseAudit", "codebaseAudit"]],
   specify: [["feature", "feature"], ["actionItemId", "actionItemId"], ["description", "description"], ["projectRoot", "projectRoot"]],
-  clarify: [["feature", "feature", true], ["projectRoot", "projectRoot"]],
+  clarify: [["feature", "feature", true], ["artifactFiles", "artifactFiles"], ["projectRoot", "projectRoot"]],
   plan: [["feature", "feature", true], ["projectRoot", "projectRoot"]],
   tasks: [["feature", "feature", true], ["projectRoot", "projectRoot"]],
-  "get-next-task": [["feature", "feature", true], ["projectRoot", "projectRoot"]],
-  implement: [["taskId", "taskId", true], ["projectRoot", "projectRoot"]],
+  "get-next-task": [["feature", "feature", true], ["artifactFiles", "artifactFiles"], ["projectRoot", "projectRoot"]],
+  implement: [["taskId", "taskId", true], ["artifactFiles", "artifactFiles"], ["projectRoot", "projectRoot"]],
   validate: [["feature", "feature"], ["artifactFiles", "artifactFiles"], ["projectRoot", "projectRoot"]],
-  inspect: [["scope", "scope"], ["feature", "feature"], ["projectRoot", "projectRoot"]],
+  inspect: [["scope", "scope"], ["feature", "feature"], ["artifactFiles", "artifactFiles"], ["projectRoot", "projectRoot"]],
   amend: [["description", "descriptionReq", true], ["projectRoot", "projectRoot"]],
   clone: [["description", "description"], ["statement", "statement"], ["maxPages", "maxPages"], ["timeoutMs", "timeoutMs"], ["concurrency", "concurrency"], ["crawl", "crawl"], ["browser", "browser"], ["refresh", "refresh"], ["projectRoot", "projectRoot"]],
   "detect-environment": [["availableTools", "availableTools"], ["capabilities", "capabilities"], ["projectRoot", "projectRoot"]],
@@ -909,6 +1104,7 @@ function handleJsonRpc(body) {
       capabilities: args.capabilities,
       researchFindings: args.researchFindings,
       artifactFiles: args.artifactFiles,
+      codebaseAudit: args.codebaseAudit,
       scope: args.scope,
     };
     const handlers = phaseHandlers(input);
@@ -917,7 +1113,8 @@ function handleJsonRpc(body) {
       return { jsonrpc: "2.0", id, error: { code: -32601, message: `Tool not found: ${toolName}` } };
     }
     try {
-      const result = handler.call(handlers);
+      const raw = handler.call(handlers);
+      const result = WRITE_PHASES.has(phaseKey) && raw && raw.success && !raw.mode ? writeEnvelope(raw) : raw;
       const structured = { ...result, _phase: phaseKey };
       return { jsonrpc: "2.0", id, result: { content: [{ type: "text", text: JSON.stringify(result, null, 2) }], structuredContent: structured } };
     } catch (err) {
@@ -1151,7 +1348,10 @@ const HTML = `<!DOCTYPE html>
     <pre>curl -X POST https://vdd.simonmak.com/api/mcp \\
   -H "Content-Type: application/json" \\
   -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"vdd_vision","arguments":{"statement":"Build a platform that...","projectRoot":"."}},"id":1}'</pre>
-    <p>Runs init → vision → strategize → tactics → specify → clarify → plan → tasks → get-next-task → validate. Returns all templates.</p>
+    <p>Returns the artifact for the requested phase (templates for write phases; parsed results for read phases).</p>
+    <h3>Hosted vs local</h3>
+    <p>This public endpoint is <strong>stateless and has no filesystem</strong>. It returns artifacts and, for filesystem-dependent phases (tactics, clarify, get-next-task, inspect, validate, implement), a <strong>delegation envelope</strong> for your agent to execute locally — then re-call the same tool with <code>artifactFiles</code> (and <code>codebaseAudit</code> for tactics) to receive the real result. Write phases are always returned with <code>persisted:false</code> and a <code>writeTargets</code> list for the agent to write.</p>
+    <p>For direct filesystem read/write, run the local stdio server instead: <code>npx -y @simonmak-ascent/mcp</code>.</p>
   </section>
 </main>
 <footer>

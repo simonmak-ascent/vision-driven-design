@@ -49,9 +49,23 @@ module.exports = async function (req, res) {
     return rpcError(res, 400, -32700, "Parse error: expected a JSON-RPC 2.0 body");
   }
 
+  // This endpoint is public and unauthenticated: bound the work so a single
+  // request cannot consume unbounded CPU or memory. Per-tool payload limits
+  // (artifactFiles) are enforced in api/_vdd-rpc.js.
+  const MAX_BODY_BYTES = 524288; // 512 KB
+  const MAX_BATCH = 50;
+  let bodySize = 0;
+  try { bodySize = Buffer.byteLength(JSON.stringify(body)); } catch { /* unstringifiable — let the handler reject it */ }
+  if (bodySize > MAX_BODY_BYTES) {
+    return rpcError(res, 413, -32600, `Request too large: ${bodySize} bytes exceeds ${MAX_BODY_BYTES}`);
+  }
+
   try {
     // JSON-RPC batch
     if (Array.isArray(body)) {
+      if (body.length > MAX_BATCH) {
+        return rpcError(res, 413, -32600, `Batch too large: ${body.length} messages exceeds ${MAX_BATCH}`);
+      }
       const responses = body.map((msg) => handleJsonRpc(msg)).filter(Boolean);
       if (responses.length === 0) return res.status(202).end();
       res.setHeader("Content-Type", "application/json");
