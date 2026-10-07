@@ -302,7 +302,7 @@
       <span class="badge">7 gates</span>
       <span class="badge">108 checks</span>
       <span class="badge">15 tools</span>
-      <span class="badge">v1.5.9</span>
+      <span class="badge">v1.9.2</span>
     </header>
 
     <main>
@@ -340,7 +340,7 @@
           every gate.
         </p>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem">
-          <a class="cta" href="https://github.com/simonmak-ascent/vision-driven-design/blob/main/vdd/docs/tutorial.md">
+          <a class="cta" href="https://github.com/simonmak-ascent/vision-driven-design/blob/main/README.md">
             Tutorial
           </a>
           <a
@@ -351,7 +351,7 @@
           </a>
           <a
             class="cta secondary"
-            href="https://github.com/simonmak-ascent/vision-driven-design/blob/main/vdd/docs/comparison.md"
+            href="https://github.com/simonmak-ascent/vision-driven-design/blob/main/SKILL.md"
           >
             VDD vs SDD
           </a>
@@ -375,6 +375,13 @@
         <p style="margin: 0.75rem 0">
           15 tools via Streamable HTTP + JSON-RPC 2.0. No API key. Connect any MCP-compatible
           agent.
+        </p>
+        <p style="margin: 0.75rem 0">
+          The hosted endpoint is <strong>stateless with no filesystem</strong>: artifact phases
+          return <code>persisted:false</code> + <code>writeTargets</code>, and filesystem-dependent
+          phases return a <code>delegation</code> envelope — re-call with
+          <code>artifactFiles</code>/<code>codebaseAudit</code>, or run the local stdio server
+          <code>npx -y @simonmak-ascent/mcp</code> for direct read/write.
         </p>
       </section>
 
@@ -406,8 +413,8 @@
       </p>
       <p style="margin-top: 0.5rem">
         <img
-          src="https://img.shields.io/badge/version-1.5.9-blue"
-          alt="v1.5.9"
+          src="https://img.shields.io/badge/version-1.9.2-blue"
+          alt="v1.9.2"
         />
         <img
           src="https://img.shields.io/badge/license-MIT-blue.svg"

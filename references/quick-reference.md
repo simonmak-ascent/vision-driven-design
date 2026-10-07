@@ -96,6 +96,7 @@ Each gate: Forward check (parent→children coverage) + Backward check (children
 - Packages: `packages/vdd-engine` · `packages/vdd-mcp` · `packages/vdd-cli`
 - `vdd_inspect` — read-only: `scope=project` (traceability matrix) or `scope=feature` (spec metrics)
 - `vdd_detect_environment` — report per-phase tool/MCP requirements + available capabilities
+- Hosted is **stateless (no filesystem)**: artifact phases return `persisted:false` + `writeTargets`; filesystem-dependent phases return a `delegation` envelope. Re-call the same tool with `artifactFiles` (and `codebaseAudit` for `vdd_tactics`), or run the local stdio server `npx -y @simonmak-ascent/mcp` for direct read/write.
 
 ## When NOT to Use VDD
 

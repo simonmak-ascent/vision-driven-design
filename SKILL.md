@@ -252,3 +252,11 @@ lists, and enforces substantive (non-placeholder) gates. The **host agent** exec
 audit, and implementation using its own environment MCP tools (Brave Search, Perplexity, Context7,
 gh_grep, Playwright, filesystem). A freshly generated template is marked NOT-ready (gates report
 placeholders) until the host agent fills it in and re-runs `/vdd:validate`.
+
+**Local vs hosted.** The stdio server (`npx -y @simonmak-ascent/mcp`) and the CLI read and write the
+real project filesystem (`mode:"local"`; artifact phases report `persisted:true`). The hosted endpoint
+(`vdd.simonmak.com/api/mcp`) is **stateless and has no filesystem**: it returns artifact content with
+`persisted:false` + `writeTargets`, and for filesystem-dependent phases (`vdd_tactics`, `vdd_clarify`,
+`vdd_get_next_task`, `vdd_inspect`, `vdd_validate`, `vdd_implement`) it returns a **`delegation`
+envelope** — re-call the same tool with `artifactFiles` (and `codebaseAudit` for tactics) to receive the
+real result. Details: `docs/deployment.md`.

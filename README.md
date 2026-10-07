@@ -77,7 +77,7 @@ Then in your project:
 
 The AI handles the rest — researching, auditing, generating specs, planning, implementing, and validating — with self-gating at 7 bi-directional verification junctions.
 
-**[Tutorial →](vdd/docs/tutorial.md)** — 30-minute walkthrough building a real project.
+**[Skill reference →](SKILL.md)** — commands, the 8-phase chain, and the quality gates.
 
 ```bash
 # Want human gates? Add to constitution.md:
@@ -347,7 +347,7 @@ VDD is benchmarked against NASA SE, CMMI REQM, DO-178C, IEC 62304, DORA, ISO 291
 
 **47/47 criteria matched (100%), 11 exceeded, 0 gaps.**
 
-[Full benchmark matrix →](vdd/docs/best-practice-benchmark.md) | [Compliance evidence templates →](references/compliance-evidence.md)
+[Standards & compliance evidence →](references/compliance-evidence.md)
 
 ---
 
@@ -356,9 +356,7 @@ VDD is benchmarked against NASA SE, CMMI REQM, DO-178C, IEC 62304, DORA, ISO 291
 | File | Contents |
 |------|----------|
 | [`SKILL.md`](SKILL.md) | Full command reference and workflow |
-| [`vdd/docs/tutorial.md`](vdd/docs/tutorial.md) | 30-minute walkthrough |
-| [`vdd/docs/comparison.md`](vdd/docs/comparison.md) | VDD vs SDD vs vibe coding vs TDD |
-| [`vdd/docs/best-practice-benchmark.md`](vdd/docs/best-practice-benchmark.md) | Standards alignment matrix |
+| [`docs/deployment.md`](docs/deployment.md) | Local stdio / HTTP / hosted modes and the delegation contract |
 | [`references/workflow-phases.md`](references/workflow-phases.md) | Step-by-step phase instructions (authoritative) |
 | [`references/artifact-templates.md`](references/artifact-templates.md) | Copy-paste templates for all 11 artifacts |
 | [`references/quality-gates.md`](references/quality-gates.md) | 7 gates with 108 checks + CI/CD |
