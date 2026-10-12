@@ -1,452 +1,84 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2363c8c4'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='18' font-weight='700' fill='%230f1115' text-anchor='middle'%3EV%3C/text%3E%3C/svg%3E"
-    />
-    <title>
-      Vision Driven Design — Bi-directional traceability for AI-assisted
-      development
-    </title>
-    <meta
-      name="description"
-      content="Prove every commit traces to the business goal that authorised it. Bi-directional traceability for AI-written code, borrowed from DO-178C, IEC 62304 and CMMI. Open source, MIT. MCP server at vdd.simonmak.com."
-    />
-    <link rel="canonical" href="https://vdd.simonmak.com/" />
-    <meta name="robots" content="index,follow,max-image-preview:large" />
-    <meta name="author" content="Simon Mak" />
-    <meta
-      name="keywords"
-      content="MCP server, Model Context Protocol, spec-driven development, requirements traceability, AI coding agents, bi-directional traceability, Claude, Cursor, VS Code, DO-178C, IEC 62304, CMMI, ISO 29148, developer tools"
-    />
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Vision Driven Design" />
-    <meta property="og:locale" content="en_US" />
-    <meta property="og:title" content="Vision Driven Design — bi-directional traceability for AI-assisted development" />
-    <meta
-      property="og:description"
-      content="Prove your AI-written code did what the business actually asked for. Bi-directional traceability from business goal to shipped commit — an MCP server with 8 phases and 7 quality gates."
-    />
-    <meta property="og:url" content="https://vdd.simonmak.com/" />
-    <meta property="og:image" content="https://vdd.simonmak.com/og.png" />
-    <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="1280" />
-    <meta property="og:image:height" content="640" />
-    <meta property="og:image:alt" content="Vision Driven Design — From Vision to Verified Impact" />
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Vision Driven Design — bi-directional traceability for AI-assisted development" />
-    <meta
-      name="twitter:description"
-      content="Prove your AI-written code did what the business actually asked for. An MCP server with 8 phases, 7 quality gates, and bi-directional traceability."
-    />
-    <meta name="twitter:image" content="https://vdd.simonmak.com/og.png" />
-    <meta name="twitter:image:alt" content="Vision Driven Design — From Vision to Verified Impact" />
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "Vision Driven Design",
-        "alternateName": "VDD MCP Server",
-        "description": "Spec-driven development MCP server: 8 phases, bi-directional V→S→T→SP→PL→TK traceability, and 7 quality gates for AI-assisted development.",
-        "url": "https://vdd.simonmak.com/",
-        "applicationCategory": "DeveloperApplication",
-        "operatingSystem": "Any",
-        "license": "https://opensource.org/licenses/MIT",
-        "isAccessibleForFree": true,
-        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-        "sameAs": [
-          "https://github.com/simonmak-ascent/vision-driven-design",
-          "https://www.npmjs.com/package/@simonmak-ascent/mcp",
-          "https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design"
-        ],
-        "softwareHelp": { "@type": "CreativeWork", "url": "https://agentstatus.dev/mcp-index/vdd" }
-      }
-    </script>
-    <style>
-      /* Dark theme (default) */
-      :root {
-        --teal: #63c8c4;
-        --teal-dark: #7fdbd6;
-        --ink: #e8eaed;
-        --muted: #a6adb4;
-        --line: #2b3138;
-        --bg: #0f1115;
-        --card: #171a20;
-        --pre-bg: #171a20;
-        --on-brand: #0f1115;
-        --header-a: #0a5c60;
-        --header-b: #074347;
-        --header-ink: #ffffff;
-        --green: #2e7d32;
-        --blue: #1565c0;
-        --orange: #c66900;
-        --purple: #7b1fa2;
-      }
-      /* Light theme (opt-in via toggle) */
-      [data-theme="light"] {
-        --teal: #006b7d;
-        --teal-dark: #005963;
-        --ink: #1a1a1a;
-        --muted: #5a5a5a;
-        --line: #e0e0e0;
-        --bg: #f8faf9;
-        --card: #fff;
-        --pre-bg: #f5f5f5;
-        --on-brand: #ffffff;
-        --header-a: #006b7d;
-        --header-b: #005963;
-        --header-ink: #ffffff;
-        --green: #4caf50;
-        --blue: #2196f3;
-        --orange: #ff9800;
-        --purple: #9c27b0;
-      }
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          "Helvetica Neue", Arial, sans-serif;
-        background: var(--bg);
-        color: var(--ink);
-        line-height: 1.6;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
-      header {
-        position: relative;
-        background: linear-gradient(135deg, var(--header-a) 0%, var(--header-b) 100%);
-        color: var(--header-ink);
-        padding: 3rem 1.5rem 2.5rem;
-        text-align: center;
-      }
-      header h1 {
-        font-size: 2.5rem;
-        font-weight: 700;
-        letter-spacing: -0.5px;
-      }
-      header p {
-        font-size: 1.15rem;
-        opacity: 0.9;
-        margin-top: 0.75rem;
-        max-width: 600px;
-        margin-left: auto;
-        margin-right: auto;
-      }
-      .badge {
-        display: inline-block;
-        padding: 0.3rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin: 0.75rem 0.3rem 0;
-        background: rgba(255, 255, 255, 0.15);
-      }
-      main {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 2.5rem 1.25rem;
-        width: 100%;
-        flex: 1;
-      }
-      section {
-        margin-bottom: 2.5rem;
-      }
-      h2 {
-        font-size: 1.35rem;
-        color: var(--teal);
-        margin-bottom: 1rem;
-        padding-bottom: 0.4rem;
-        border-bottom: 2px solid var(--teal);
-      }
-      h3 {
-        font-size: 1.1rem;
-        color: var(--ink);
-        margin-bottom: 0.75rem;
-      }
-      .diagram {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        justify-content: center;
-        margin: 1.5rem 0;
-      }
-      .diagram-box {
-        padding: 0.8rem 1rem;
-        border-radius: 6px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        color: #fff;
-        min-width: 90px;
-        text-align: center;
-      }
-      .diagram-arrow {
-        display: flex;
-        align-items: center;
-        font-size: 1.2rem;
-        color: var(--muted);
-      }
-      .card {
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 1.25rem;
-        margin-bottom: 1rem;
-      }
-      .row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid var(--line);
-      }
-      .row:last-child {
-        border-bottom: none;
-      }
-      .row .label {
-        font-weight: 600;
-        color: var(--muted);
-      }
-      .row .value {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      }
-      pre {
-        background: var(--pre-bg);
-        color: var(--ink);
-        padding: 1rem;
-        border-radius: 6px;
-        font-size: 0.82rem;
-        overflow-x: auto;
-        white-space: pre-wrap;
-        margin-bottom: 1rem;
-      }
-      .cta {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.7rem 1.3rem;
-        background: var(--teal);
-        color: var(--on-brand);
-        text-decoration: none;
-        border-radius: 6px;
-        font-weight: 600;
-        transition: background 0.15s;
-      }
-      .cta:hover {
-        background: var(--teal-dark);
-      }
-      .cta.secondary {
-        background: var(--card);
-        color: var(--teal);
-        border: 1px solid var(--teal);
-      }
-      .cta.secondary:hover {
-        background: var(--bg);
-      }
-      .theme-toggle {
-        position: absolute; top: 1rem; right: 1rem;
-        display: inline-flex; align-items: center; justify-content: center;
-        background: rgba(255,255,255,0.12); color: var(--header-ink);
-        border: 1px solid rgba(255,255,255,0.55); border-radius: 999px;
-        padding: 0.5rem 1rem; font-size: 0.9rem; font-weight: 600; cursor: pointer;
-        min-height: 44px; min-width: 44px;
-      }
-      .theme-toggle:hover, .theme-toggle:focus-visible { background: rgba(255,255,255,0.22); }
-      footer {
-        text-align: center;
-        padding: 1.5rem;
-        color: var(--muted);
-        font-size: 0.85rem;
-        border-top: 1px solid var(--line);
-      }
-      footer a {
-        color: var(--teal);
-        text-decoration: none;
-      }
-      @media (max-width: 600px) {
-        header {
-          padding: 2rem 1rem 1.5rem;
-        }
-        header h1 {
-          font-size: 1.6rem;
-        }
-      }
-    </style>
-    <script>
-      (function () {
-        try {
-          if (localStorage.getItem("vdd-theme") === "light") {
-            document.documentElement.setAttribute("data-theme", "light");
-          }
-        } catch (e) {}
-      })();
-    </script>
-  </head>
-  <body>
-    <header>
-      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light mode">Light mode</button>
-      <h1>Vision Driven Design</h1>
-      <p>
-        From vision to verified impact — bi-directional traceability for
-        AI-assisted development. Prove every commit serves the business goal.
-      </p>
-      <span class="badge">8 phases</span>
-      <span class="badge">7 gates</span>
-      <span class="badge">108 checks</span>
-      <span class="badge">15 tools</span>
-      <span class="badge">v1.9.2</span>
-    </header>
+<!doctype html>
+<html lang="en-GB" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vision Driven Design MCP — Ascent Partners</title>
+  <meta name="description" content="Give AI coding agents a spec-driven methodology — 8 phases with bi-directional traceability and 7 quality gates.">
+  <link rel="canonical" href="/">
+    <link rel="alternate" hreflang="x-default" href="/">
+    <link rel="alternate" hreflang="zh-Hans" href="/zh/">
+    <link rel="alternate" hreflang="zh-Hant-HK" href="/hk/">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Titillium+Web:wght@400;600;700&family=Raleway:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="apg-tokens.css">
+  <link rel="stylesheet" href="apg-tool.css">
+  <script>(function(){try{var v=localStorage.getItem("apg-theme");document.documentElement.setAttribute("data-theme",v==="light"||v==="dark"?v:"dark");}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
+</head>
+<body>
+  <div class="apg-topbar"><div class="apg-container apg-topbar-inner">
+    <a class="apg-brand" href="https://www.ascent-partners.com/tools"><span class="apg-mark">AP</span> Ascent&nbsp;Partners · <span style="font-family:var(--ap-font-body);font-weight:400">Open Tooling</span></a>
+    <div class="apg-controls"><span class="apg-langs"><a class="apg-lang" href="" hreflang="en-GB" aria-current="true">English</a><a class="apg-lang" href="zh/" hreflang="zh-Hans">中文</a><a class="apg-lang" href="hk/" hreflang="zh-Hant-HK">繁體</a></span><button class="apg-theme-toggle" type="button" aria-label="Toggle theme">☾</button></div>
+  </div></div>
 
-    <main>
-      <section>
-        <h2>The Chain</h2>
-        <div class="diagram">
-          <div class="diagram-box" style="background: var(--green)">Vision</div>
-          <div class="diagram-arrow">→</div>
-          <div class="diagram-box" style="background: var(--blue)">Strategy</div>
-          <div class="diagram-arrow">→</div>
-          <div class="diagram-box" style="background: var(--orange)">Tactics</div>
-          <div class="diagram-arrow">→</div>
-          <div class="diagram-box" style="background: var(--purple)">Specs</div>
-          <div class="diagram-arrow">→</div>
-          <div class="diagram-box" style="background: var(--muted)">Plan</div>
-          <div class="diagram-arrow">→</div>
-          <div class="diagram-box" style="background: var(--muted)">Tasks</div>
-          <div class="diagram-arrow">→</div>
-          <div class="diagram-box" style="background: var(--muted)">Implement</div>
-          <div class="diagram-arrow">→</div>
-          <div class="diagram-box" style="background: var(--green)">Validate</div>
-        </div>
-      </section>
+  <header class="apg-hero">
+    <img src="hero.jpg" alt="" width="1440" height="750">
+    <div class="apg-scrim"></div>
+    <nav class="apg-crumbs" aria-label="Breadcrumb"><div class="apg-container"><ol>
+      <li><a href="https://www.ascent-partners.com/">Home</a></li>
+      <li><a href="https://www.ascent-partners.com/tools">Open Tooling</a></li>
+      <li aria-current="page">Vision Driven Design MCP</li>
+    </ol></div></nav>
+    <h1 class="apg-container">Vision Driven Design MCP</h1>
+  </header>
 
-      <section>
-        <h2>Quick Start</h2>
-        <pre>curl -sSL https://raw.githubusercontent.com/simonmak-ascent/vision-driven-design/main/scripts/install.sh | bash</pre>
-        <p>Then in your project:</p>
-        <pre>/vdd:vision "I want to build a platform that..."</pre>
-        <p style="margin-top:0.5rem;">Or run the full chain in one call:</p>
-        <pre>/vdd:e2e "your vision statement here"</pre>
-        <p style="margin-top:0.5rem;">
-          AI handles the rest — domain research, codebase audit, specs, plans,
-          implementation, and validation — with bi-directional verification at
-          every gate.
-        </p>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem">
-          <a class="cta" href="https://github.com/simonmak-ascent/vision-driven-design/blob/main/README.md">
-            Tutorial
-          </a>
-          <a
-            class="cta secondary"
-            href="https://github.com/simonmak-ascent/vision-driven-design#commands"
-          >
-            All Commands
-          </a>
-          <a
-            class="cta secondary"
-            href="https://github.com/simonmak-ascent/vision-driven-design/blob/main/SKILL.md"
-          >
-            VDD vs SDD
-          </a>
-        </div>
-      </section>
+  <main class="apg-container apg-main">
+    <div class="apg-header">
+      <span class="apg-badge">MCP server</span>
+      <p class="apg-value">Give AI coding agents a spec-driven methodology — 8 phases with bi-directional traceability and 7 quality gates.</p>
+      <p class="apg-thesis">A methodology for AI coding agents: eight phases, seven gates — so “done” means traceable, not just working.</p>
+    </div>
+    <dl class="apg-stats"><div class="apg-stat"><dt>tools</dt><dd>15</dd></div><div class="apg-stat"><dt>phases</dt><dd>8</dd></div><div class="apg-stat"><dt>gate checks</dt><dd>108</dd></div><div class="apg-stat"><dt>open source</dt><dd>MIT</dd></div></dl>
+    <div class="apg-sections">
+      <section class="apg-section-h"><h2>Capabilities</h2><ul class="apg-caps"><li>15 tools over Streamable HTTP</li><li>Vision → strategy → tactics → specs → plan → tasks → implement → validate</li><li>7 bi-directional gates (108 checks); DO-178C / IEC 62304 / CMMI alignment</li></ul></section>
+      <section class="apg-section-h"><h2>Standards</h2><ul class="apg-chips"><li>DO-178C</li><li>IEC 62304</li><li>CMMI</li></ul></section>
+      <section class="apg-section-h"><h2>Connect</h2><p>Point an MCP client at the hosted endpoint. Open access, no API key.</p><div class="apg-tabs" role="tablist"><button class="apg-tab" role="tab" aria-selected="true" data-target="pane-opencode">OpenCode</button><button class="apg-tab" role="tab" aria-selected="false" data-target="pane-claude-code">Claude Code</button><button class="apg-tab" role="tab" aria-selected="false" data-target="pane-claude-desktop">Claude Desktop</button><button class="apg-tab" role="tab" aria-selected="false" data-target="pane-cursor">Cursor</button><button class="apg-tab" role="tab" aria-selected="false" data-target="pane-vscode">VS Code</button><button class="apg-tab" role="tab" aria-selected="false" data-target="pane-generic">Any MCP client</button><div class="apg-pane" id="pane-opencode" role="tabpanel"><button class="apg-copy" type="button">Copy</button><pre>{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "vdd": { "type": "remote", "url": "https://vdd.simonmak.com/api/mcp" }
+  }
+}</pre></div><div class="apg-pane" id="pane-claude-code" role="tabpanel" hidden><button class="apg-copy" type="button">Copy</button><pre>claude mcp add --transport http vdd https://vdd.simonmak.com/api/mcp</pre></div><div class="apg-pane" id="pane-claude-desktop" role="tabpanel" hidden><button class="apg-copy" type="button">Copy</button><pre>{
+  "mcpServers": {
+    "vdd": { "url": "https://vdd.simonmak.com/api/mcp" }
+  }
+}</pre></div><div class="apg-pane" id="pane-cursor" role="tabpanel" hidden><button class="apg-copy" type="button">Copy</button><pre>{
+  "mcpServers": {
+    "vdd": { "url": "https://vdd.simonmak.com/api/mcp" }
+  }
+}</pre></div><div class="apg-pane" id="pane-vscode" role="tabpanel" hidden><button class="apg-copy" type="button">Copy</button><pre>{
+  "servers": {
+    "vdd": { "type": "http", "url": "https://vdd.simonmak.com/api/mcp" }
+  }
+}</pre></div><div class="apg-pane" id="pane-generic" role="tabpanel" hidden><button class="apg-copy" type="button">Copy</button><pre>{
+  "mcpServers": {
+    "vdd": { "url": "https://vdd.simonmak.com/api/mcp" }
+  }
+}</pre></div></div></section>
+      <section class="apg-section-h"><h2>Facts</h2><dl class="apg-facts"><div class="apg-fact"><dt>Endpoint</dt><dd><code>https://vdd.simonmak.com/api/mcp</code></dd></div><div class="apg-fact"><dt>Transport</dt><dd>Streamable HTTP</dd></div><div class="apg-fact"><dt>Auth</dt><dd>Open — no API key</dd></div><div class="apg-fact"><dt>Licence</dt><dd>MIT</dd></div><div class="apg-fact"><dt>Registry</dt><dd><code>io.github.simonmak-ascent/vision-driven-design</code></dd></div></dl></section>
+      <section class="apg-card"><h2>Where it comes from</h2><p>A methodology from the Ascent Partners technology practice — spec-driven development with bi-directional traceability, developed against VDD itself.</p><div class="apg-inline-links"><a href="https://www.ascent-partners.com/services/technology-advisory">Technology Advisory</a><a href="https://www.ascent-partners.com/about#contact">Contact us</a></div></section>
+      <div class="apg-actions">
+        <a class="apg-btn apg-btn-primary" href="https://vdd.simonmak.com" rel="noopener">Documentation</a>
+        <a class="apg-btn apg-btn-secondary" href="https://github.com/simonmak-ascent/vision-driven-design" rel="noopener">Source</a>
+      </div>
+      <a class="apg-back" href="https://www.ascent-partners.com/tools">← All tools</a>
+    </div>
+  </main>
 
-      <section>
-        <h2>MCP API</h2>
-        <div class="card">
-          <div class="row">
-            <span class="label">Endpoint</span>
-            <span class="value">https://vdd.simonmak.com/api/mcp</span>
-          </div>
-          <div class="row">
-            <span class="label">Transport</span><span class="value">Streamable HTTP + JSON-RPC 2.0</span>
-          </div>
-          <div class="row">
-            <span class="label">Auth</span><span class="value">Public — no API key</span>
-          </div>
-        </div>
-        <p style="margin: 0.75rem 0">
-          15 tools via Streamable HTTP + JSON-RPC 2.0. No API key. Connect any MCP-compatible
-          agent.
-        </p>
-        <p style="margin: 0.75rem 0">
-          The hosted endpoint is <strong>stateless with no filesystem</strong>: artifact phases
-          return <code>persisted:false</code> + <code>writeTargets</code>, and filesystem-dependent
-          phases return a <code>delegation</code> envelope — re-call with
-          <code>artifactFiles</code>/<code>codebaseAudit</code>, or run the local stdio server
-          <code>npx -y @simonmak-ascent/mcp</code> for direct read/write.
-        </p>
-      </section>
-
-      <section>
-        <h2>Goldratt S&T</h2>
-        <p>
-          Every phase is both the <strong>Tactic</strong> for its parent and the
-          <strong>Strategy</strong> for its child. Gates verify forward
-          (parent→children coverage) and backward (children→parent authorization).
-        </p>
-      </section>
-
-      <section>
-        <h2>Impact Chain</h2>
-        <pre>V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006 → commits</pre>
-        <p style="margin-top: 0.75rem">
-          Every commit message ties back through plans, specs, tactics, strategy,
-          and vision. Nothing gets built unless it serves the original impact goal.
-        </p>
-      </section>
-    </main>
-
-    <footer>
-      <p>
-        <a href="https://github.com/simonmak-ascent/vision-driven-design"
-          >Vision Driven Design</a
-        >
-        — 15 tools, no API key. MIT licensed.
-      </p>
-      <p style="margin-top: 0.5rem">
-        <img
-          src="https://img.shields.io/badge/version-1.9.2-blue"
-          alt="v1.9.2"
-        />
-        <img
-          src="https://img.shields.io/badge/license-MIT-blue.svg"
-          alt="MIT"
-        />
-        <img
-          src="https://img.shields.io/badge/built_with-VDD-teal"
-          alt="Built with VDD"
-        />
-      </p>
-      <p style="margin-top: 0.75rem">
-        Goldratt S&T · Impact Mapping · NASA SE · CMMI
-      </p>
-    </footer>
-    <script>
-      (function () {
-        var b = document.getElementById("theme-toggle");
-        if (!b) return;
-        function sync() {
-          var l = document.documentElement.getAttribute("data-theme") === "light";
-          b.textContent = l ? "Dark mode" : "Light mode";
-          b.setAttribute("aria-label", l ? "Switch to dark mode" : "Switch to light mode");
-        }
-        b.addEventListener("click", function () {
-          var l = document.documentElement.getAttribute("data-theme") === "light";
-          if (l) { document.documentElement.removeAttribute("data-theme"); }
-          else { document.documentElement.setAttribute("data-theme", "light"); }
-          try { localStorage.setItem("vdd-theme", l ? "dark" : "light"); } catch (e) {}
-          sync();
-        });
-        sync();
-      })();
-    </script>
-  </body>
+  <footer class="apg-footer"><div class="apg-container">
+    <p>MIT © Simon Mak / Ascent Partners Group Limited · v1.9.2 · <a href="https://github.com/simonmak-ascent/vision-driven-design" rel="noopener">GitHub</a> · <a href="https://www.npmjs.com/package/@simonmak-ascent/mcp" rel="noopener">npm</a></p>
+  </div></footer>
+  <script src="apg-tool.js"></script>
+</body>
 </html>

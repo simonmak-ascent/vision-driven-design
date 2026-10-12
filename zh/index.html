@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-Hans" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vision Driven Design MCP — Ascent Partners</title>
+  <meta name="description" content="为 AI 编码代理提供规格驱动的方法论——8 个阶段、双向可追溯性及 7 个质量门。">
+  <link rel="canonical" href="/zh/">
+    <link rel="alternate" hreflang="x-default" href="/">
+    <link rel="alternate" hreflang="zh-Hans" href="/zh/">
+    <link rel="alternate" hreflang="zh-Hant-HK" href="/hk/">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Titillium+Web:wght@400;600;700&family=Raleway:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../apg-tokens.css">
+  <link rel="stylesheet" href="../apg-tool.css">
+  <script>(function(){try{var v=localStorage.getItem("apg-theme");document.documentElement.setAttribute("data-theme",v==="light"||v==="dark"?v:"dark");}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
+</head>
+<body>
+  <div class="apg-topbar"><div class="apg-container apg-topbar-inner">
+    <a class="apg-brand" href="https://www.ascent-partners.com/tools"><span class="apg-mark">AP</span> Ascent&nbsp;Partners · <span style="font-family:var(--ap-font-body);font-weight:400">开放工具</span></a>
+    <div class="apg-controls"><span class="apg-langs"><a class="apg-lang" href="../" hreflang="en-GB">English</a><a class="apg-lang" href="../zh/" hreflang="zh-Hans" aria-current="true">中文</a><a class="apg-lang" href="../hk/" hreflang="zh-Hant-HK">繁體</a></span><button class="apg-theme-toggle" type="button" aria-label="Toggle theme">☾</button></div>
+  </div></div>
+
+  <header class="apg-hero">
+    <img src="../hero.jpg" alt="" width="1440" height="750">
+    <div class="apg-scrim"></div>
+    <nav class="apg-crumbs" aria-label="Breadcrumb"><div class="apg-container"><ol>
+      <li><a href="https://www.ascent-partners.com/">首页</a></li>
+      <li><a href="https://www.ascent-partners.com/tools">开放工具</a></li>
+      <li aria-current="page">Vision Driven Design MCP</li>
+    </ol></div></nav>
+    <h1 class="apg-container">Vision Driven Design MCP</h1>
+  </header>
+
+  <main class="apg-container apg-main">
+    <div class="apg-header">
+      <span class="apg-badge">MCP 服务器</span>
+      <p class="apg-value">为 AI 编码代理提供规格驱动的方法论——8 个阶段、双向可追溯性及 7 个质量门。</p>
+      <p class="apg-thesis">面向 AI 编码代理的方法论：八个阶段、七道质量门——让「完成」意味着可追溯，而非仅仅能跑。</p>
+    </div>
+    <dl class="apg-stats"><div class="apg-stat"><dt>个工具</dt><dd>15</dd></div><div class="apg-stat"><dt>个阶段</dt><dd>8</dd></div><div class="apg-stat"><dt>项质量检查</dt><dd>108</dd></div><div class="apg-stat"><dt>开源</dt><dd>MIT</dd></div></dl>
+    <div class="apg-sections">
+      <section class="apg-section-h"><h2>能力</h2><ul class="apg-caps"><li>通过 Streamable HTTP 提供 15 个工具</li><li>愿景 → 策略 → 战术 → 规格 → 计划 → 任务 → 实施 → 验证</li><li>7 个双向质量门（108 项检查）；对齐 DO-178C / IEC 62304 / CMMI</li></ul></section>
+      <section class="apg-section-h"><h2>准则</h2><ul class="apg-chips"><li>DO-178C</li><li>IEC 62304</li><li>CMMI</li></ul></section>
+      <section class="apg-section-h"><h2>连接</h2><p>将 MCP 客户端指向托管端点。开放访问，无需 API 密钥。</p><div class="apg-tabs" role="tablist"><button class="apg-tab" role="tab" aria-selected="true" data-target="pane-opencode">OpenCode</button><button class="apg-tab" role="tab" aria-selected="false" data-target="pane-claude-code">Claude Code</button><button class="apg-tab" role="tab" aria-selected="false" data-target="pane-claude-desktop">Claude Desktop</button><button class="apg-tab" role="tab" aria-selected="false" data-target="pane-cursor">Cursor</button><button class="apg-tab" role="tab" aria-selected="false" data-target="pane-vscode">VS Code</button><button class="apg-tab" role="tab" aria-selected="false" data-target="pane-generic">Any MCP client</button><div class="apg-pane" id="pane-opencode" role="tabpanel"><button class="apg-copy" type="button">复制</button><pre>{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "vdd": { "type": "remote", "url": "https://vdd.simonmak.com/api/mcp" }
+  }
+}</pre></div><div class="apg-pane" id="pane-claude-code" role="tabpanel" hidden><button class="apg-copy" type="button">复制</button><pre>claude mcp add --transport http vdd https://vdd.simonmak.com/api/mcp</pre></div><div class="apg-pane" id="pane-claude-desktop" role="tabpanel" hidden><button class="apg-copy" type="button">复制</button><pre>{
+  "mcpServers": {
+    "vdd": { "url": "https://vdd.simonmak.com/api/mcp" }
+  }
+}</pre></div><div class="apg-pane" id="pane-cursor" role="tabpanel" hidden><button class="apg-copy" type="button">复制</button><pre>{
+  "mcpServers": {
+    "vdd": { "url": "https://vdd.simonmak.com/api/mcp" }
+  }
+}</pre></div><div class="apg-pane" id="pane-vscode" role="tabpanel" hidden><button class="apg-copy" type="button">复制</button><pre>{
+  "servers": {
+    "vdd": { "type": "http", "url": "https://vdd.simonmak.com/api/mcp" }
+  }
+}</pre></div><div class="apg-pane" id="pane-generic" role="tabpanel" hidden><button class="apg-copy" type="button">复制</button><pre>{
+  "mcpServers": {
+    "vdd": { "url": "https://vdd.simonmak.com/api/mcp" }
+  }
+}</pre></div></div></section>
+      <section class="apg-section-h"><h2>信息</h2><dl class="apg-facts"><div class="apg-fact"><dt>端点</dt><dd><code>https://vdd.simonmak.com/api/mcp</code></dd></div><div class="apg-fact"><dt>传输</dt><dd>Streamable HTTP</dd></div><div class="apg-fact"><dt>认证</dt><dd>开放——无需密钥</dd></div><div class="apg-fact"><dt>许可</dt><dd>MIT</dd></div><div class="apg-fact"><dt>注册表</dt><dd><code>io.github.simonmak-ascent/vision-driven-design</code></dd></div></dl></section>
+      <section class="apg-card"><h2>来源</h2><p>来自艾升集团技术咨询团队的方法论——具备双向可追溯性的规格驱动开发，并以 VDD 自身开发验证。</p><div class="apg-inline-links"><a href="https://www.ascent-partners.com/services/technology-advisory">技术咨询</a><a href="https://www.ascent-partners.com/about#contact">联系我们</a></div></section>
+      <div class="apg-actions">
+        <a class="apg-btn apg-btn-primary" href="https://vdd.simonmak.com" rel="noopener">文档</a>
+        <a class="apg-btn apg-btn-secondary" href="https://github.com/simonmak-ascent/vision-driven-design" rel="noopener">源代码</a>
+      </div>
+      <a class="apg-back" href="https://www.ascent-partners.com/tools">← 全部工具</a>
+    </div>
+  </main>
+
+  <footer class="apg-footer"><div class="apg-container">
+    <p>MIT © Simon Mak / Ascent Partners Group Limited · v1.9.2 · <a href="https://github.com/simonmak-ascent/vision-driven-design" rel="noopener">GitHub</a> · <a href="https://www.npmjs.com/package/@simonmak-ascent/mcp" rel="noopener">npm</a></p>
+  </div></footer>
+  <script src="../apg-tool.js"></script>
+</body>
+</html>
