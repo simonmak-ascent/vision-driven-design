@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed (web UI — APG design tokens)
+- The landing page (`index.html`) and the browser docs page served at `GET /api/mcp` (`api/_vdd-rpc.js`) are re-themed with the Ascent Partners Group design tokens (`apg-website` `src/styles/tokens.v2.json` + `tokens-dark.json`): brand teal `#0085ae`, accent `#005467` (light) / `#5bc8e8` (dark), gold accent, neutral text/surface/border roles, APG radii (4/8/12px), `shadow.sm`, motion `0.15s` + `cubic-bezier(.4,0,.2,1)`, and a 2px `border.focus` ring. Type now uses Open Sans (body), Titillium Web (headings) and Raleway (display). Dark remains the default; the light toggle is unchanged. Every pair still clears WCAG 2.2 AAA for text.
+
 ### Changed (hosted endpoint — agent-delegation)
 - **The hosted endpoint no longer claims writes it cannot perform.** It is stateless and has no filesystem: artifact-producing phases return `persisted: false` and a `writeTargets` list, and phases that need project content (`vdd_tactics`, `vdd_clarify`, `vdd_get_next_task`, `vdd_inspect`, `vdd_validate`, `vdd_implement`) return a **delegation envelope** instead of a static string or a fabricated matrix. Re-call the same tool with `artifactFiles` (and `codebaseAudit` for tactics) to receive the real result — the delegation contract now also covers the local engine.
 - Hosted tool annotations are truthful: all 15 tools are `readOnlyHint: true`, `openWorldHint: false` (the endpoint writes nothing and fetches nothing), distinct from the stdio server, which does write.

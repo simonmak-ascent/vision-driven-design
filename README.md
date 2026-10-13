@@ -377,7 +377,7 @@ VDD is benchmarked against NASA SE, CMMI REQM, DO-178C, IEC 62304, DORA, ISO 291
 ├── CHANGELOG.md                     # Versioned change history
 ├── CONTRIBUTING.md                  # Contribution guidelines
 ├── LICENSE                         # MIT
-├── index.html                       # GitHub Pages landing page
+├── index.html                       # Vercel landing page (en / zh / hk)
 ├── pnpm-workspace.yaml              # Workspace config
 ├── package.json                     # Root package (Vercel + workspace)
 ├── vercel.json                      # Vercel deployment config

@@ -1145,7 +1145,11 @@ const HTML = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2363c8c4'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='18' font-weight='700' fill='%230f1115' text-anchor='middle'%3EV%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230085ae'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='18' font-weight='700' fill='%23ffffff' text-anchor='middle'%3EV%3C/text%3E%3C/svg%3E">
+<!-- APG typefaces: Open Sans (body), Titillium Web (headings), Raleway (display). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=Titillium+Web:wght@400;600;700&family=Raleway:wght@600;700&display=swap" rel="stylesheet">
 <title>VDD MCP Server — Vision Driven Design (MCP API)</title>
 <meta name="description" content="Public Model Context Protocol (MCP) server for Vision Driven Design (VDD) — 15 tools over streamable HTTP, no API key. Spec-driven development with bi-directional traceability for AI coding agents (Claude, Cursor, VS Code).">
 <link rel="canonical" href="https://vdd.simonmak.com/api/mcp">
@@ -1167,46 +1171,54 @@ const HTML = `<!DOCTYPE html>
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Vision Driven Design MCP Server","alternateName":"VDD MCP Server","description":"Spec-driven development MCP server: 8 phases, bi-directional V→S→T→SP→PL→TK traceability, 7 quality gates.","url":"https://vdd.simonmak.com/api/mcp","applicationCategory":"DeveloperApplication","operatingSystem":"Any","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"sameAs":["https://github.com/simonmak-ascent/vision-driven-design","https://www.npmjs.com/package/@simonmak-ascent/mcp"]}
 </script>
 <style>
-  /* Dark theme (default) — all contrast >= 7:1 (WCAG 2.2 AAA) */
+  /* APG design tokens — dark (default). Source: apg-website
+     src/styles/tokens-dark.json + src/lib/css-vars.ts.
+     All text pairs >= 7:1 (WCAG 2.2 AAA). */
   :root {
-    --bg: #0f1115;
-    --card: #171a20;
-    --ink: #e8eaed;
-    --muted: #a6adb4;
-    --line: #2b3138;
-    --brand: #63c8c4;
-    --brand-dark: #7fdbd6;
-    --pre-bg: #171a20;
-    --focus: #63c8c4;
-    --on-brand: #0f1115;
-    --header-a: #0a5c60;
-    --header-b: #074347;
-    --header-ink: #ffffff;
+    --bg: #141414;          /* semantic.color.surface.page */
+    --card: #262626;        /* semantic.color.surface.raised */
+    --ink: #f4f4f4;         /* semantic.color.text.primary */
+    --muted: #c2c2c2;       /* semantic.color.text.muted */
+    --line: #3a3a3a;        /* semantic.color.border.subtle */
+    --brand: #5bc8e8;       /* semantic.color.text.accent */
+    --brand-dark: #7dd6ee;  /* semantic.color.text.link */
+    --gold: #e8c766;        /* primitive.color.brand.gold */
+    --pre-bg: #1e1e1e;      /* semantic.color.surface.inset */
+    --focus: #5bc8e8;       /* semantic.color.border.focus */
+    --on-brand: #141414;    /* semantic.color.action.primaryText */
+    --header-a: #00506a;    /* semantic.color.surface.heroBand */
+    --header-b: #00506a;    /* semantic.color.surface.heroBand */
+    --header-ink: #ffffff;  /* semantic.color.text.inverse */
+    --c-green: #338736;     /* primitive.color.green.500 */
   }
-  /* Light theme (opt-in via toggle) */
+  /* APG design tokens — light (opt-in via toggle).
+     Source: apg-website src/styles/tokens.v2.json. */
   [data-theme="light"] {
-    --bg: #f5f7f6;
-    --card: #ffffff;
-    --ink: #111111;
-    --muted: #4a4a4a;
-    --line: #c9c9c9;
-    --brand: #0a5c60;
-    --brand-dark: #074347;
-    --pre-bg: #f0f0f0;
-    --focus: #1a56a8;
-    --on-brand: #ffffff;
-    --header-a: #0a5c60;
-    --header-b: #074347;
-    --header-ink: #ffffff;
+    --bg: #ffffff;          /* semantic.color.surface.page */
+    --card: #efefef;        /* semantic.color.surface.raised */
+    --ink: #000000;         /* semantic.color.text.primary */
+    --muted: #595959;       /* semantic.color.text.muted */
+    --line: #cccccc;        /* primitive.color.neutral.300 (structural hairline) */
+    --brand: #005467;       /* semantic.color.text.accent */
+    --brand-dark: #005467;  /* semantic.color.text.link */
+    --gold: #dfb947;        /* primitive.color.brand.gold */
+    --pre-bg: #efefef;      /* semantic.color.surface.inset */
+    --focus: #005467;       /* semantic.color.border.focus */
+    --on-brand: #ffffff;    /* semantic.color.action.primaryText */
+    --header-a: #005467;    /* semantic.color.surface.heroBand */
+    --header-b: #005467;    /* semantic.color.surface.heroBand */
+    --header-ink: #ffffff;  /* semantic.color.text.inverse */
+    --c-green: #338736;     /* primitive.color.green.500 */
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Open Sans", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 300;            /* APG body weight */
     background: var(--bg);
     color: var(--ink);
-    font-size: 1rem;
-    line-height: 1.6;            /* 1.4.8 AAA: >= 1.5 */
+    font-size: 1rem;             /* APG primitive.fontSize.16 */
+    line-height: 1.7;            /* 1.4.8 AAA (APG leading-170) */
     letter-spacing: 0.01em;      /* 1.4.12 */
     word-spacing: 0.05em;        /* 1.4.12 */
     min-height: 100vh;
@@ -1214,7 +1226,7 @@ const HTML = `<!DOCTYPE html>
     flex-direction: column;
   }
   /* 1.4.8 AAA: limit measure of blocks of text */
-  main { max-width: 70ch; margin: 0 auto; padding: 2rem 1.5rem; width: 100%; flex: 1; }
+  main { max-width: 68ch; margin: 0 auto; padding: 2rem 1.5rem; width: 100%; flex: 1; } /* APG primitive.measure.prose */
   p { margin-bottom: 1rem; }     /* 1.4.8: paragraph spacing */
   a { color: var(--brand); text-decoration: underline; text-underline-offset: 0.15em; }
   a:hover, a:focus-visible { color: var(--brand-dark); }
@@ -1223,7 +1235,7 @@ const HTML = `<!DOCTYPE html>
   .skip-link {
     position: absolute; left: -9999px; top: 0;
     background: #000; color: #fff; padding: 0.75rem 1.25rem;
-    z-index: 100; font-weight: 600; text-decoration: none; border-radius: 0 0 8px 0;
+    z-index: 100; font-weight: 600; text-decoration: none; border-radius: 0 0 0.25rem 0;
   }
   .skip-link:focus { left: 0; top: 0; }
 
@@ -1233,42 +1245,44 @@ const HTML = `<!DOCTYPE html>
     color: var(--header-ink);
     padding: 3rem 1.5rem 2.5rem;
   }
-  header .wrap { max-width: 70ch; margin: 0 auto; }
-  header h1 { font-size: 2rem; font-weight: 700; line-height: 1.3; margin-bottom: 0.5rem; }
+  header .wrap { max-width: 68ch; margin: 0 auto; }
+  header h1 { font-family: "Raleway", "Open Sans", sans-serif; font-size: 2rem; font-weight: 700; line-height: 1.3; margin-bottom: 0.5rem; }
   header p { font-size: 1.1rem; color: #fff; max-width: 60ch; }
 
   .badge {
-    display: inline-block; padding: 0.35rem 0.85rem; border-radius: 999px;
+    display: inline-block; padding: 0.35rem 0.85rem; border-radius: 9999px;
     font-size: 0.9rem; font-weight: 600; margin: 0.75rem 0.4rem 0 0;
     border: 1px solid rgba(255,255,255,0.7); color: #fff;
   }
 
-  h2 { font-size: 1.5rem; color: var(--brand-dark); margin: 2rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--brand-dark); line-height: 1.3; }
-  h3 { font-size: 1.15rem; color: var(--brand-dark); margin: 1.5rem 0 0.75rem; line-height: 1.3; }
+  h2 { font-family: "Titillium Web", "Open Sans", sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--brand); margin: 2rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--brand); line-height: 1.3; }
+  h3 { font-family: "Titillium Web", "Open Sans", sans-serif; font-size: 1.15rem; font-weight: 600; color: var(--brand); margin: 1.5rem 0 0.75rem; line-height: 1.3; }
 
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem; list-style: none; }
   .tool {
     display: flex; align-items: center; gap: 0.5rem;
     padding: 0.75rem 0.9rem; background: var(--card); border: 1px solid var(--line);
-    border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    border-radius: 0.25rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.9rem; color: var(--ink); min-height: 44px;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); /* APG primitive.shadow.sm */
   }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: #1e7d32; flex-shrink: 0; } /* decorative, aria-hidden */
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c-green); flex-shrink: 0; } /* decorative, aria-hidden */
 
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 0.25rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); padding: 1.5rem; }
   .row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 0.6rem 0; border-bottom: 1px solid var(--line); }
   .row:last-child { border-bottom: none; }
   .row .label { font-weight: 600; color: var(--muted); }
   .row .value { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.95rem; word-break: break-word; }
 
-  pre { background: var(--pre-bg); color: var(--ink); padding: 1.25rem; border-radius: 8px; font-size: 0.9rem; overflow-x: auto; white-space: pre-wrap; word-break: break-word; margin-bottom: 1rem; border: 1px solid var(--line); }
+  pre { background: var(--pre-bg); color: var(--ink); padding: 1.25rem; border-radius: 0.25rem; font-size: 0.9rem; overflow-x: auto; white-space: pre-wrap; word-break: break-word; margin-bottom: 1rem; border: 1px solid var(--line); }
 
   .cta-group { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.25rem; }
   .cta {
     display: inline-flex; align-items: center; justify-content: center;
     padding: 0.8rem 1.5rem; background: var(--brand); color: var(--on-brand);
-    text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 1rem;
+    text-decoration: none; border-radius: 0.25rem; font-weight: 600; font-size: 1rem;
     min-height: 44px; min-width: 44px;   /* 2.5.5 AAA / 2.5.8 AA target size */
+    transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1); /* APG motion.hover + easing.standard */
   }
   .cta:hover, .cta:focus-visible { background: var(--brand-dark); color: var(--on-brand); }
   .cta.secondary { background: var(--card); color: var(--brand); border: 2px solid var(--brand); }
@@ -1278,7 +1292,7 @@ const HTML = `<!DOCTYPE html>
     position: absolute; top: 1rem; right: 1rem;
     display: inline-flex; align-items: center; justify-content: center;
     background: rgba(255,255,255,0.12); color: var(--header-ink);
-    border: 1px solid rgba(255,255,255,0.55); border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.55); border-radius: 9999px;
     padding: 0.5rem 1rem; font-size: 0.9rem; font-weight: 600; cursor: pointer;
     min-height: 44px; min-width: 44px;
   }
@@ -1288,7 +1302,7 @@ const HTML = `<!DOCTYPE html>
   footer a { color: var(--brand-dark); }
 
   /* 2.4.7 Focus Visible (3:1) */
-  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 0.25rem; } /* APG border.focus */
 
   /* 2.3.3 reduced motion + 1.4.11 contrast preferences */
   @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
