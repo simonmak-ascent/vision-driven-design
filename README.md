@@ -6,7 +6,7 @@
 
 [![VDD Quality Gates](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/vdd-quality-gates.yml/badge.svg)](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/vdd-quality-gates.yml)
 [![MCP Tool Definition Quality](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/tdqs.yml/badge.svg)](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/tdqs.yml)
-[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.simonmak--ascent%2Fvision--driven--design-4CAF50)](https://registry.modelcontextprotocol.io/v0/servers?search=com.ascent-partners/vision-driven-design)
+[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-com.ascent-partners%2Fvision-driven-design-4CAF50)](https://registry.modelcontextprotocol.io/v0/servers?search=com.ascent-partners/vision-driven-design)
 [![Glama MCP](https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design/badges/score.svg)](https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design)
 [![Agent Status](https://wdmisgfkoimdpvvduebj.supabase.co/functions/v1/mcp-badge?slug=vdd)](https://agentstatus.dev/mcp-index/vdd)
 [![Version](https://img.shields.io/badge/version-1.9.2-blue)](https://github.com/simonmak-ascent/vision-driven-design/releases)
