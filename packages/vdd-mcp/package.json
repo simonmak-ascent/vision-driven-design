@@ -1,13 +1,17 @@
 {
   "name": "@simonmak-ascent/mcp",
-  "version": "1.9.2",
-  "description": "Vision Driven Design MCP server — 15 tools for bi-directional traceability across an 8-phase, spec-driven development chain (Vision → Strategy → Tactics → Spec → Plan → Tasks) with 7 quality gates.",
-  "mcpName": "io.github.simonmak-ascent/vision-driven-design",
+  "version": "1.9.4",
+  "description": "Vision Driven Design MCP server \u2014 15 tools for bi-directional traceability across an 8-phase, spec-driven development chain (Vision \u2192 Strategy \u2192 Tactics \u2192 Spec \u2192 Plan \u2192 Tasks) with 7 quality gates.",
+  "mcpName": "com.ascent-partners/vision-driven-design",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
-  "bin": { "vdd-mcp": "./dist/stdio.js" },
-  "files": ["dist"],
+  "bin": {
+    "vdd-mcp": "./dist/stdio.js"
+  },
+  "files": [
+    "dist"
+  ],
   "keywords": [
     "mcp",
     "model-context-protocol",
@@ -36,13 +40,22 @@
     "directory": "packages/vdd-mcp"
   },
   "homepage": "https://github.com/simonmak-ascent/vision-driven-design#mcp-api",
-  "bugs": { "url": "https://github.com/simonmak-ascent/vision-driven-design/issues" },
+  "bugs": {
+    "url": "https://github.com/simonmak-ascent/vision-driven-design/issues"
+  },
   "author": "simonmak-ascent",
-  "scripts": { "build": "tsc", "check": "tsc --noEmit" },
+  "scripts": {
+    "build": "tsc",
+    "check": "tsc --noEmit"
+  },
   "dependencies": {
     "@simonmak-ascent/engine": "workspace:^",
     "@modelcontextprotocol/server": "^2.0.0",
     "zod": "^4.0.0"
   },
-  "devDependencies": { "@types/node": "^22.0.0", "typescript": "^5.6.0", "vitest": "^2.1.0" }
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
 }

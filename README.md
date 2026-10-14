@@ -1,12 +1,12 @@
 # Vision Driven Design
 
-<!-- mcp-name: io.github.simonmak-ascent/vision-driven-design -->
+<!-- mcp-name: com.ascent-partners/vision-driven-design -->
 
 > **From vision to verified impact** — an AI-native, fully autonomous software development methodology.
 
 [![VDD Quality Gates](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/vdd-quality-gates.yml/badge.svg)](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/vdd-quality-gates.yml)
 [![MCP Tool Definition Quality](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/tdqs.yml/badge.svg)](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/tdqs.yml)
-[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.simonmak--ascent%2Fvision--driven--design-4CAF50)](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.simonmak-ascent/vision-driven-design)
+[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.simonmak--ascent%2Fvision--driven--design-4CAF50)](https://registry.modelcontextprotocol.io/v0/servers?search=com.ascent-partners/vision-driven-design)
 [![Glama MCP](https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design/badges/score.svg)](https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design)
 [![Agent Status](https://wdmisgfkoimdpvvduebj.supabase.co/functions/v1/mcp-badge?slug=vdd)](https://agentstatus.dev/mcp-index/vdd)
 [![Version](https://img.shields.io/badge/version-1.9.2-blue)](https://github.com/simonmak-ascent/vision-driven-design/releases)
@@ -289,7 +289,7 @@ Maintainer notes:
 - `glama.json` (repo root) is Glama's registry file. Its [schema](https://glama.ai/mcp/schemas/server.json) consumes exactly one field — `maintainers`. Build/transport/description metadata belongs in `package.json` and this README, **not** here; Glama ignores it.
 - Glama generates its own container build from the stdio entrypoint (`packages/vdd-mcp/dist/stdio.js`), wrapped with `mcp-proxy`. The root `Dockerfile` is for **self-hosting** the Streamable HTTP server, not for Glama.
 - After tool-definition changes: sync the repository and run **Build & Release** in the Glama admin. Tool-level scores refresh on the next sweep; the server-level *coherence* score re-runs less often.
-- Also published to the [**Official MCP Registry**](https://registry.modelcontextprotocol.io) as `io.github.simonmak-ascent/vision-driven-design` (manifest: `server.json`) — PulseMCP and other directories ingest from there.
+- Also published to the [**Official MCP Registry**](https://registry.modelcontextprotocol.io) as `com.ascent-partners/vision-driven-design` (manifest: `server.json`) — PulseMCP and other directories ingest from there.
 - Listed in the [`awesome-mcp-servers`](https://github.com/punkpeye/awesome-mcp-servers) community list under Developer Tools.
 - Listed on [**Agent Status**](https://agentstatus.dev/mcp-index/vdd) — an outside-in MCP reliability index that probes reach, catalog, and tool calls from real hosts (Cursor, Claude, VS Code, ChatGPT). The submission created the Free dashboard account; the score populates after the first probe.
 

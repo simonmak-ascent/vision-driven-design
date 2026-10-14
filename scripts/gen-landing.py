@@ -18,7 +18,7 @@ ENDPOINT = "https://vdd.simonmak.com/api/mcp"
 DOCS = "https://vdd.simonmak.com"
 REPO = "https://github.com/simonmak-ascent/vision-driven-design"
 NPM = "https://www.npmjs.com/package/@simonmak-ascent/mcp"
-REGISTRY = "io.github.simonmak-ascent/vision-driven-design"
+REGISTRY = "com.ascent-partners/vision-driven-design"
 VERSION = "1.9.2"
 
 TECH = "https://www.ascent-partners.com/services/technology-advisory"
