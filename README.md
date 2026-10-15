@@ -7,7 +7,7 @@
 [![VDD Quality Gates](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/vdd-quality-gates.yml/badge.svg)](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/vdd-quality-gates.yml)
 [![MCP Tool Definition Quality](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/tdqs.yml/badge.svg)](https://github.com/simonmak-ascent/vision-driven-design/actions/workflows/tdqs.yml)
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-com.ascent-partners%2Fvision-driven-design-4CAF50)](https://registry.modelcontextprotocol.io/v0/servers?search=com.ascent-partners/vision-driven-design)
-[![Glama MCP](https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design/badges/score.svg)](https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design)
+[![Glama MCP](https://glama.ai/mcp/connectors/com.ascent-partners/vision-driven-design/badges/score.svg)](https://glama.ai/mcp/connectors/com.ascent-partners/vision-driven-design)
 [![Agent Status](https://wdmisgfkoimdpvvduebj.supabase.co/functions/v1/mcp-badge?slug=vdd)](https://agentstatus.dev/mcp-index/vdd)
 [![Version](https://img.shields.io/badge/version-1.9.2-blue)](https://github.com/simonmak-ascent/vision-driven-design/releases)
 [![MCP tools](https://img.shields.io/badge/MCP-15%20tools-4CAF50)](https://vdd.simonmak.com/api/mcp)
@@ -280,9 +280,9 @@ For direct read/write of a local project, run the **local stdio server** instead
 
 ### MCP Registry (Glama)
 
-The server is listed on [Glama](https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design), which builds it from source and publishes a hosted remote endpoint plus a **Tool Definition Quality Score** and maintenance rating:
+The server is listed on [Glama](https://glama.ai/mcp/connectors/com.ascent-partners/vision-driven-design), which builds it from source and publishes a hosted remote endpoint plus a **Tool Definition Quality Score** and maintenance rating:
 
-<a href="https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design"><img src="https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design/badges/card.svg" alt="Glama quality and maintenance score"></a>
+<a href="https://glama.ai/mcp/connectors/com.ascent-partners/vision-driven-design"><img src="https://glama.ai/mcp/connectors/com.ascent-partners/vision-driven-design/badges/card.svg" alt="Glama quality and maintenance score"></a>
 
 Maintainer notes:
 
