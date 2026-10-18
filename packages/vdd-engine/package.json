@@ -1,13 +1,17 @@
 {
   "name": "@simonmak-ascent/engine",
   "version": "1.9.0",
-  "description": "Vision Driven Design shared engine — 17 phase functions, bi-directional gate logic (7 gates, 108 checks), and phase/tool metadata for the VDD 8-phase chain.",
+  "description": "Vision Driven Design shared engine \u2014 17 phase functions, bi-directional gate logic (7 gates, 108 checks), and phase/tool metadata for the VDD 8-phase chain.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": { ".": "./dist/index.js" },
-  "files": ["dist"],
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
   "keywords": [
     "vdd",
     "vision-driven-design",
@@ -26,9 +30,25 @@
     "directory": "packages/vdd-engine"
   },
   "homepage": "https://github.com/simonmak-ascent/vision-driven-design",
-  "bugs": { "url": "https://github.com/simonmak-ascent/vision-driven-design/issues" },
+  "bugs": {
+    "url": "https://github.com/simonmak-ascent/vision-driven-design/issues"
+  },
   "author": "simonmak-ascent",
-  "scripts": { "build": "tsc", "check": "tsc --noEmit", "test": "vitest run" },
-  "dependencies": { "zod": "^3.23.0" },
-  "devDependencies": { "@types/node": "^22.0.0", "typescript": "^5.6.0", "vitest": "^2.1.0", "playwright": "^1.48.0" }
+  "scripts": {
+    "build": "tsc",
+    "check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0",
+    "playwright": "^1.48.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

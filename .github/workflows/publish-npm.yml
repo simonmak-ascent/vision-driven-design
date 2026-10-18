@@ -35,3 +35,8 @@ jobs:
         run: pnpm -r publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # `pnpm publish` rewrites `workspace:` deps; `npm publish` does not.
+      # Fail the release if a published manifest is uninstallable (the 1.9.4 regression).
+      - name: Verify published manifests
+        run: node scripts/verify-publish.mjs

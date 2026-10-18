@@ -1,12 +1,16 @@
 {
   "name": "@simonmak-ascent/cli",
   "version": "1.9.0",
-  "description": "Vision Driven Design CLI — 17 subcommands driving the 8-phase VDD chain (Vision → Strategy → Tactics → Spec → Plan → Tasks → Implement → Validate) with 7 bi-directional quality gates.",
+  "description": "Vision Driven Design CLI \u2014 17 subcommands driving the 8-phase VDD chain (Vision \u2192 Strategy \u2192 Tactics \u2192 Spec \u2192 Plan \u2192 Tasks \u2192 Implement \u2192 Validate) with 7 bi-directional quality gates.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
-  "bin": { "vdd": "./dist/cli.js" },
-  "files": ["dist"],
+  "bin": {
+    "vdd": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
   "keywords": [
     "vdd",
     "vision-driven-design",
@@ -27,9 +31,14 @@
     "directory": "packages/vdd-cli"
   },
   "homepage": "https://github.com/simonmak-ascent/vision-driven-design#commands",
-  "bugs": { "url": "https://github.com/simonmak-ascent/vision-driven-design/issues" },
+  "bugs": {
+    "url": "https://github.com/simonmak-ascent/vision-driven-design/issues"
+  },
   "author": "simonmak-ascent",
-  "scripts": { "build": "tsc", "check": "tsc --noEmit" },
+  "scripts": {
+    "build": "tsc",
+    "check": "tsc --noEmit"
+  },
   "dependencies": {
     "@simonmak-ascent/engine": "workspace:^",
     "commander": "^12.0.0",
@@ -38,5 +47,8 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
