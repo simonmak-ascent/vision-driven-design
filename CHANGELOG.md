@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added (MCP prompts — full phase command set)
+- Both the stdio server (`packages/vdd-mcp/src/prompts.ts`) and the hosted endpoint
+  (`api/_vdd-rpc.js`) now expose the complete command set as MCP prompts: `init`, `vision`,
+  `strategize`, `tactics`, `specify`, `clarify`, `plan`, `tasks`, `get-next-task`, `implement`,
+  `validate`, `inspect`, `trace`, `analyze`, `amend`, `detect-environment`, `clone`, and `e2e`,
+  alongside the original `start_vdd_project`, `implement_next_task`, and `change_requirement`.
+  MCP-aware clients surface them as `/vdd:<name>` (OpenCode 2, Claude, Cursor), so the command
+  table in `SKILL.md` is now real in every client instead of documentation-only.
+- Every prompt states the hosted endpoint's stateless contract: write what `writeTargets`
+  names, and pass artifacts back through `artifactFiles` on later calls.
+- `trace` and `analyze` are read-only aliases over `vdd_inspect`; `e2e` is a host-agent
+  workflow over the phase tools (the one-call `e2e` tool remains CLI-only by design).
+- `api-surface.test.ts` parity coverage keeps the stdio and hosted prompt lists identical by
+  name and text.
+- `SERVER_VERSION` and the stdio `McpServer` version are synchronised to the package version
+  (1.9.5), fixing the drift that failed the version parity test.
+
 ### Changed (web UI — APG design tokens)
 - The landing page (`index.html`) and the browser docs page served at `GET /api/mcp` (`api/_vdd-rpc.js`) are re-themed with the Ascent Partners Group design tokens (`apg-website` `src/styles/tokens.v2.json` + `tokens-dark.json`): brand teal `#0085ae`, accent `#005467` (light) / `#5bc8e8` (dark), gold accent, neutral text/surface/border roles, APG radii (4/8/12px), `shadow.sm`, motion `0.15s` + `cubic-bezier(.4,0,.2,1)`, and a 2px `border.focus` ring. Type now uses Open Sans (body), Titillium Web (headings) and Raleway (display). Dark remains the default; the light toggle is unchanged. Every pair still clears WCAG 2.2 AAA for text.
 

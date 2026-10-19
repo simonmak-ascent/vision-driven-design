@@ -107,7 +107,7 @@ export const MCP_TOOL_PHASES = PHASE_NAMES.filter(
 );
 
 export function createVddMcpServer(): McpServer {
-    const server = new McpServer({ name: 'vdd', title: 'Vision Driven Design', version: '1.9.2' });
+    const server = new McpServer({ name: 'vdd', title: 'Vision Driven Design', version: '1.9.5' });
 
   for (const name of MCP_TOOL_PHASES) {
     const toolName = `vdd_${name.replace(/-/g, '_')}`;
