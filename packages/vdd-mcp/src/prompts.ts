@@ -15,7 +15,7 @@ export interface VddPrompt {
   text: (a: Record<string, string | undefined>) => string;
 }
 
-const HOSTED = `This MCP endpoint is stateless: it cannot read the workspace. Write every artifact it returns to the path in writeTargets, and pass existing artifacts back through artifactFiles when a later tool needs them.`;
+const HOSTED = `This server may be the hosted, stateless endpoint: it cannot read the workspace. When a tool returns writeTargets, write those artifacts yourself; when a later tool needs existing artifacts, pass them back through artifactFiles. The local stdio server reads and writes the workspace directly, so those fields are optional there.`;
 
 export const PROMPTS: VddPrompt[] = [
   {

@@ -1032,7 +1032,7 @@ function toolDefs() {
 }
 
 // Guided workflows — mirrors packages/vdd-mcp/src/prompts.ts (keep in sync).
-const HOSTED = `This MCP endpoint is stateless: it cannot read the workspace. Write every artifact it returns to the path in writeTargets, and pass existing artifacts back through artifactFiles when a later tool needs them.`;
+const HOSTED = `This server may be the hosted, stateless endpoint: it cannot read the workspace. When a tool returns writeTargets, write those artifacts yourself; when a later tool needs existing artifacts, pass them back through artifactFiles. The local stdio server reads and writes the workspace directly, so those fields are optional there.`;
 const PROMPTS = [
   {
     name: "start_vdd_project",
