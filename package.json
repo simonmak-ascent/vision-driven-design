@@ -1,6 +1,6 @@
 {
   "name": "vision-driven-design",
-  "description": "Spec-driven development MCP server: 8 phases, bi-directional V\u2192S\u2192T\u2192SP\u2192PL\u2192TK traceability, and 7 quality gates for AI-assisted development.",
+  "description": "Spec-driven development MCP server: 8 phases, bi-directional V→S→T→SP→PL→TK traceability, and 7 quality gates for AI-assisted development.",
   "keywords": [
     "mcp",
     "model-context-protocol",
@@ -31,5 +31,9 @@
     "check": "pnpm -r check",
     "test": "pnpm -r test",
     "verify:publish": "node scripts/verify-publish.mjs"
-  }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.30.3"
 }
