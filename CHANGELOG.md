@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.10.0] - 2026-11-26
 
 ### Added (MCP prompts — full phase command set)
 - Both the stdio server (`packages/vdd-mcp/src/prompts.ts`) and the hosted endpoint
@@ -17,7 +17,7 @@
 - `api-surface.test.ts` parity coverage keeps the stdio and hosted prompt lists identical by
   name and text.
 - `SERVER_VERSION` and the stdio `McpServer` version are synchronised to the package version
-  (1.9.5), fixing the drift that failed the version parity test.
+  (1.10.0), fixing the drift that failed the version parity test.
 
 ### Removed
 - **The `clone` capability.** `vdd_clone`, its MCP prompt, the `-c/--clone` CLI route, and the whole

@@ -186,8 +186,14 @@ describe('hosted ↔ stdio parity (schemas, prompts, version)', async () => {
   });
 
   it('keeps server.json version in sync with the package', () => {
-    const serverJson = require('../../../server.json') as { version: string };
+    const serverJson = require('../../../server.json') as {
+      version: string;
+      packages: Array<{ version: string }>;
+    };
     expect(serverJson.version).toBe(pkg.version);
+    // The registry entry (`packages[0].version`) is a separate field that nothing else checks:
+    // a half-bump of server.json would leave the published registry metadata stale.
+    expect(serverJson.packages[0]?.version).toBe(pkg.version);
   });
 });
 
