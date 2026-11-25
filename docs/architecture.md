@@ -1,6 +1,6 @@
 # Architecture — one knowledge base, one capability core, two transports
 
-Status: **proposed** — under review. Code has changed since this was written (A1 feature validation, A2 `projectRoot` confinement, A3 clone SSRF gate); §6 lists what is planned, not what is done. Supersedes the "MCP server with 15 tools and 21 prompts" model.
+Status: **proposed** — under review. Code has changed since this was written (A1 feature validation, A2 `projectRoot` confinement; A3's clone SSRF gate was superseded when `clone` was removed on 2026-11-25); §6 lists what is planned, not what is done. Supersedes the "MCP server with 15 tools and 21 prompts" model.
 
 The product has two kinds of content and they were previously mixed in both places:
 
@@ -33,9 +33,9 @@ Each concern has exactly one owner. The other layers may *reference* it, never r
 | Local MCP clients | **MCP stdio** | `packages/vdd-mcp` | — |
 | Remote skill distribution | **MCP hosted** | `api/mcp.js` (resources + one read-only tool) | engine code |
 
-Consequence: **the tool surface is five deterministic operations.** Everything that requires
+Consequence: **the tool surface is four deterministic operations.** Everything that requires
 judgement — init, vision, strategize, tactics, specify, plan, tasks, implement, amend, e2e —
-is a skill workflow, not a tool. The engine keeps the code for the five; it no longer contains
+is a skill workflow, not a tool. The engine keeps the code for the four; it no longer contains
 template-emitting phases.
 
 The boundary test, applied to every candidate: keep it in code only if (i) the output is fully
@@ -46,7 +46,7 @@ network crawl. A tool that restates a document is a second copy of that document
 `env` fails (iii): its payload is `TOOL_REQUIREMENTS` (`meta.ts:126-145`) rendered per phase —
 static data already owned by `references/ai-agent-patterns.md`. It moves to the skill.
 
-## 2. The five capabilities
+## 2. The four capabilities
 
 Defined once, in `packages/vdd-engine/src/capabilities.ts`:
 
@@ -56,7 +56,6 @@ Defined once, in `packages/vdd-engine/src/capabilities.ts`:
 | `inspect` | `inspect` | yes | no | no | deterministic parsing of the chain |
 | `clarify` | `clarify` | yes | no | no | exhaustive marker scan |
 | `next-task` | `get-next-task` | yes | no | no | deterministic ordering |
-| `clone` | `clone` | yes | yes | yes | network crawl |
 
 Both `packages/vdd-mcp/src/server.ts` and `packages/vdd-cli/src/cli.ts` **generate** their
 surface from this registry. Neither holds its own list, schema or description.
@@ -66,7 +65,7 @@ design is approved):
 
 ```
 Capability {
-  id: 'verify'|'inspect'|'clarify'|'next-task'|'clone'
+  id: 'verify'|'inspect'|'clarify'|'next-task'
   phase: EngineOp            // key of PHASES — must exist, asserted by test
   title: string
   description: string        // the ONLY surface text; PHASE_META does not duplicate it
@@ -84,7 +83,6 @@ Capability {
 | `inspect` | scope, feature, artifactFiles, projectRoot | yes | no | yes | no |
 | `clarify` | feature, artifactFiles, projectRoot | yes | no | yes | no |
 | `next-task` | feature, artifactFiles, projectRoot | yes | no | yes | no |
-| `clone` | description, statement, maxPages, timeoutMs, concurrency, crawl, browser, refresh, projectRoot | no | yes | no | yes |
 
 ## 3. The collaboration contract
 
@@ -113,7 +111,7 @@ The layers are not independent — they are coupled at exactly two points, and b
         │
         │ read by the agent
         ▼
-   agent ──calls──▶ vdd verify|inspect|clarify|next-task|clone
+   agent ──calls──▶ vdd verify|inspect|clarify|next-task
                      ├── vdd-cli      (shell)
                      └── vdd-mcp      (stdio, MCP clients)
                               │
@@ -135,8 +133,8 @@ The layers are not independent — they are coupled at exactly two points, and b
   Final but the extension is Beta: shipping clients are ChatGPT (partial), fast-agent (partial)
   and MCP Inspector (partial); no mainstream harness implements it. **No behaviour, test or
   claim may depend on `skills/*`.**
-- **stdio** exposes the five capabilities for clients that have a filesystem.
-- **CLI** exposes the same five for shell users and for agents that prefer `exec`.
+- **stdio** exposes the four capabilities for clients that have a filesystem.
+- **CLI** exposes the same four for shell users and for agents that prefer `exec`.
 
 A remote client therefore gets the *knowledge*; execution needs a filesystem, which is where
 the work actually happens. That is the honest boundary, not a limitation to paper over.
@@ -152,15 +150,16 @@ the work actually happens. That is the honest boundary, not a limitation to pape
 | hosted delegation envelopes | returned "do it yourself" instead of a result |
 | engine template literals | `references/artifact-templates.md` is the only copy |
 | `e2e` as a tool | orchestration of skill phases; it now lives in the skill |
+| `clone` and its crawl/capture pipeline (2,057 LOC) | a URL-to-app generator unrelated to the phase chain — the only outbound network surface; removed by operator decision 2026-11-25 |
 
 **Evidence of cost.** The old `tools/list` was 36,237 bytes ≈ 9,059 tokens resident in every
 connected client, 12,015 bytes of it one `outputSchema` repeated 15 times. The new surface is
-five operations.
+four operations.
 
 ## 6. Migration record
 
 Planned, not yet implemented (see §7 for the constraints that gate each step): registry;
-five-capability surface; prompts retired; hosted endpoint rebuilt as a resource server with
+four-capability surface; prompts retired; hosted endpoint rebuilt as a resource server with
 precomputed digests; `_vdd-rpc.js` deleted; template-emitting phases removed; `verify` exposes
 the gate suite; contract checks in CI.
 
@@ -213,13 +212,10 @@ From the internal architecture review and the security review. Each is a blocker
   the changed convention is recorded in the migration note and CHANGELOG, not asserted in CI.
 
 **Existing code that ships exploitable behaviour today**
-- V7 `clone` accepted private targets: `normalize-domain.ts:20` allowed `localhost`, `IPV4_RE`
-  (`:17`) accepted `169.254.169.254`/`10/8`/`127/8`, there was no DNS check, and `crawl.ts:106-110`
-  followed redirects without re-validation. **Fixed for the initial target and the plain-fetch crawl
-  2026-11-25** (`assert-public-target.ts`, gated at `clone-pipeline.ts:62` and `crawl.ts:323`, manual
-  redirects with a per-hop guard). Residual: IP pinning (DNS rebinding), `capture`'s redirects **and
-  its stylesheet fetch**, `evidence`'s `page.goto`, browserless navigation (its initial URL is gated;
-  redirects and subresources inside the service are not), and the token in the query string (A4).
+- V7 **removed, not fixed.** The `clone` capability accepted private targets and was the only outbound
+  network path in VDD. It was removed by operator decision on 2026-11-25 as unrelated to the phase chain
+  (2,057 LOC, all of the SSRF residuals). No VDD surface makes outbound requests now; the class goes
+  with the feature.
 - V8 `feature` is concatenated into read paths with no validation; `feature="../../other-project"`
   reads a sibling checkout. **Fixed 2026-11-25** at the engine choke point (`engine.ts:49-56`, `:82`,
   `:636`) and the schema (`server.ts:16-18`), with a behavioural test (`feature-arg.test.ts`).

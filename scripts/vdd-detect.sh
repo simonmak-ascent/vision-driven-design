@@ -73,7 +73,7 @@ echo "## Agent Environment / MCP Tools"
 detected=0
 if [ -f "$HOME/.config/opencode/opencode.json" ]; then
   echo "- opencode config found: $HOME/.config/opencode/opencode.json"
-  grep -oE '"(brave-search|perplexity|context7|gh_grep|playwright|browserless|github|sentry|postgres)"' "$HOME/.config/opencode/opencode.json" 2>/dev/null | sort -u | sed 's/^/-   /'
+  grep -oE '"(brave-search|perplexity|context7|gh_grep|playwright|github|sentry|postgres)"' "$HOME/.config/opencode/opencode.json" 2>/dev/null | sort -u | sed 's/^/-   /'
   detected=1
 fi
 if [ -f "$HOME/.claude.json" ]; then
@@ -82,12 +82,12 @@ if [ -f "$HOME/.claude.json" ]; then
 fi
 if [ -f "opencode.json" ]; then
   echo "- project opencode.json found"
-  grep -oE '"(brave-search|perplexity|context7|gh_grep|playwright|browserless|github|sentry|postgres)"' opencode.json 2>/dev/null | sort -u | sed 's/^/-   /'
+  grep -oE '"(brave-search|perplexity|context7|gh_grep|playwright|github|sentry|postgres)"' opencode.json 2>/dev/null | sort -u | sed 's/^/-   /'
   detected=1
 fi
 if [ -f ".mcp.json" ]; then
   echo "- project .mcp.json found"
-  grep -oE '"(brave-search|perplexity|context7|gh_grep|playwright|browserless|github|sentry|postgres)"' .mcp.json 2>/dev/null | sort -u | sed 's/^/-   /'
+  grep -oE '"(brave-search|perplexity|context7|gh_grep|playwright|github|sentry|postgres)"' .mcp.json 2>/dev/null | sort -u | sed 's/^/-   /'
   detected=1
 fi
 [ "$detected" -eq 0 ] && echo "- (no agent/MCP config detected — pass availableTools manually to /vdd:detect-environment)"

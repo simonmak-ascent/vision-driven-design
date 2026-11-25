@@ -4,7 +4,7 @@ import type { AddressInfo } from 'node:net';
 
 // Drives the real Streamable HTTP transport over a loopback socket. The stdio
 // surface is covered by server-surface.test.ts; this proves the HTTP entrypoint
-// (packages/vdd-mcp/dist/http-entry.js) actually serves the 15 tools.
+// (packages/vdd-mcp/dist/http-entry.js) actually serves the 14 tools.
 describe('HTTP transport (Streamable HTTP)', () => {
   let server: Server;
   let base: string;
@@ -63,11 +63,11 @@ describe('HTTP transport (Streamable HTTP)', () => {
     await post({ jsonrpc: '2.0', method: 'notifications/initialized' });
   });
 
-  it('lists the 15 tools over HTTP', async () => {
+  it('lists the 14 tools over HTTP', async () => {
     const res = await post({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
     expect(res.status).toBe(200);
     const body = (await readRpc(res)) as { result?: { tools?: unknown[] } };
-    expect(body.result?.tools?.length).toBe(15);
+    expect(body.result?.tools?.length).toBe(14);
   });
 
   it('rejects a projectRoot outside the allowed roots', async () => {

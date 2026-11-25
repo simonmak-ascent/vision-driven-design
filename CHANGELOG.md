@@ -6,7 +6,7 @@
 - Both the stdio server (`packages/vdd-mcp/src/prompts.ts`) and the hosted endpoint
   (`api/_vdd-rpc.js`) now expose the complete command set as MCP prompts: `init`, `vision`,
   `strategize`, `tactics`, `specify`, `clarify`, `plan`, `tasks`, `get-next-task`, `implement`,
-  `validate`, `inspect`, `trace`, `analyze`, `amend`, `detect-environment`, `clone`, and `e2e`,
+  `validate`, `inspect`, `trace`, `analyze`, `amend`, `detect-environment`, and `e2e`,
   alongside the original `start_vdd_project`, `implement_next_task`, and `change_requirement`.
   MCP-aware clients surface them as `/vdd:<name>` (OpenCode 2, Claude, Cursor), so the command
   table in `SKILL.md` is now real in every client instead of documentation-only.
@@ -19,12 +19,19 @@
 - `SERVER_VERSION` and the stdio `McpServer` version are synchronised to the package version
   (1.9.5), fixing the drift that failed the version parity test.
 
+### Removed
+- **The `clone` capability.** `vdd_clone`, its MCP prompt, the `-c/--clone` CLI route, and the whole
+  crawl → capture → evidence → schema → backend → manifest pipeline (11 engine modules, 11 test files,
+  ~2,057 LOC) are gone. It is a URL-to-app generator unrelated to the 8-phase chain and was the only
+  outbound-network path in VDD, so the SSRF class goes with it. The MCP surface is now **14 tools and
+  20 prompts**. Decision and rationale: `docs/plan.md` D13; `docs/architecture.md` V7.
+
 ### Changed (web UI — APG design tokens)
 - The landing page (`index.html`) and the browser docs page served at `GET /api/mcp` (`api/_vdd-rpc.js`) are re-themed with the Ascent Partners Group design tokens (`apg-website` `src/styles/tokens.v2.json` + `tokens-dark.json`): brand teal `#0085ae`, accent `#005467` (light) / `#5bc8e8` (dark), gold accent, neutral text/surface/border roles, APG radii (4/8/12px), `shadow.sm`, motion `0.15s` + `cubic-bezier(.4,0,.2,1)`, and a 2px `border.focus` ring. Type now uses Open Sans (body), Titillium Web (headings) and Raleway (display). Dark remains the default; the light toggle is unchanged. Every pair still clears WCAG 2.2 AAA for text.
 
 ### Changed (hosted endpoint — agent-delegation)
 - **The hosted endpoint no longer claims writes it cannot perform.** It is stateless and has no filesystem: artifact-producing phases return `persisted: false` and a `writeTargets` list, and phases that need project content (`vdd_tactics`, `vdd_clarify`, `vdd_get_next_task`, `vdd_inspect`, `vdd_validate`, `vdd_implement`) return a **delegation envelope** instead of a static string or a fabricated matrix. Re-call the same tool with `artifactFiles` (and `codebaseAudit` for tactics) to receive the real result — the delegation contract now also covers the local engine.
-- Hosted tool annotations are truthful: all 15 tools are `readOnlyHint: true`, `openWorldHint: false` (the endpoint writes nothing and fetches nothing), distinct from the stdio server, which does write.
+- Hosted tool annotations are truthful: all 14 tools are `readOnlyHint: true`, `openWorldHint: false` (the endpoint writes nothing and fetches nothing), distinct from the stdio server, which does write.
 
 ### Added (engine)
 - The local engine (stdio/CLI) accepts `artifactFiles` (and `codebaseAudit` for `vdd_tactics`) as a fallback for `vdd_clarify`, `vdd_get_next_task`, `vdd_implement`, and `vdd_tactics`, so content-driven runs match the hosted endpoint. Every phase result now carries `mode: "local"`; write phases carry `persisted: true`.
@@ -34,7 +41,7 @@
 - The production project now has a Vercel WAF rate-limit rule on the MCP path (120 requests / 60 s per IP).
 
 ### Added (tests)
-- Streamable-HTTP transport integration test (`packages/vdd-mcp/test/http-transport.test.ts`): boots the HTTP entrypoint on an ephemeral port and asserts `initialize` (session id), `tools/list` (15), and a tool call. `startHttpServer()` now returns the `http.Server` so callers can read the bound port and close it.
+- Streamable-HTTP transport integration test (`packages/vdd-mcp/test/http-transport.test.ts`): boots the HTTP entrypoint on an ephemeral port and asserts `initialize` (session id), `tools/list` (14), and a tool call. `startHttpServer()` now returns the `http.Server` so callers can read the bound port and close it.
 
 ### Added (docs)
 - `.env.example`, `docs/deployment.md`, and an expanded `SECURITY.md` threat model; README gains a "Hosted vs local (filesystem)" section.

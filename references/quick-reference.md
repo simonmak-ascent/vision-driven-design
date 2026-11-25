@@ -36,7 +36,6 @@ One-page cheat sheet. For full details, see referenced files.
 | `/vdd:amend [what changed]` | any | updated chain from change point down |
 | `/vdd:detect-environment` | any | per-phase tool/MCP requirements + available capabilities |
 | `/vdd:e2e [vision statement]` | 0–8 | full 8-phase chain in one call, writes 10+ template files |
-| `/vdd:e2e -clone [domain]` | 7 | clone pipeline: capture → evidence → schema → backend → AI tools |
 
 ## 7 Bi-Directional Gates
 
@@ -91,7 +90,7 @@ Each gate: Forward check (parent→children coverage) + Backward check (children
 ## MCP API
 
 **Endpoint**: `https://vdd.simonmak.com/api/mcp` (Streamable HTTP)
-- POST: JSON-RPC 2.0 — `initialize` / `tools/list` / `tools/call` (15 tools)
+- POST: JSON-RPC 2.0 — `initialize` / `tools/list` / `tools/call` (14 tools)
 - POST: Phase result (validate: substantive drift/orphan/uncovered detection — a placeholder template does NOT pass)
 - Packages: `packages/vdd-engine` · `packages/vdd-mcp` · `packages/vdd-cli`
 - `vdd_inspect` — read-only: `scope=project` (traceability matrix) or `scope=feature` (spec metrics)

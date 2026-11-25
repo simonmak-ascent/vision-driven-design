@@ -11,7 +11,7 @@
 - Glama listing: https://glama.ai/mcp/servers/simonmak-ascent/vision-driven-design
 - Context7 library ID: `/simonmak-ascent/vision-driven-design`
 
-## MCP tools (15)
+## MCP tools (14)
 
 - `vdd_init`: Phase 0, write constitution.md (run first)
 - `vdd_vision`, `vdd_strategize`, `vdd_tactics`: Phases 1-3, vision, research-backed strategy, codebase audit
@@ -21,15 +21,14 @@
 - `vdd_validate`: Phase 8, traceability matrix, drift and orphan detection, 7 gates
 - `vdd_inspect`: read-only project or feature inspection
 - `vdd_amend`: plan a requirement-change cascade through the chain
-- `vdd_clone`: capture a target domain into a clone dataset and manifest
 - `vdd_detect_environment`: report required vs available host tools per phase
 
-## MCP prompts (21)
+## MCP prompts (20)
 
 - Project flow: `start_vdd_project`, `implement_next_task`, `change_requirement`
 - Per phase: `init`, `vision`, `strategize`, `tactics`, `specify`, `clarify`, `plan`, `tasks`, `get-next-task`, `implement`, `validate`
-- Cross-phase: `inspect`, `trace`, `analyze`, `amend`, `detect-environment`, `clone`, `e2e`
-- Clients surface these as `/vdd:<name>`. Published npm `1.9.5` predates them: `npx -y @simonmak-ascent/mcp` serves only the three project-flow prompts, while the hosted endpoint and the repository serve all 21.
+- Cross-phase: `inspect`, `trace`, `analyze`, `amend`, `detect-environment`, `e2e`
+- Clients surface these as `/vdd:<name>`. Published npm `1.9.5` predates them: `npx -y @simonmak-ascent/mcp` serves only the three project-flow prompts, while the hosted endpoint and the repository serve all 20.
 
 ## Docs
 

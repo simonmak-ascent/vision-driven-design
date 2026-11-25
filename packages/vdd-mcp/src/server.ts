@@ -25,12 +25,6 @@ const capabilities = z.array(z.string()).optional().describe('Alias for availabl
 const researchFindings = z.string().optional().describe('Consolidated research subagent findings to synthesize into strategy.md (effect only on the second strategize call)');
 const artifactFiles = z.record(z.string(), z.string()).optional().describe('Map of vdd/-relative artifact path → full file text, for the hosted (stateless) endpoint, which cannot read the caller filesystem; without it the tool returns a delegation envelope');
 const codebaseAudit = z.string().optional().describe('Repo scan (directory tree, manifests, modules, debt) produced by the host agent, for tactics on the hosted (stateless) endpoint which cannot scan the repo itself');
-const maxPages = z.number().int().positive().optional().describe('Clone: max pages to crawl, 1-5000 (default 200)');
-const timeoutMs = z.number().int().positive().optional().describe('Clone: per-request timeout in ms, 1000-60000 (default 10000)');
-const concurrency = z.number().int().positive().optional().describe('Clone: concurrent crawl workers, 1-16; above ~16 risks tripping the target site rate limit (default 8)');
-const crawl = z.boolean().optional().describe('Clone: run the crawl (default true)');
-const browser = z.boolean().optional().describe('Clone: run browser/static capture (default true)');
-const refresh = z.boolean().optional().describe('Clone: force re-crawl, ignore a fresh cached dataset');
 
 export const PHASE_INPUT_SCHEMAS: Record<string, Record<string, z.ZodType>> = {
   init: { projectRoot },
@@ -46,7 +40,6 @@ export const PHASE_INPUT_SCHEMAS: Record<string, Record<string, z.ZodType>> = {
   validate: { feature, artifactFiles, projectRoot },
   inspect: { scope, feature, artifactFiles, projectRoot },
   amend: { description: descriptionReq, projectRoot },
-  clone: { description, statement, maxPages, timeoutMs, concurrency, crawl, browser, refresh, projectRoot },
   'detect-environment': { availableTools, capabilities, projectRoot },
 };
 
@@ -57,7 +50,7 @@ export const PHASE_INPUT_SCHEMAS: Record<string, Record<string, z.ZodType>> = {
 //   - destructiveHint: true only when the tool overwrites an existing artifact;
 //     false when it is additive (writes a new generated file). The MCP default
 //     is true, so a non-read-only tool must set false to be shown as additive.
-//   - openWorldHint: the tool reaches external systems (web research, cloning).
+//   - openWorldHint: the tool reaches external systems (web research).
 // `clarify`, `implement`, and `amend` return questions/instructions without
 // touching disk, so they are read-only; `validate` writes only a new generated
 // report and never clobbers a hand-authored one.
@@ -83,7 +76,6 @@ export const TOOL_ANNOTATIONS: Record<string, {
   validate: { title: 'Validate Impact', annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false } },
   inspect: { title: 'Inspect Project', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
   amend: { title: 'Amend Requirements', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
-  clone: { title: 'Clone Website', annotations: { destructiveHint: true, openWorldHint: true } },
   'detect-environment': { title: 'Detect Environment', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
 };
 
@@ -155,12 +147,6 @@ export function createVddMcpServer(): McpServer {
           researchFindings: params.researchFindings as string | undefined,
           artifactFiles: params.artifactFiles as Record<string, string> | undefined,
           codebaseAudit: params.codebaseAudit as string | undefined,
-          maxPages: params.maxPages as number | undefined,
-          timeoutMs: params.timeoutMs as number | undefined,
-          concurrency: params.concurrency as number | undefined,
-          crawl: params.crawl as boolean | undefined,
-          browser: params.browser as boolean | undefined,
-          refresh: params.refresh as boolean | undefined,
           json: false,
         };
         const result = await PHASES[name](input, ctx);

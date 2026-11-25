@@ -10,7 +10,7 @@
 [![Glama MCP](https://glama.ai/mcp/connectors/com.ascent-partners/vision-driven-design/badges/score.svg)](https://glama.ai/mcp/connectors/com.ascent-partners/vision-driven-design)
 [![Agent Status](https://wdmisgfkoimdpvvduebj.supabase.co/functions/v1/mcp-badge?slug=vdd)](https://agentstatus.dev/mcp-index/vdd)
 [![Version](https://img.shields.io/badge/version-1.9.2-blue)](https://github.com/simonmak-ascent/vision-driven-design/releases)
-[![MCP tools](https://img.shields.io/badge/MCP-15%20tools-4CAF50)](https://vdd.simonmak.com/api/mcp)
+[![MCP tools](https://img.shields.io/badge/MCP-14%20tools-4CAF50)](https://vdd.simonmak.com/api/mcp)
 [![API](https://img.shields.io/badge/API-vdd.simonmak.com-006b7d)](https://vdd.simonmak.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -172,7 +172,6 @@ flowchart TB
 | `/vdd:amend "what changed"` | any | Cascade requirement change through full chain |
 | `/vdd:detect-environment` | any | Report per-phase tool/MCP requirements + available capabilities |
 | `/vdd:e2e "vision statement"` | 0–8 | **End-to-end**: run full 8-phase chain in one call, writes all 10+ template files |
-| `/vdd:e2e -clone <domain>` | 7 | **Clone**: crawl site (browserless/fetch) into a full dataset + exact UI/UX + rebuilt backend + generated schema + AI tools + deployable dynamic site (vdd/clone-site/) from a domain (https/http/www/bare) |
 
 ---
 
@@ -230,7 +229,7 @@ pnpm -r build
 
 ## MCP API
 
-VDD is available as a public MCP server at `https://vdd.simonmak.com` — 15 tools, no API key required — over the MCP **Streamable HTTP** transport at `https://vdd.simonmak.com/api/mcp` (also reachable at `/mcp`). The legacy SSE endpoint is retired: `https://vdd.simonmak.com/api/sse` now returns an HTTP 308 redirect to `/api/mcp`.
+VDD is available as a public MCP server at `https://vdd.simonmak.com` — 14 tools, no API key required — over the MCP **Streamable HTTP** transport at `https://vdd.simonmak.com/api/mcp` (also reachable at `/mcp`). The legacy SSE endpoint is retired: `https://vdd.simonmak.com/api/sse` now returns an HTTP 308 redirect to `/api/mcp`.
 
 ### Agent Configuration
 
@@ -256,9 +255,9 @@ VDD is available as a public MCP server at `https://vdd.simonmak.com` — 15 too
 
 **Any Streamable HTTP client** (Smithery, Claude Code, …) — MCP server URL: `https://vdd.simonmak.com/api/mcp`
 
-### MCP Tools (15)
+### MCP Tools (14)
 
-`vdd_init`, `vdd_vision`, `vdd_strategize`, `vdd_tactics`, `vdd_specify`, `vdd_clarify`, `vdd_plan`, `vdd_tasks`, `vdd_get_next_task`, `vdd_implement`, `vdd_validate`, `vdd_inspect`, `vdd_amend`, `vdd_clone`, `vdd_detect_environment`.
+`vdd_init`, `vdd_vision`, `vdd_strategize`, `vdd_tactics`, `vdd_specify`, `vdd_clarify`, `vdd_plan`, `vdd_tasks`, `vdd_get_next_task`, `vdd_implement`, `vdd_validate`, `vdd_inspect`, `vdd_amend`, `vdd_detect_environment`.
 
 The one-call `e2e` shortcut is not an MCP tool (it duplicates the phase sequence); use the CLI `vdd e2e "vision"` instead.
 
@@ -268,15 +267,15 @@ Each tool advertises only the parameters it reads. Shared inputs include `statem
 
 The hosted endpoint (`https://vdd.simonmak.com/api/mcp`) is **stateless and has no filesystem**. It returns artifacts and, for filesystem-dependent phases, a **delegation envelope** for the calling agent to execute locally:
 
-- Artifact-producing phases (`vdd_init`, `vdd_vision`, `vdd_strategize`, `vdd_tactics`, `vdd_specify`, `vdd_plan`, `vdd_tasks`, `vdd_validate`, `vdd_clone`) return their content with `persisted: false` and a `writeTargets` list — the agent writes them.
+- Artifact-producing phases (`vdd_init`, `vdd_vision`, `vdd_strategize`, `vdd_tactics`, `vdd_specify`, `vdd_plan`, `vdd_tasks`, `vdd_validate`) return their content with `persisted: false` and a `writeTargets` list — the agent writes them.
 - Read phases (`vdd_tactics`, `vdd_clarify`, `vdd_get_next_task`, `vdd_inspect`, `vdd_validate`, `vdd_implement`) return a `delegation` envelope when given no content; re-call the **same tool** with `artifactFiles` (and `codebaseAudit` for tactics) to receive the real result.
 
 For direct read/write of a local project, run the **local stdio server** instead — `npx -y @simonmak-ascent/mcp` (see [Local MCP](#local-mcp-from-source)). It performs real filesystem I/O and returns `mode: "local"`, `persisted: true`.
 
 
-### MCP Prompts (3)
+### MCP Prompts (20)
 
-`start_vdd_project` (vision → validated task list), `implement_next_task` (one test-first task with traceability) and `change_requirement` (cascade a change and re-run the gates). Available on the stdio server and the hosted endpoint.
+The three project-flow prompts — `start_vdd_project` (vision → validated task list), `implement_next_task` (one test-first task with traceability) and `change_requirement` (cascade a change and re-run the gates) — plus one per phase (`init`, `vision`, `strategize`, `tactics`, `specify`, `clarify`, `plan`, `tasks`, `get-next-task`, `implement`, `validate`) and the cross-phase set (`inspect`, `trace`, `analyze`, `amend`, `detect-environment`, `e2e`). Clients surface them as `/vdd:<name>`; available on the stdio server and the hosted endpoint. See [`SKILL.md`](SKILL.md#command-reference).
 
 ### MCP Registry (Glama)
 
@@ -362,7 +361,6 @@ VDD is benchmarked against NASA SE, CMMI REQM, DO-178C, IEC 62304, DORA, ISO 291
 | [`references/quality-gates.md`](references/quality-gates.md) | 7 gates with 108 checks + CI/CD |
 | [`references/anti-patterns.md`](references/anti-patterns.md) | 24 failure modes and fixes |
 | [`references/compliance-evidence.md`](references/compliance-evidence.md) | DO-178C/IEC 62304/CMMI/ISO 29148 evidence maps |
-| [`references/clone-workflow.md`](references/clone-workflow.md) | Website cloning — crawl → dataset → deployable dynamic site |
 | [`references/quick-reference.md`](references/quick-reference.md) | One-page cheat sheet |
 
 ---
@@ -411,11 +409,11 @@ VDD is benchmarked against NASA SE, CMMI REQM, DO-178C, IEC 62304, DORA, ISO 291
 │   ├── docs/                        # 16 guides and references
 │   └── specs/                       # 3 feature specs
 ├── packages/                        # TypeScript monorepo
-│   ├── vdd-engine/                  # Shared core — 18 phase functions + meta.ts
-│   ├── vdd-mcp/                     # MCP server — 15 tools, stdio + Streamable HTTP
-│   └── vdd-cli/                     # CLI binary — 17 subcommands
+│   ├── vdd-engine/                  # Shared core — 17 phase functions + meta.ts
+│   ├── vdd-mcp/                     # MCP server — 14 tools, stdio + Streamable HTTP
+│   └── vdd-cli/                     # CLI binary — 16 subcommands
 ├── api/                             # Vercel MCP endpoint
-│   ├── mcp.js                       # Streamable HTTP MCP endpoint (15 tools)
+│   ├── mcp.js                       # Streamable HTTP MCP endpoint (14 tools)
 │   └── _vdd-rpc.js                  # Shared JSON-RPC core + browser docs page (not routed)
 ├── scripts/                         # 4 installer/helper scripts
 └── .github/                         # GitHub config

@@ -1,6 +1,6 @@
 # Deployment Modes
 
-VDD's MCP server runs in three modes. They expose the **same 15 tools**; the
+VDD's MCP server runs in three modes. They expose the **same 14 tools**; the
 difference is whether the server itself can touch a filesystem.
 
 | Mode | Entry point | Filesystem | Network | Full VDD |

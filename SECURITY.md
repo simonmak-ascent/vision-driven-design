@@ -53,6 +53,3 @@ the result back via `artifactFiles`/`codebaseAudit`.
 
 - A compromised client machine or agent.
 - A malicious MCP server that impersonates this endpoint (pin the canonical URL).
-- The `vdd_clone` pipeline, which performs outbound network requests — it is not
-  available on the hosted endpoint and runs only on a filesystem-capable host at
-  the user's direction.

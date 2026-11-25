@@ -21,9 +21,6 @@ Navigation map for all VDD reference files.
 - Step-by-step — workflow-phases.md
 - S&T mapping — workflow-phases.md
 
-### Clone
-- Website cloning pipeline (crawl → dataset → dynamic site) — clone-workflow.md
-
 ### Quality & Gates
 - 7 bidirectional gate checklists — quality-gates.md
 - CI/CD integration — quality-gates.md
