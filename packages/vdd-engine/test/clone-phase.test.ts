@@ -15,6 +15,11 @@ vi.mock('playwright', () => ({
 const FIXTURE = '<html lang="en"><head><title>Home</title><meta name="description" content="Fixture"></head>' +
   '<body><h1>Hello</h1><p>A long enough paragraph for the crawl fixture page content.</p></body></html>';
 
+// Keep the suite hermetic: the clone path now refuses anything that resolves to a non-public
+// address, and an injected resolver stands in for DNS. `lookup` is a test seam on the input.
+const publicLookup = async () => [{ address: '93.184.216.34', family: 4 }];
+const loopbackLookup = async () => [{ address: '127.0.0.1', family: 4 }];
+
 function stubFetch() {
   vi.stubGlobal('fetch', vi.fn(async () => {
     // Root page served; sitemap not found (404) so only the root is crawled.
@@ -33,7 +38,7 @@ describe('clone phase', () => {
     try {
       stubFetch();
       const result = await PHASES['clone'](
-        { description: 'https://www.ascent-partners.com', json: false },
+        { description: 'https://www.ascent-partners.com', json: false, ssrfLookup: publicLookup } as never,
         { projectRoot: root, mode: 'auto' },
       );
       expect(result.success).toBe(true);
@@ -66,6 +71,21 @@ describe('clone phase', () => {
       );
       expect(result.success).toBe(false);
       expect(result.error).toContain('INVALID_HOST');
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it('AC-E2: refuses a target that resolves to a non-public address', async () => {
+    const root = await fs.mkdtemp(join(tmpdir(), 'vdd-clone-'));
+    try {
+      stubFetch();
+      const result = await PHASES['clone'](
+        { description: 'https://rebind.example', json: false, ssrfLookup: loopbackLookup } as never,
+        { projectRoot: root, mode: 'auto' },
+      );
+      expect(result.success).toBe(false);
+      expect(String(result.error)).toContain('non-public');
     } finally {
       await fs.rm(root, { recursive: true, force: true });
     }

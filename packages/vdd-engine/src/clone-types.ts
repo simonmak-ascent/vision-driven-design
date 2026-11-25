@@ -1,5 +1,7 @@
 // Shared types for the `-clone` pipeline (A-001 … A-009).
 
+import type { Lookup } from './assert-public-target.js';
+
 export interface NormalizedUrl {
   scheme: 'https' | 'http';
   host: string;
@@ -201,6 +203,8 @@ export interface SiteDataset {
   truncated: boolean;
   pages: CrawledPage[];
   cms?: CmsDescriptor;
+  /** URLs refused by the SSRF gate (redirect target or sitemap entry), with the reason. */
+  refused?: string[];
 }
 
 // --- Scaffold manifest (A-008) ---
@@ -275,4 +279,8 @@ export interface CrawlOptions {
   timeoutMs?: number;
   concurrency?: number;
   fetcher?: PageFetcher;
+  /** Refuse a non-public origin and re-validate every redirect hop (set by runClone). */
+  enforcePublicTarget?: boolean;
+  /** Injected resolver (tests keep the suite hermetic). */
+  lookup?: Lookup;
 }

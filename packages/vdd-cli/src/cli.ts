@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { PHASES, type VddContext, type VddPhaseInput } from '@simonmak-ascent/engine';
+import { PHASES, isProjectRootAllowed, projectRootError, type VddContext, type VddPhaseInput } from '@simonmak-ascent/engine';
 
 const program = new Command();
 program.name('vdd').description('Vision Driven Design CLI').version('1.9.0');
@@ -33,6 +33,11 @@ program.option('-c, --clone <domain>', 'Clone a website from a domain (https/htt
 
 async function runClone(domain: string, availableTools: string[]): Promise<void> {
   const ctx: VddContext = { projectRoot: process.cwd(), mode: 'auto' };
+  if (!isProjectRootAllowed(ctx.projectRoot)) {
+    console.error(projectRootError(ctx.projectRoot));
+    process.exitCode = 1;
+    return;
+  }
   const input: VddPhaseInput = { json: jsonMode, availableTools, capabilities: availableTools, description: domain };
   const result = await PHASES['clone'](input, ctx);
   console.log(jsonMode ? JSON.stringify(result) : result.success ? `✓ ${result.artifact || 'Done'}` : `✗ ${result.error}`);
@@ -52,6 +57,11 @@ for (const [name, { desc, args }] of Object.entries(PHASE_DESC)) {
     const availableTools = opts.tool ?? [];
     if (name === 'e2e' && opts.clone) { await runClone(opts.clone, availableTools); return; }
     const ctx: VddContext = { projectRoot: process.cwd(), mode: 'auto' };
+    if (!isProjectRootAllowed(ctx.projectRoot)) {
+      console.error(projectRootError(ctx.projectRoot));
+      process.exitCode = 1;
+      return;
+    }
     const input: VddPhaseInput = { json: jsonMode, availableTools, capabilities: availableTools };
     if (args[0] === 'statement') input.statement = argValues[0];
     else if (args[0] === 'idOrDesc') { input.description = argValues[0]; input.actionItemId = argValues[0]; }

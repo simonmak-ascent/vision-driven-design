@@ -33,18 +33,29 @@ interface RawPolylangLanguage {
   is_default?: boolean;
 }
 
-async function getJson<T>(url: string, timeoutMs: number): Promise<T | null> {
-  try {
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(timeoutMs),
-      redirect: 'follow',
-      headers: { 'user-agent': UA, accept: 'application/json' },
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as T;
-  } catch {
-    return null;
+async function getJson<T>(url: string, timeoutMs: number, guard?: (u: string) => Promise<boolean>): Promise<T | null> {
+  // WordPress commonly 301s `/wp-json` to `/wp-json/`; follow at most two hops, gating each one.
+  for (let hop = 0; hop <= 2; hop += 1) {
+    if (guard && !(await guard(url))) return null;
+    try {
+      const res = await fetch(url, {
+        signal: AbortSignal.timeout(timeoutMs),
+        redirect: 'manual',
+        headers: { 'user-agent': UA, accept: 'application/json' },
+      });
+      if (res.status >= 300 && res.status < 400) {
+        const location = res.headers.get('location');
+        if (!location) return null;
+        url = new URL(location, url).toString();
+        continue;
+      }
+      if (!res.ok) return null;
+      return (await res.json()) as T;
+    } catch {
+      return null;
+    }
   }
+  return null;
 }
 
 function normalizeLocale(raw: RawPolylangLanguage): I18nLocale {
@@ -59,7 +70,7 @@ function normalizeLocale(raw: RawPolylangLanguage): I18nLocale {
   };
 }
 
-export async function probeCms(domain: string, timeoutMs = 15000): Promise<CmsDescriptor> {
+export async function probeCms(domain: string, timeoutMs = 15000, guard?: (u: string) => Promise<boolean>): Promise<CmsDescriptor> {
   const restBase = domain + '/wp-json';
   const empty: CmsDescriptor = {
     platform: 'unknown',
@@ -73,10 +84,11 @@ export async function probeCms(domain: string, timeoutMs = 15000): Promise<CmsDe
   const root = await getJson<{ name?: string; description?: string; routes?: Record<string, unknown> }>(
     restBase + '/',
     timeoutMs,
+    guard,
   );
   if (!root) return empty;
 
-  const types = await getJson<Record<string, RawWpType>>(restBase + '/wp/v2/types', timeoutMs);
+  const types = await getJson<Record<string, RawWpType>>(restBase + '/wp/v2/types', timeoutMs, guard);
   const contentTypes: CmsContentType[] = types
     ? Object.values(types)
         .filter((t): t is RawWpType => !!t && typeof t === 'object')
@@ -91,7 +103,7 @@ export async function probeCms(domain: string, timeoutMs = 15000): Promise<CmsDe
         .filter((t) => t.slug.length > 0)
     : [];
 
-  const taxonomies = await getJson<Record<string, RawWpTaxonomy>>(restBase + '/wp/v2/taxonomies', timeoutMs);
+  const taxonomies = await getJson<Record<string, RawWpTaxonomy>>(restBase + '/wp/v2/taxonomies', timeoutMs, guard);
   const taxonomyList: CmsTaxonomy[] = taxonomies
     ? Object.values(taxonomies)
         .filter((t): t is RawWpTaxonomy => !!t && typeof t === 'object')
@@ -104,7 +116,7 @@ export async function probeCms(domain: string, timeoutMs = 15000): Promise<CmsDe
         .filter((t) => t.slug.length > 0)
     : [];
 
-  const languages = await getJson<RawPolylangLanguage[]>(restBase + '/pll/v1/languages', timeoutMs);
+  const languages = await getJson<RawPolylangLanguage[]>(restBase + '/pll/v1/languages', timeoutMs, guard);
   const locales: I18nLocale[] = (languages ?? [])
     .filter((l): l is RawPolylangLanguage => !!l && typeof l === 'object')
     .map(normalizeLocale);

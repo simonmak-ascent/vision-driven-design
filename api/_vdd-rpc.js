@@ -19,6 +19,14 @@ function listFeatureDirs() {
 // Resolve a missing `feature`: auto-use the single spec directory when exactly one
 // exists; otherwise return guidance. Returns null when feat is set, else
 // { feature } or { guidance }.
+// `feature` and the specify `id` are interpolated into writeTargets — an instruction the caller's
+// agent follows — so they are gated here exactly as the engine gates them (engine.ts:399-406).
+const FEATURE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+const invalidFeatureArg = (v) => ({
+  success: false,
+  error: `Invalid feature name ${JSON.stringify(v)}: expected ^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$ (one path segment — kebab-case or an action-item id such as A-001; no separators or dot segments).`,
+});
+
 function resolveFeature(root, feat, tool, availableOverride) {
   if (feat) return null;
   const available = availableOverride || listFeatureDirs(root);
@@ -610,12 +618,14 @@ function phaseHandlers(input) {
     },
     specify() {
       if (!id) return needsInput(["feature", "actionItemId", "description"], "Pass actionItemId (e.g. \"A-001\") or a freeform description to create a new spec; pass feature to name the spec directory.");
+      if (!FEATURE_NAME.test(id)) return invalidFeatureArg(id);
       return { success: true, artifact: `${root}/vdd/specs/${id}/spec.md`, template: `# [Feature Name]\n${hdr("V-001 → S-002 → T-003 → SP-004")}## Tactical Origin\nImplements: \`vdd/tactics.md\` → Action Item [${id}]\n\n## Overview\n[1-2 sentences. Reference which vision impact this serves.]\n\n## User Stories\n### Primary\nAs a [role], I want [goal] so that [benefit].\n\n## Boundaries\n**Always do:**\n- [e.g., "validate all inputs before processing"]\n\n**Ask first:**\n- [e.g., "adding a new database table not in this spec"]\n\n**Never do:**\n- [e.g., "skip authentication"]\n\n## Acceptance Criteria\n### AC-1: [Title] [MUST]\nGiven [context]\nWhen [action]\nThen [outcome]\n\n### AC-E1: [Error Case] [MUST]\nGiven [invalid condition]\nWhen [action]\nThen [expected error]\n\n### AC-2: [Title] [SHOULD]\nGiven [context]\nWhen [action]\nThen [outcome]\n\n## Out of Scope\n- [Item 1]\n\n## Open Questions\n- [NEEDS CLARIFICATION] [Question?]\n\n## Non-Functional Requirements\n- Performance: [e.g., "< 200ms at p95"]\n- Security: [e.g., "authenticated session required"]\n- Accessibility: [e.g., "WCAG 2.1 AA"]\n\n## Impact Verification\n- [e.g., AC-1 enables Impact I-001]\n\n## S&T Assumptions (Specs → Plan)\n**Necessity:** ...\n**Achievability:** ...\n**Sufficiency:** ...\n**Warnings:** ...\n` };
     },
     clarify() {
       const rc = resolveFeature(root, feat, "clarify", listFeaturesFromFiles(artifactFiles));
       if (rc && rc.guidance) return rc.guidance;
       if (rc && rc.feature) feat = rc.feature;
+      if (!FEATURE_NAME.test(feat)) return invalidFeatureArg(feat);
       const specKey = `vdd/specs/${feat}/spec.md`;
       const spec = artifactFiles[specKey];
       if (spec == null) {
@@ -628,6 +638,7 @@ function phaseHandlers(input) {
       const rp = resolveFeature(root, feat, "plan");
       if (rp && rp.guidance) return rp.guidance;
       if (rp && rp.feature) feat = rp.feature;
+      if (!FEATURE_NAME.test(feat)) return invalidFeatureArg(feat);
       const base = `${root}/vdd/specs/${feat}`;
       return { success: true, artifact: `${base}/plan.md`, files: {
         [`${base}/plan.md`]: `# Technical Plan\n${hdr("V-001 → S-002 → T-003 → SP-004 → PL-005")}## Spec Reference\nImplements: \`vdd/specs/${feat}/spec.md\`\n\n## Architecture Overview\n[High-level description. 3-5 sentences.]\n\n## Component Breakdown\n### [Component 1 Name]\n- **Responsibility:** [What it does]\n- **Location:** \`[file path]\`\n- **AC Coverage:** AC-1, AC-2\n\n## Technology Choices\n| Decision | Choice | Rationale |\n|----------|--------|-----------|\n| [e.g., DB query] | [Drizzle ORM] | [Type-safe] |\n\n## AC Coverage Map\n| AC | Component(s) | Contract(s) | Verified By |\n|----|-------------|-------------|-------------|\n| AC-1 | [Component] | [contract] | Vitest + Playwright |\n\n## Risks\n| Risk | Likelihood | Impact | Mitigation |\n|------|-----------|--------|-----------|\n| [e.g., API unavailable] | Low | High | Circuit breaker |\n\n## S&T Assumptions (Plan → Tasks)\n**Necessity:** ...\n**Achievability:** ...\n**Sufficiency:** ...\n**Warnings:** ...\n`,
@@ -639,12 +650,14 @@ function phaseHandlers(input) {
       const rt = resolveFeature(root, feat, "tasks");
       if (rt && rt.guidance) return rt.guidance;
       if (rt && rt.feature) feat = rt.feature;
+      if (!FEATURE_NAME.test(feat)) return invalidFeatureArg(feat);
       return { success: true, artifact: `${root}/vdd/specs/${feat}/tasks.md`, template: `# Task List\n${hdr("V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006")}## Plan Reference\nImplements: \`vdd/specs/${feat}/plan.md\`\n\n## Tasks\n### Setup\n- [ ] **TASK-001** [S] Set up [module] skeleton\n  - Creates: \`[path]\`\n  - Depends on: none\n\n### Implementation\n- [ ] **TASK-002** [M] [P] Write tests for [component]\n  - Tests: AC-1, AC-2 from \`vdd/specs/${feat}/spec.md\`\n  - Depends on: TASK-001\n\n- [ ] **TASK-002b** [S] Write error-case tests for [component]\n  - Tests: AC-E1\n  - Depends on: TASK-002\n\n- [ ] **TASK-003** [M] Implement [component]\n  - Contract: \`contracts/[file].md\`\n  - Satisfies: AC-1, AC-2\n  - Depends on: TASK-002\n\n### Integration\n- [ ] **TASK-006** [L] Integration test\n  - Tests: AC-1 through AC-4\n  - Depends on: TASK-003\n\n## Legend\n- \`[S]\` < 1h, \`[M]\` 1-3h, \`[L]\` 3-6h, \`[P]\` Parallelizable\n` };
     },
     "get-next-task"() {
       const rn = resolveFeature(root, feat, "get-next-task", listFeaturesFromFiles(artifactFiles));
       if (rn && rn.guidance) return rn.guidance;
       if (rn && rn.feature) feat = rn.feature;
+      if (!FEATURE_NAME.test(feat)) return invalidFeatureArg(feat);
       const tasksKey = `vdd/specs/${feat}/tasks.md`;
       const tasks = artifactFiles[tasksKey];
       if (tasks == null) {
@@ -673,6 +686,7 @@ function phaseHandlers(input) {
     },
     validate() {
       const featureDir = feat || "feature-1";
+      if (!FEATURE_NAME.test(featureDir)) return invalidFeatureArg(featureDir);
       const canonical = [
         { key: "constitution.md", path: "constitution.md", expected: "Phase 0 — Constitution (immutable)" },
         { key: "vision.md", path: "vdd/vision.md", expected: "V-001" },
@@ -745,6 +759,7 @@ function phaseHandlers(input) {
         const ri = resolveFeature(root, feat, "inspect", listFeaturesFromFiles(artifactFiles));
         if (ri && ri.guidance) return ri.guidance;
         if (ri && ri.feature) feat = ri.feature;
+        if (!FEATURE_NAME.test(feat)) return invalidFeatureArg(feat);
         const analysis = analyzeFeature(artifactFiles, feat);
         if (analysis == null) {
           const specKey = `vdd/specs/${feat}/spec.md`;
@@ -947,7 +962,7 @@ const P = {
   statement: { type: "string", description: "Freeform vision statement (required for vision)" },
   statementReq: { type: "string", description: "Freeform vision statement" },
   actionItemId: { type: "string", description: "Tactical action item ID, format A-### (e.g., \"A-001\"); must be an item id from vdd/tactics.md" },
-  feature: { type: "string", description: "Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., \"user-auth\"); must reference a directory created earlier by vdd_specify" },
+  feature: { type: "string", pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$", description: "Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., \"user-auth\"); must reference a directory created earlier by vdd_specify" },
   scope: { type: "string", enum: ["project", "feature"], description: "Inspect scope: \"project\" (default) returns the traceability matrix; \"feature\" returns per-feature spec metrics (requires feature)" },
   taskId: { type: "string", description: "Task ID to implement, format TASK-### (e.g., \"TASK-003\"); must be an id listed in the feature's tasks.md (see vdd_get_next_task)" },
   description: { type: "string", description: "Freeform description input" },

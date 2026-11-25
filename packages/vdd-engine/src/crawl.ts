@@ -14,6 +14,7 @@
 
 import type { CrawledPage, CrawlOptions, PageFetcher, SiteDataset } from './clone-types.js';
 import { normalizeDomain } from './normalize-domain.js';
+import { assertPublicTarget, type Lookup } from './assert-public-target.js';
 import { probeCms } from './probe-cms.js';
 
 const ASSET_EXT = /\.(png|jpe?g|gif|svg|webp|ico|css|js|json|xml|pdf|zip|mp4|webm|woff2?|ttf|eot|html)$/i;
@@ -101,25 +102,45 @@ function extractLocs(xml: string): string[] {
   return out;
 }
 
-async function fetchText(url: string, timeoutMs: number): Promise<string | null> {
-  try {
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(timeoutMs),
-      redirect: 'follow',
-      headers: { 'user-agent': UA, accept: 'text/html,application/xhtml+xml,text/css,*/*' },
-    });
-    if (!res.ok) return null;
-    const ct = res.headers.get('content-type') || '';
-    if (ct.includes('json') || ct.includes('xml') || ct.includes('text/plain') || ct.includes('text/css')) return await res.text();
-    const text = await res.text();
-    if (/\b(xml|html)\b/i.test(text.slice(0, 200))) return text;
-    return ct.includes('text/html') || ct.includes('text/css') ? text : null;
-  } catch {
-    return null;
+async function fetchText(url: string, timeoutMs: number, guard?: (u: string) => Promise<boolean>): Promise<string | null> {
+  // Redirects are followed manually so every hop is re-validated by the SSRF guard. This covers
+  // the plain-fetch path only: `capture` and the browserless service navigate server-side and are
+  // a recorded residual (`docs/plan.md` A3), not something this comment may imply is covered.
+  let current = url;
+  const deadline = Date.now() + timeoutMs;
+  for (let hop = 0; hop <= 3; hop += 1) {
+    // Every hop passes the guard, including hop 0: `current` can be a sitemap-index <loc>,
+    // which is remote-controlled and filtered nowhere else.
+    if (guard && !(await guard(current))) return null;
+    try {
+      const res = await fetch(current, {
+        signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())),
+        redirect: 'manual',
+        headers: { 'user-agent': UA, accept: 'text/html,application/xhtml+xml,text/css,*/*' },
+      });
+      if (res.status >= 300 && res.status < 400) {
+        const location = res.headers.get('location');
+        if (!location) return null;
+        // The next iteration re-checks the guard, so no separate redirect check is needed.
+        current = new URL(location, current).toString();
+        continue;
+      }
+      if (!res.ok) return null;
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('json') || ct.includes('xml') || ct.includes('text/plain') || ct.includes('text/css')) return await res.text();
+      const text = await res.text();
+      if (/\b(xml|html)\b/i.test(text.slice(0, 200))) return text;
+      return ct.includes('text/html') || ct.includes('text/css') ? text : null;
+    } catch {
+      return null;
+    }
   }
+  return null;
 }
 
-async function fetchBrowserless(host: string, token: string, url: string, timeoutMs: number): Promise<string | null> {
+async function fetchBrowserless(host: string, token: string, url: string, timeoutMs: number, guard?: (u: string) => Promise<boolean>): Promise<string | null> {
+  // The browser service fetches the URL from its own host, so it must pass the same gate.
+  if (guard && !(await guard(url))) return null;
   try {
     const sep = host.includes('?') ? '&' : '?';
     const res = await fetch(`${host}/content${sep}token=${encodeURIComponent(token)}`, {
@@ -136,16 +157,20 @@ async function fetchBrowserless(host: string, token: string, url: string, timeou
   }
 }
 
-async function resolveFetcher(options: CrawlOptions): Promise<PageFetcher> {
-  if (options.fetcher) return options.fetcher;
+async function resolveFetcher(options: CrawlOptions, guard?: (u: string) => Promise<boolean>): Promise<PageFetcher> {
+  if (options.fetcher) {
+    // An injected fetcher must not silently disable enforcement.
+    const injected = options.fetcher;
+    return guard ? async (url) => ((await guard(url)) ? injected(url) : null) : injected;
+  }
   const host = process.env.BROWSERLESS_HOST || 'http://localhost:3000';
   const token = process.env.BROWSERLESS_TOKEN || '';
   const timeoutMs = options.timeoutMs ?? 15000;
   if (token) {
     return async (url) =>
-      (await fetchBrowserless(host, token, url, timeoutMs)) ?? (await fetchText(url, timeoutMs));
+      (await fetchBrowserless(host, token, url, timeoutMs, guard)) ?? (await fetchText(url, timeoutMs, guard));
   }
-  return async (url) => fetchText(url, timeoutMs);
+  return async (url) => fetchText(url, timeoutMs, guard);
 }
 
 // The editorial content region — `<main>` or `<article>` — so footer/nav
@@ -247,17 +272,17 @@ function extractCanonical(html: string, base: URL): URL | null {
   return absolutize(base, raw);
 }
 
-async function discoverSitemap(root: string, timeoutMs: number): Promise<string[]> {
+async function discoverSitemap(root: string, timeoutMs: number, guard?: (u: string) => Promise<boolean>): Promise<string[]> {
   const locs: string[] = [];
   for (const name of ['sitemap.xml', 'sitemap_index.xml']) {
-    const txt = await fetchText(root + '/' + name, timeoutMs);
+    const txt = await fetchText(root + '/' + name, timeoutMs, guard);
     if (!txt) continue;
     const children = extractLocs(txt);
     if (/<sitemapindex/i.test(txt)) {
       let fetched = 0;
       for (const loc of children) {
         if (fetched >= 20) break;
-        const child = await fetchText(loc, timeoutMs);
+        const child = await fetchText(loc, timeoutMs, guard);
         if (child) {
           for (const l of extractLocs(child)) locs.push(l);
           fetched++;
@@ -298,12 +323,29 @@ async function fetchPage(fetcher: PageFetcher, url: string): Promise<CrawledPage
 export async function crawlSite(domain: string, options: CrawlOptions = {}): Promise<SiteDataset> {
   const normalized = normalizeDomain(domain);
   if ('code' in normalized) throw new Error(normalized.code + ': ' + normalized.message);
+  if (options.enforcePublicTarget) {
+    const check = await assertPublicTarget(normalized.host, options.lookup);
+    if (!check.ok) throw new Error(check.reason ?? 'refused: non-public crawl target');
+  }
   const root = normalized.scheme + '://' + normalized.host;
   const maxPages = options.maxPages ?? 200;
   const timeoutMs = options.timeoutMs ?? 15000;
   const concurrency = options.concurrency ?? 8;
 
-  const fetcher = await resolveFetcher(options);
+  const refused: string[] = [];
+  const guard = options.enforcePublicTarget
+    ? async (u: string) => {
+        try {
+          const check = await assertPublicTarget(new URL(u).hostname, options.lookup);
+          if (!check.ok && !refused.some((r) => r.startsWith(`${u} —`))) refused.push(`${u} — ${check.reason ?? 'refused'}`);
+          return check.ok;
+        } catch {
+          refused.push(`${u} — invalid URL`);
+          return false;
+        }
+      }
+    : undefined;
+  const fetcher = await resolveFetcher(options, guard);
   const origin = new URL(root + '/');
 
   const queue: string[] = [];
@@ -339,7 +381,7 @@ export async function crawlSite(domain: string, options: CrawlOptions = {}): Pro
   };
 
   enqueue(root + '/');
-  for (const loc of await discoverSitemap(root, timeoutMs)) enqueue(loc);
+  for (const loc of await discoverSitemap(root, timeoutMs, guard)) enqueue(loc);
 
   // Fetch the root synchronously first so the dataset starts with the origin
   // (deterministic ordering for tests and consumers).
@@ -368,7 +410,15 @@ export async function crawlSite(domain: string, options: CrawlOptions = {}): Pro
   // discovered than were actually stored.
   if (pages.length >= maxPages && seen.size > pages.length) truncated = true;
 
-  const cms = await probeCms(root, timeoutMs);
+  const cms = await probeCms(root, timeoutMs, guard);
 
-  return { root, crawledAt: new Date().toISOString(), maxPages, truncated, pages, cms };
+  return {
+    root,
+    crawledAt: new Date().toISOString(),
+    maxPages,
+    truncated,
+    pages,
+    cms,
+    ...(refused.length > 0 ? { refused } : {}),
+  };
 }

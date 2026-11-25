@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { z } from 'zod';
-import { PHASES, PHASE_NAMES, PHASE_META, PARAM_RELATIONSHIP_NOTES, type VddContext, type VddPhaseInput } from '@simonmak-ascent/engine';
+import { PHASES, PHASE_NAMES, PHASE_META, PARAM_RELATIONSHIP_NOTES, isProjectRootAllowed, projectRootError, type VddContext, type VddPhaseInput } from '@simonmak-ascent/engine';
 import { PROMPTS } from './prompts.js';
 
 // Shared field definitions, then a per-phase input schema so each tool advertises
@@ -10,8 +10,12 @@ const projectRoot = z.string().default('.').describe('Project root: directory th
 const statement = z.string().optional().describe('Freeform vision statement (required for vision)');
 const statementReq = z.string().describe('Freeform vision statement');
 const actionItemId = z.string().optional().describe('Tactical action item ID, format A-### (e.g., "A-001"); must be an item id from vdd/tactics.md');
-const feature = z.string().optional().describe('Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., "user-auth"); must reference a directory created earlier by vdd_specify');
-const featureReq = z.string().describe('Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., "user-auth"); must reference a directory created earlier by vdd_specify');
+// Mirrors the engine's choke-point validator (`isValidFeatureName` in engine.ts). The engine
+// remains authoritative — the CLI and direct imports bypass this schema — but rejecting here
+// gives MCP clients the error before a round trip. `feature-schema.test.ts` asserts they agree.
+export const FEATURE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+const feature = z.string().regex(FEATURE_PATTERN).optional().describe('Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., "user-auth"); must reference a directory created earlier by vdd_specify');
+const featureReq = z.string().regex(FEATURE_PATTERN).describe('Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., "user-auth"); must reference a directory created earlier by vdd_specify');
 const scope = z.enum(['project', 'feature']).optional().describe('Inspect scope: "project" (default) returns the traceability matrix; "feature" returns per-feature spec metrics (requires feature)');
 const taskId = z.string().describe('Task ID to implement, format TASK-### (e.g., "TASK-003"); must be an id listed in the feature\'s tasks.md (see vdd_get_next_task)');
 const description = z.string().optional().describe('Freeform description input');
@@ -123,7 +127,23 @@ export function createVddMcpServer(): McpServer {
         annotations: toolMeta?.annotations,
       },
       async (params: Record<string, unknown>) => {
-        const ctx: VddContext = { projectRoot: String(params.projectRoot || '.'), mode: 'auto' };
+        const root = String(params.projectRoot || '.');
+        // `projectRoot` is a write primitive (`mkdir -p` + `writeFile`); confine it at the surface.
+        // The engine stays usable from library tests with any temp root, so this check lives here.
+        if (!isProjectRootAllowed(root)) {
+          const refused = {
+            success: false,
+            error: projectRootError(root),
+            _phase: name,
+            _sdt: meta?.instructions ?? '',
+          };
+          return {
+            content: [{ type: 'text' as const, text: JSON.stringify(refused, null, 2) }],
+            structuredContent: refused as Record<string, unknown>,
+            isError: true,
+          };
+        }
+        const ctx: VddContext = { projectRoot: root, mode: 'auto' };
         const input: VddPhaseInput = {
           statement: params.statement as string | undefined,
           actionItemId: params.actionItemId as string | undefined,
