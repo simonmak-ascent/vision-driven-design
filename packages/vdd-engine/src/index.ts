@@ -1,4 +1,5 @@
-export { PHASES } from './engine.js';
+export { PHASES, isValidFeatureName } from './engine.js';
+export { allowedProjectRoots, isProjectRootAllowed, projectRootError } from './project-root.js';
 export { normalizeDomain } from './normalize-domain.js';
 export type { NormalizedUrl, NormalizeError } from './normalize-domain.js';
 export { inferSchema } from './infer-schema.js';

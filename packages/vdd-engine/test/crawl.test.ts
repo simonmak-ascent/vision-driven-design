@@ -141,4 +141,33 @@ describe('crawlSite (A-002)', () => {
     const ds = await crawlSite('https://example.com', { fetcher });
     expect(ds.pages.filter((p) => p.path.includes('/tc/'))).toHaveLength(1);
   });
+
+  it('refuses a non-public origin when enforcement is on', async () => {
+    await expect(
+      crawlSite('https://localhost', {
+        enforcePublicTarget: true,
+        lookup: async () => [{ address: '127.0.0.1', family: 4 }],
+      }),
+    ).rejects.toThrow(/refused/);
+  });
+
+  it('does not follow a redirect to a private address', async () => {
+    const mock = vi.fn(async () =>
+      new Response('', {
+        status: 302,
+        headers: { location: 'http://169.254.169.254/latest/meta-data/' },
+      }),
+    );
+    vi.stubGlobal('fetch', mock);
+
+    const ds = await crawlSite('https://public.example', {
+      enforcePublicTarget: true,
+      lookup: async () => [{ address: '93.184.216.34', family: 4 }],
+      maxPages: 1,
+    });
+
+    expect(ds.pages).toHaveLength(0);
+    expect(mock.mock.calls.some(([u]) => String(u).includes('169.254'))).toBe(false);
+    expect(ds.refused?.some((r) => r.includes('169.254'))).toBe(true);
+  });
 });

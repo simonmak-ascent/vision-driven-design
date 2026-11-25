@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Lookup } from './assert-public-target.js';
 
 export const VddMode = z.enum(['auto', 'gated']);
 export type VddMode = z.infer<typeof VddMode>;
@@ -71,6 +72,8 @@ export const VddPhaseInput = z.object({
   crawl: z.boolean().optional(),
   browser: z.boolean().optional(),
   refresh: z.boolean().optional(),
+  /** @internal test seam only — never supplied by the MCP/CLI surface. */
+  ssrfLookup: z.custom<Lookup>((v) => typeof v === 'function').optional(),
 });
 export type VddPhaseInput = z.infer<typeof VddPhaseInput>;
 

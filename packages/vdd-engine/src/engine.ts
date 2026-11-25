@@ -46,6 +46,26 @@ function needsInput(fields: string[], instruction: string, extra: Record<string,
   };
 }
 
+// `feature` is concatenated into filesystem paths (`vdd/specs/<feature>/...`), so it is
+// validated here, at the engine choke point — not only in the tool schema, because the CLI
+// and direct imports reach the same functions. An invalid name is an error, not guidance.
+// One path segment. Admits the documented action-item form (`A-001`) as well as kebab-case;
+// refuses separators, dot segments, NUL and spaces (no later phase could address a spaced name).
+const FEATURE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+
+export function isValidFeatureName(name: string): boolean {
+  return FEATURE_NAME.test(name);
+}
+
+function invalidFeature(name: string): VddOutput {
+  return {
+    success: false,
+    error:
+      `Invalid feature name ${JSON.stringify(name)}: expected ^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$ ` +
+      `(one path segment — kebab-case or an action-item id such as A-001; no separators or dot segments).`,
+  };
+}
+
 async function listFeatureDirs(root: string): Promise<string[]> {
   try {
     return (await fs.readdir(root + '/vdd/specs', { withFileTypes: true }))
@@ -61,7 +81,7 @@ async function listFeatureDirs(root: string): Promise<string[]> {
 // there is exactly one; otherwise return guidance listing what is available.
 // Returns null when input.feature is (now) set, or a guidance VddOutput otherwise.
 async function withFeature(input: VddPhaseInput, root: string, tool: string): Promise<VddOutput | null> {
-  if (input.feature) return null;
+  if (input.feature) return isValidFeatureName(input.feature) ? null : invalidFeature(input.feature);
   const available = await listFeatureDirs(root);
   if (available.length === 1) {
     input.feature = available[0];
@@ -378,8 +398,13 @@ async function tactics(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput
 
 // Phase 4: specify
 async function specify(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> {
+  if (input.feature && !isValidFeatureName(input.feature)) return invalidFeature(input.feature);
   const id = input.feature || input.actionItemId || input.description;
   if (!id) return needsInput(['feature', 'actionItemId', 'description'], 'Pass actionItemId (e.g. "A-001") or a freeform description to create a new spec; pass feature to name the spec directory.');
+  // `actionItemId`/`description` are free text (documented form "A-001"); they still must be a
+  // single path segment — `specify` is the phase that CREATES `vdd/specs/<id>/`, so it is the one
+  // write path that must be validated even when `feature` is absent.
+  if (!isValidFeatureName(id)) return invalidFeature(id);
   const artifact = ctx.projectRoot + '/vdd/specs/' + id + '/spec.md';
   const content = '# [Feature Name]\n' + templateHeader((await chainContext(ctx.projectRoot)).tactics + ' → SP-<n>') +
     '## Tactical Origin\nImplements: `vdd/tactics.md` → Action Item [' + id + ']\n\n' +
@@ -615,6 +640,7 @@ async function validate(input: VddPhaseInput, ctx: VddContext): Promise<VddOutpu
   const specsDir = root + '/vdd/specs';
   let features: string[];
   if (input.feature) {
+    if (!isValidFeatureName(input.feature)) return invalidFeature(input.feature);
     features = [input.feature];
   } else {
     try {
@@ -1628,6 +1654,8 @@ async function clone(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> 
       timeoutMs,
       concurrency,
       reuseDataset,
+      // Test seam only: the MCP/CLI schema never supplies this. Production uses the system resolver.
+      lookup: input.ssrfLookup,
     });
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : String(err) };
@@ -1732,6 +1760,7 @@ async function clone(input: VddPhaseInput, ctx: VddContext): Promise<VddOutput> 
       normalized: target,
       platform,
       pages: pageCount,
+      refused: pipeline.refused ?? [],
       dataset: datasetPath,
       schema: schemaPath,
       capture: capturePath,

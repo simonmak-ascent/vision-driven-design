@@ -70,16 +70,24 @@ describe('HTTP transport (Streamable HTTP)', () => {
     expect(body.result?.tools?.length).toBe(15);
   });
 
-  it('calls a tool over HTTP', async () => {
-    const res = await post({
-      jsonrpc: '2.0',
-      id: 3,
-      method: 'tools/call',
-      params: { name: 'vdd_detect_environment', arguments: { availableTools: ['filesystem'] } },
-    });
-    expect(res.status).toBe(200);
-    const body = (await readRpc(res)) as { result?: { content?: Array<{ text: string }> } };
-    const parsed = JSON.parse(body.result!.content![0].text) as { success: boolean };
-    expect(parsed.success).toBe(true);
+  it('rejects a projectRoot outside the allowed roots', async () => {
+    const prev = process.env.VDD_ALLOWED_ROOTS;
+    process.env.VDD_ALLOWED_ROOTS = '/tmp/vdd-allowed-root';
+    try {
+      const res = await post({
+        jsonrpc: '2.0',
+        id: 4,
+        method: 'tools/call',
+        params: { name: 'vdd_detect_environment', arguments: { projectRoot: '/etc' } },
+      });
+      expect(res.status).toBe(200);
+      const body = (await readRpc(res)) as { result?: { content?: Array<{ text: string }> } };
+      const parsed = JSON.parse(body.result!.content![0].text) as { success: boolean; error?: string };
+      expect(parsed.success).toBe(false);
+      expect(parsed.error).toContain('outside the allowed roots');
+    } finally {
+      if (prev === undefined) delete process.env.VDD_ALLOWED_ROOTS;
+      else process.env.VDD_ALLOWED_ROOTS = prev;
+    }
   });
 });

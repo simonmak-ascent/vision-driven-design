@@ -2,9 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { runClone } from '../src/clone-pipeline.js';
 import type { SiteDataset } from '../src/clone-types.js';
 
+// Hermetic resolver: the gate refuses non-public answers, so the suite injects one.
+const publicLookup = async () => [{ address: '93.184.216.34', family: 4 }];
+
 describe('runClone (pure, browser + crawl disabled)', () => {
   it('normalizes and produces deterministic empty output without network', async () => {
-    const r = await runClone('https://www.example.com', { browser: false, crawl: false });
+    const r = await runClone('https://www.example.com', { browser: false, crawl: false, lookup: publicLookup });
     expect(r.normalized).toEqual({ scheme: 'https', host: 'example.com' });
     expect(r.browserSkipped).toBe(true);
     expect(r.crawlSkipped).toBe(false);
@@ -41,7 +44,7 @@ describe('runClone (pure, browser + crawl disabled)', () => {
         },
       ],
     };
-    const r = await runClone('https://example.com', { browser: false, crawl: true, reuseDataset: dataset });
+    const r = await runClone('https://example.com', { browser: false, crawl: true, reuseDataset: dataset, lookup: publicLookup });
     expect(r.dataset).toBe(dataset);
     expect(r.crawlSkipped).toBe(false);
     expect(r.manifest).toBeDefined();

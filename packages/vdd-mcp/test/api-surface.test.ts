@@ -137,9 +137,26 @@ describe('hosted ↔ stdio parity (schemas, prompts, version)', async () => {
     for (const tool of hosted.toolDefs()) {
       const shape = PHASE_INPUT_SCHEMAS[phaseOf(tool.name)];
       expect(Object.keys(tool.inputSchema.properties).sort(), tool.name).toEqual(Object.keys(shape).sort());
-      const json = z.toJSONSchema(z.object(shape), { io: 'input' }) as { required?: string[] };
+      const json = z.toJSONSchema(z.object(shape), { io: 'input' }) as {
+        required?: string[];
+        properties?: Record<string, { pattern?: string }>;
+      };
       expect((tool.inputSchema.required ?? []).sort(), tool.name).toEqual((json.required ?? []).sort());
+      // Compare per-field constraints, not just names: a `pattern` added on one side and not the
+      // other is how the hosted twin drifted — and it interpolates writeTargets.
+      for (const [key, prop] of Object.entries(json.properties ?? {})) {
+        const hostedProp = (tool.inputSchema.properties as Record<string, { pattern?: string }>)[key];
+        expect(hostedProp?.pattern, `${tool.name}.${key}`).toBe(prop.pattern);
+      }
       expect(tool.outputSchema, tool.name).toBeTruthy();
+    }
+  });
+
+  it('refuses a hostile feature in the hosted handlers that interpolate it', () => {
+    for (const tool of ['vdd_validate', 'vdd_inspect']) {
+      const result = callTool(tool, { feature: '../../x' });
+      expect(result.success, tool).toBe(false);
+      expect(String((result as { error?: string }).error), tool).toContain('Invalid feature name');
     }
   });
 
