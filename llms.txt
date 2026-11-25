@@ -28,7 +28,7 @@
 - Project flow: `start_vdd_project`, `implement_next_task`, `change_requirement`
 - Per phase: `init`, `vision`, `strategize`, `tactics`, `specify`, `clarify`, `plan`, `tasks`, `get-next-task`, `implement`, `validate`
 - Cross-phase: `inspect`, `trace`, `analyze`, `amend`, `detect-environment`, `e2e`
-- Clients surface these as `/vdd:<name>`. Published npm `1.9.5` predates them: `npx -y @simonmak-ascent/mcp` serves only the three project-flow prompts, while the hosted endpoint and the repository serve all 20.
+- Clients surface these as `/vdd:<name>`. From `1.10.0` the npm package serves all 20 prompts, matching the hosted endpoint and the repository.
 
 ## Docs
 
