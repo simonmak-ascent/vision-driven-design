@@ -1,4 +1,4 @@
-# Plan v4 — from 15 tools to five capabilities
+# Plan v4 — from 15 tools to four capabilities
 
 v4 grounds the plan in the operator's constraint and the estate's ship gate:
 
@@ -70,6 +70,7 @@ content; gate semantics beyond honesty; UI redesign; `skills/*` before a non-par
 | D10 | `TASKS.md` is a per-commit record, not a backlog | Measured 2026-11-25: `ready` → exit 1, stale blocker → exit 2. Only delivered or operator-gated work can be committed; the backlog stays in `docs/plan.md`. |
 | D11 | `compliance.json` is declared in 1.9.6 | The estate audits how a change reaches production; the repo declares none today. |
 | D12 | Adopting `estate-ci.yml` is **deferred**, not assumed | It runs on `ubuntu-latest` (so a public repo could use it), but its probe job checks out `apg-infra` at `job.workflow_sha`; that is a decision with an access question, not a mechanical edit. |
+| D13 | **`clone` is removed**, so the surface is four capabilities | It is a URL-to-app generator unrelated to the chain (2,057 LOC) and the only network surface. Operator decision 2026-11-25; A3/A4 below are superseded. |
 
 ## Review loop (per increment)
 
@@ -106,13 +107,13 @@ Verdict binds to bytes; any code edit after `ship` voids it; one shipping action
 |---|---|---|---|
 | A1 | `feature` rule `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$` — one path segment, admitting the documented `A-###` form and kebab-case — at the engine choke point, the schema and the hosted twin. **Landed 2026-11-25**: `engine.ts:49-56` (validator), `:82` (choke point), `:636` (validate); `server.ts:16-18` (pattern) | A01 | `-- feature-arg` (engine) **and** `-- feature-schema` (mcp) |
 | A2 | Confine `projectRoot`; `writeArtifact` is `mkdir -p` anywhere. **Landed 2026-11-25**: `project-root.ts:33-39`, wired in `server.ts` and `cli.ts` | A1 | `-- project-root` **and** the HTTP surface case in `http-transport.test.ts` |
-| A3 | New `assert-public-target` module + `assert-public-target.test.ts`: reject localhost/private/link-local/`100.100.100.200`/IPv6 equivalents; `dns.lookup({all:true})`, refuse if **any** answer is private; return the addresses for pinning. **Landed 2026-11-25**: `assert-public-target.ts`, gate in `runClone` and `crawlSite`, `redirect:'manual'` with a per-hop guard including sitemap discovery. `normalize-domain` stays a permissive normalizer — the gate is the control. **Residual:** IP pinning (validate-then-fetch is still TOCTOU, so DNS rebinding can reach a private address), `capture`'s redirects **and its stylesheet fetch**, `evidence`'s `page.goto`, the browserless service (its initial URL is gated; redirects and subresources inside the service are not), hosted `projectRoot` (its `writeTargets` are executed by the caller's agent and are not confined), token/host (A4) | — | `-- assert-public-target`; `-- crawl` (refusal + redirect cases) |
-| A4 | Browserless token as a header (`crawl.ts:146`, `capture.ts:201`); host explicitly configured, non-loopback | A3 | `-- crawl` (the browserless request case) asserts the header and that no token appears in the query |
+| A3 | *Superseded (D13): `clone` removed, so the SSRF gate has no subject.* Original scope: New `assert-public-target` module + `assert-public-target.test.ts`: reject localhost/private/link-local/`100.100.100.200`/IPv6 equivalents; `dns.lookup({all:true})`, refuse if **any** answer is private; return the addresses for pinning. **Landed 2026-11-25**: `assert-public-target.ts`, gate in `runClone` and `crawlSite`, `redirect:'manual'` with a per-hop guard including sitemap discovery. `normalize-domain` stays a permissive normalizer — the gate is the control. **Residual:** IP pinning (validate-then-fetch is still TOCTOU, so DNS rebinding can reach a private address), `capture`'s redirects **and its stylesheet fetch**, `evidence`'s `page.goto`, the browserless service (its initial URL is gated; redirects and subresources inside the service are not), hosted `projectRoot` (its `writeTargets` are executed by the caller's agent and are not confined), token/host (A4) | — | `-- assert-public-target`; `-- crawl` (refusal + redirect cases) |
+| A4 | *Superseded (D13): `clone` removed.* Browserless token as a header (`crawl.ts:146`, `capture.ts:201`); host explicitly configured, non-loopback | A3 | `-- crawl` (the browserless request case) asserts the header and that no token appears in the query |
 | A5 | `artifactFiles` caps (64 / 256 KiB) in the engine choke point | A1 | `-- artifact-files` |
 | A6 | Ship 1.9.6: engine/cli 1.9.0→1.9.1, mcp 1.9.5→1.9.6, `SERVER_VERSION` (`api/_vdd-rpc.js:892`), `server.json`, CHANGELOG, tag `v1.9.6`, global re-patch. `scripts/copy-skill.mjs` copies root `SKILL.md`/`references/`/`domain-primers/` into `packages/vdd-mcp/`, `files` gains them, `"prepack"` runs it, copied paths added to `.gitignore` | A1–A5, A02 | `(cd packages/vdd-mcp && npm pack --dry-run 2>&1 \| grep -q 'references/')`; version-parity test; `git describe --tags --exact-match HEAD` after tagging |
 
 **Delivered 2026-11-25 (unreviewed code, uncommitted):** A1, A2, A3. Evidence: `feature-arg` 8,
-`feature-schema` 16, `project-root` 10, `http-transport` 3, `assert-public-target` 27, plus the crawl
+`feature-schema` 16, `project-root` 10, `http-transport` 3, `assert-public-target` 27 and the crawl
 refusal/redirect cases; `$GATE` 18 files / 137 tests. The red runs are in the session log — the
 traversal test failed twice for the wrong reason, and the redirect test exposed a bypass
 (`discoverSitemap` called `fetchText` without the guard) before it passed. A0 is withdrawn.
@@ -191,7 +192,7 @@ A release ships only when every task passed the loop **and** `TASKS.md` is compl
 |---|---|---|
 | Template conformance | engine test on a temp project from the doc | — |
 | URI traversal | `resource-uri`, all vectors | — |
-| SSRF | `assert-public-target` (A3) | rebinding is a recorded residual; pinning is not shipped |
+| SSRF | `assert-public-target` (A3) | removed with `clone` (D13) — no VDD surface fetches |
 | Vercel bundle | post-deploy `curl` | merge gate, not local |
 | CI gates the PR | first PR's `gh pr checks` | yaml assertion before that |
 

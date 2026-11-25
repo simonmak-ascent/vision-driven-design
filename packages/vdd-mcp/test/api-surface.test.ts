@@ -44,8 +44,8 @@ describe('hosted MCP tool surface (api/_vdd-rpc.js)', () => {
   const tools = core.toolDefs();
   const byName = new Map(tools.map((tool) => [tool.name, tool]));
 
-  it('exposes 15 tools', () => {
-    expect(tools).toHaveLength(15);
+  it('exposes 14 tools', () => {
+    expect(tools).toHaveLength(14);
   });
 
   it('has a title and annotations for every tool', () => {

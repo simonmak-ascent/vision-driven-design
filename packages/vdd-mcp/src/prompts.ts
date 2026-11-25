@@ -75,7 +75,7 @@ export const PROMPTS: VddPrompt[] = [
       { name: "researchFindings", description: "Optional consolidated findings to skip the dispatch pass.", required: false },
       { name: "projectRoot", description: "Project root (default \".\").", required: false },
     ],
-    text: (a) => `Run VDD Phase 2 for projectRoot="${a.projectRoot || "."}".\n${HOSTED}\n1. Confirm vdd/vision.md exists and pass it via artifactFiles.\n2. Call vdd_strategize with availableTools (the tool names you actually have, e.g. ["brave-search","perplexity","context7","gh_grep","playwright","browserless","filesystem","shell"]) and projectRoot.\n3. Dispatch the returned research subagents in parallel and collect findings with citations.\n4. Re-call vdd_strategize with researchFindings${a.researchFindings ? ` (pre-supplied: ${a.researchFindings})` : ""} and write vdd/strategy.md.\n5. Report gate G2: every pillar traces to a vision goal and every goal has at least one pillar.`,
+    text: (a) => `Run VDD Phase 2 for projectRoot="${a.projectRoot || "."}".\n${HOSTED}\n1. Confirm vdd/vision.md exists and pass it via artifactFiles.\n2. Call vdd_strategize with availableTools (the tool names you actually have, e.g. ["brave-search","perplexity","context7","gh_grep","playwright","filesystem","shell"]) and projectRoot.\n3. Dispatch the returned research subagents in parallel and collect findings with citations.\n4. Re-call vdd_strategize with researchFindings${a.researchFindings ? ` (pre-supplied: ${a.researchFindings})` : ""} and write vdd/strategy.md.\n5. Report gate G2: every pillar traces to a vision goal and every goal has at least one pillar.`,
   },
   {
     name: "tactics",
@@ -206,17 +206,7 @@ export const PROMPTS: VddPrompt[] = [
     arguments: [
       { name: "availableTools", description: "Optional comma-separated host tool names.", required: false },
     ],
-    text: (a) => `Run VDD environment detection.\n1. Call vdd_detect_environment with availableTools (the names you actually have, e.g. ["brave-search","perplexity","context7","gh_grep","playwright","browserless","filesystem","shell"]${a.availableTools ? `; pre-supplied: ${a.availableTools}` : ""}).\n2. Report the per-phase required vs present/missing tools and the Phase 2 research dispatch plan. Do not edit files.`,
-  },
-  {
-    name: "clone",
-    title: "VDD Clone — Crawl and manifest",
-    description: "Crawl a domain into a clone dataset and manifest for the vdd-clone skill.",
-    arguments: [
-      { name: "description", description: "Domain to clone (https://example.com or example.com).", required: true },
-      { name: "projectRoot", description: "Project root (default \".\").", required: false },
-    ],
-    text: (a) => `Run the VDD clone workflow for "${a.description}" (projectRoot="${a.projectRoot || "."}").\n${HOSTED}\n1. Call vdd_clone with description="${a.description}" and projectRoot.\n2. Write vdd/clone-dataset.json, vdd/clone-manifest.json, and vdd/clone.md.\n3. Report page count, detected CMS/locales, and the manifest path. To make the clone live, use the vdd-clone skill.`,
+    text: (a) => `Run VDD environment detection.\n1. Call vdd_detect_environment with availableTools (the names you actually have, e.g. ["brave-search","perplexity","context7","gh_grep","playwright","filesystem","shell"]${a.availableTools ? `; pre-supplied: ${a.availableTools}` : ""}).\n2. Report the per-phase required vs present/missing tools and the Phase 2 research dispatch plan. Do not edit files.`,
   },
   {
     name: "e2e",

@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import { MCP_TOOL_PHASES, TOOL_ANNOTATIONS } from '../src/server.js';
 
-const DESTRUCTIVE = ['init', 'vision', 'strategize', 'tactics', 'specify', 'plan', 'tasks', 'clone'];
+const DESTRUCTIVE = ['init', 'vision', 'strategize', 'tactics', 'specify', 'plan', 'tasks'];
 const READ_ONLY = ['clarify', 'get-next-task', 'implement', 'inspect', 'amend', 'detect-environment'];
-const OPEN_WORLD = ['strategize', 'clone'];
+const OPEN_WORLD = ['strategize'];
 
 describe('MCP server tool metadata (stdio + Streamable HTTP)', () => {
-  it('exposes 15 tools (e2e excluded; trace+analyze folded into inspect)', () => {
-    expect(MCP_TOOL_PHASES).toHaveLength(15);
+  it('exposes 14 tools (e2e excluded; trace+analyze folded into inspect; clone removed)', () => {
+    expect(MCP_TOOL_PHASES).toHaveLength(14);
   });
 
   it('has a title and annotations for every tool', () => {
@@ -32,7 +32,7 @@ describe('MCP server tool metadata (stdio + Streamable HTTP)', () => {
     expect(TOOL_ANNOTATIONS.validate.annotations.destructiveHint).toBe(false);
   });
 
-  it('marks openWorldHint on every tool, true only for strategize and clone', () => {
+  it('marks openWorldHint on every tool, true only for strategize', () => {
     for (const phase of MCP_TOOL_PHASES) {
       const openWorld = TOOL_ANNOTATIONS[phase].annotations.openWorldHint;
       expect(typeof openWorld, phase).toBe('boolean');

@@ -1,7 +1,7 @@
 {
   "$schema": "https://context7.com/schema/context7.json",
   "projectTitle": "Vision Driven Design (VDD)",
-  "description": "Spec-driven development methodology and MCP server for AI coding agents: 8 phases from vision to validation, bi-directional V→S→T→SP→PL→TK traceability, and 7 quality gates, exposed as 15 `vdd_*` tools over stdio or Streamable HTTP.",
+  "description": "Spec-driven development methodology and MCP server for AI coding agents: 8 phases from vision to validation, bi-directional V→S→T→SP→PL→TK traceability, and 7 quality gates, exposed as 14 `vdd_*` tools over stdio or Streamable HTTP.",
   "folders": [
     "docs",
     "references",

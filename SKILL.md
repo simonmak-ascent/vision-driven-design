@@ -185,7 +185,6 @@ are read-only aliases over `vdd_inspect`; `e2e` is a host-agent workflow over th
 | `/vdd:amend "what changed"` | any | Cascade a requirement change through the full chain |
 | `/vdd:detect-environment` | any | Report per-phase tool/MCP requirements + available capabilities |
 | `/vdd:e2e "vision statement"` | 0–8 | **End-to-end**: execute full chain init→vision→strategize→tactics→specify→clarify→plan→tasks→get-next-task→validate in one call. Writes all 10+ template files. Accept optional `--actionItemId` / `--feature` to customize feature name (default: "feature-1"). |
-| `/vdd:e2e -clone <domain>` | 7 | **Clone**: crawl the site (browserless/fetch) into a full dataset, capture exact UI/UX, rebuild backend, generate DB schema, emit AI tools, and generate a deployable **dynamic** site (`vdd/clone-site/`) that renders every crawled page. Accepts https/http/www/bare domain (e.g. `https://www.ascent-partners.com` or `ascent-partners.com`). |
 
 ---
 
@@ -240,16 +239,15 @@ vdd/
 | One-page cheat sheet | `references/quick-reference.md` |
 | Topic navigation | `references/INDEX.md` |
 | Compliance evidence templates | `references/compliance-evidence.md` |
-| Clone pipeline → live site playbook | `references/clone-playbook.md` |
 | Domain-specific research patterns | `domain-primers/*.md` |
 
 ## MCP & Packages
 
 The public MCP server at `vdd.simonmak.com/api/mcp` and the TypeScript packages are in this repo:
-- `api/mcp.js` — deployed Vercel Streamable HTTP handler (15 tools); `api/_vdd-rpc.js` — shared JSON-RPC core + browser docs page
-- `packages/vdd-engine/` — shared core (18 phase functions + `meta.ts`: phase metadata, tool requirements, research subagents, domain primers)
-- `packages/vdd-mcp/` — MCP server (15 tools, stdio + Streamable HTTP)
-- `packages/vdd-cli/` — CLI binary (17 subcommands, `--json`)
+- `api/mcp.js` — deployed Vercel Streamable HTTP handler (14 tools); `api/_vdd-rpc.js` — shared JSON-RPC core + browser docs page
+- `packages/vdd-engine/` — shared core (17 phase functions + `meta.ts`: phase metadata, tool requirements, research subagents, domain primers)
+- `packages/vdd-mcp/` — MCP server (14 tools, stdio + Streamable HTTP)
+- `packages/vdd-cli/` — CLI binary (16 subcommands, `--json`)
 
 **Capability contract:** the MCP is the *structured orchestration + verification* layer — it emits
 research-subagent dispatch specs, per-phase tool requirements (`/vdd:detect-environment`), domain-primer

@@ -19,7 +19,6 @@ export const PHASE_NAMES = [
   'inspect',
   'amend',
   'e2e',
-  'clone',
   'detect-environment',
 ] as const;
 
@@ -96,12 +95,8 @@ export const PHASE_META: Record<PhaseName, PhaseMeta> = {
     instructions: 'Pass "statement" with your vision. The tool runs all phases end-to-end, creating every artifact: constitution.md, vision.md, strategy.md, tactics.md, spec.md, plan.md, data-model.md, contracts/, tasks.md, and impact-report.md. Use optional "feature" (default "feature-1") to customize the spec directory name. The AI agent then fills in each template with domain-specific content.',
   },
   'detect-environment': {
-    description: 'VDD Environment Detection: Report which tools/MCPs each VDD phase requires vs treats as optional — across the 8-phase pipeline (init through validate) plus the cross-phase helpers (amend, clone, inspect, get-next-task) — and which of the host agent availableTools are present vs missing. Read-only; returns a capability report without modifying files. Run before vdd_strategize to plan research-subagent dispatch, or when a phase fails for lack of a tool; to inspect artifacts instead of capabilities use vdd_inspect. Returns a fixed-shape capability report; tool-name matching is normalized, so pass names as your host exposes them.',
+    description: 'VDD Environment Detection: Report which tools/MCPs each VDD phase requires vs treats as optional — across the 8-phase pipeline (init through validate) plus the cross-phase helpers (amend, inspect, get-next-task) — and which of the host agent availableTools are present vs missing. Read-only; returns a capability report without modifying files. Run before vdd_strategize to plan research-subagent dispatch, or when a phase fails for lack of a tool; to inspect artifacts instead of capabilities use vdd_inspect. Returns a fixed-shape capability report; tool-name matching is normalized, so pass names as your host exposes them.',
     instructions: 'Pass availableTools (array of MCP/tool names available to the host agent, e.g. ["brave-search","perplexity","context7","gh_grep","playwright","filesystem"]). Returns a per-phase capability report. Used before Phase 2 (strategize) to plan research subagent dispatch.',
-  },
-  clone: {
-    description: 'Crawl and capture a target domain into a clone dataset + manifest — WordPress-aware schema inference, Payload collections, and a Next.js + Payload + Postgres scaffold manifest (vdd/clone-manifest.json). Pass the domain as description. Writes vdd/clone-dataset.json, vdd/clone-manifest.json, and vdd/clone.md, overwriting any existing versions in place. Open-world: makes network requests to the target site and reads its sitemap and same-origin links. Use for cloning an external site; it is not part of the VDD phase pipeline, so for the normal init→validate flow call those phase tools instead.',
-    instructions: 'Pass the domain as "description" (or "statement"). The phase normalizes the domain, crawls the site (sitemap + same-origin links, browserless-first with plain-fetch fallback) into vdd/clone-dataset.json, detects WordPress CMS (content types, taxonomies, Polylang locales), infers the content model, generates Payload collections, and writes vdd/clone-manifest.json + vdd/clone.md. To make the clone live, run the `vdd-clone` skill: scaffold a Next.js + Payload + Postgres app at the project root (`.`), then `docker compose up` (self-hosted Postgres) and expose it via an SSH tunnel. Browserless config: BROWSERLESS_HOST (default http://localhost:3000) + BROWSERLESS_TOKEN env vars.',
   },
 };
 
@@ -112,7 +107,6 @@ export const TOOL_KEYS = [
   'context7',
   'gh_grep',
   'playwright',
-  'browserless',
   'filesystem',
   'shell',
 ] as const;
@@ -126,7 +120,7 @@ export interface ToolRequirements {
 export const TOOL_REQUIREMENTS: Record<PhaseName, ToolRequirements> = {
   init: { required: [], optional: [] },
   vision: { required: [], optional: [] },
-  strategize: { required: ['brave-search', 'perplexity'], optional: ['context7', 'gh_grep', 'playwright', 'browserless'] },
+  strategize: { required: ['brave-search', 'perplexity'], optional: ['context7', 'gh_grep', 'playwright'] },
   tactics: { required: ['filesystem'], optional: ['shell'] },
   specify: { required: [], optional: [] },
   clarify: { required: ['filesystem'], optional: [] },
@@ -139,8 +133,7 @@ export const TOOL_REQUIREMENTS: Record<PhaseName, ToolRequirements> = {
   analyze: { required: ['filesystem'], optional: [] },
   inspect: { required: ['filesystem'], optional: [] },
   amend: { required: ['filesystem'], optional: [] },
-  e2e: { required: ['filesystem'], optional: ['brave-search', 'perplexity', 'context7', 'gh_grep', 'playwright', 'browserless', 'shell'] },
-  clone: { required: ['filesystem'], optional: ['playwright', 'browserless', 'shell'] },
+  e2e: { required: ['filesystem'], optional: ['brave-search', 'perplexity', 'context7', 'gh_grep', 'playwright', 'shell'] },
   'detect-environment': { required: [], optional: [] },
 };
 
@@ -233,7 +226,6 @@ function normalizeToolKey(tool: string): string {
   if (t === 'context7' || t === 'context-7' || t === 'context_7') return 'context7';
   if (t === 'gh_grep' || t === 'gh-grep' || t === 'ghgrep') return 'gh_grep';
   if (t === 'brave-search' || t === 'brave_search' || t === 'brave') return 'brave-search';
-  if (t === 'browserless') return 'browserless';
   if (t === 'playwright') return 'playwright';
   if (t === 'perplexity') return 'perplexity';
   if (t === 'filesystem' || t === 'fs' || t === 'glob' || t === 'grep' || t === 'read') return 'filesystem';
@@ -313,6 +305,5 @@ export const PARAM_RELATIONSHIP_NOTES: Partial<Record<PhaseName, string>> = {
   validate: ' Parameter relationships: feature narrows the check to one spec; artifactFiles maps artifact path to content for serverless runs and is omitted when resolving against a local projectRoot. On the hosted (stateless) endpoint, pass artifactFiles (the vdd/ artifacts) so the tool can run drift/orphan/substance checks; without it the tool returns a delegation envelope.',
   inspect: ' Parameter relationships: scope="feature" requires feature, while scope="project" (the default) ignores it; projectRoot must match the root used by earlier phases. On the hosted (stateless) endpoint, pass artifactFiles (path→content for the vdd/ artifacts) so the tool computes the real matrix/metrics; without it the tool returns a delegation envelope.',
   amend: ' Parameter relationships: description is the requirement change to cascade through the artifact chain; projectRoot must match the root used by earlier phases.',
-  clone: ' Parameter relationships: description is the target domain and statement is the desired outcome (both optional); maxPages, timeoutMs, concurrency, crawl, and browser tune the crawl and refresh=true bypasses a cached dataset.',
   'detect-environment': ' Parameter relationships: availableTools and capabilities are aliases; omit both to get the per-phase requirements without a present/missing comparison.',
 };

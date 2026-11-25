@@ -1,6 +1,6 @@
 # VDD MCP server — Streamable HTTP transport on port 3000.
 #
-# Builds the TypeScript monorepo and serves the 16 VDD MCP tools over the MCP
+# Builds the TypeScript monorepo and serves the 14 VDD MCP tools over the MCP
 # Streamable HTTP transport, for self-hosting or any remote client.
 #
 # Note: Glama does NOT build from this file — it generates its own container

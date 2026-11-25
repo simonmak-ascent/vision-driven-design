@@ -324,7 +324,7 @@ function gateSummary(gates) {
 const TOOL_REQUIREMENTS = {
   init: { required: [], optional: [] },
   vision: { required: [], optional: [] },
-  strategize: { required: ["brave-search", "perplexity"], optional: ["context7", "gh_grep", "playwright", "browserless"] },
+  strategize: { required: ["brave-search", "perplexity"], optional: ["context7", "gh_grep", "playwright"] },
   tactics: { required: ["filesystem"], optional: ["shell"] },
   specify: { required: [], optional: [] },
   clarify: { required: ["filesystem"], optional: [] },
@@ -336,8 +336,7 @@ const TOOL_REQUIREMENTS = {
   trace: { required: ["filesystem"], optional: [] },
   analyze: { required: ["filesystem"], optional: [] },
   amend: { required: ["filesystem"], optional: [] },
-  e2e: { required: ["filesystem"], optional: ["brave-search", "perplexity", "context7", "gh_grep", "playwright", "browserless", "shell"] },
-  clone: { required: ["filesystem"], optional: ["playwright", "browserless", "shell"] },
+  e2e: { required: ["filesystem"], optional: ["brave-search", "perplexity", "context7", "gh_grep", "playwright", "shell"] },
   "detect-environment": { required: [], optional: [] },
 };
 
@@ -401,22 +400,6 @@ function countSubstancePlaceholders(content) {
   return (c.match(/\[e\.g\./g) || []).length + (c.match(/\[NEEDS CLARIFICATION\]/g) || []).length + (c.match(/\[Fill in:/g) || []).length + (c.match(/\[PENDING\]/g) || []).length;
 }
 
-function normalizeCloneDomain(raw) {
-  const input = String(raw || "").trim();
-  if (!input) return { error: "EMPTY_DOMAIN: Domain is required. Accepted forms: https://…, http://…, www.…, or a bare domain." };
-  let rest = input;
-  let scheme = "https";
-  const m = rest.match(/^(https?):\/\//i);
-  if (m) { scheme = m[1].toLowerCase() === "http" ? "http" : "https"; rest = rest.slice(m[0].length); }
-  let host = rest.split(/[/?#]/)[0] || "";
-  if (host.includes("@")) host = host.split("@").pop() || "";
-  host = host.toLowerCase().replace(/\.$/, "");
-  if (host.startsWith("www.")) host = host.slice(4);
-  const hostOk = host === "localhost" || /^(\d{1,3}\.){3}\d{1,3}$/.test(host) || /^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i.test(host);
-  if (!hostOk) return { error: `INVALID_HOST: "${input}" is not a valid domain. Accepted forms: https://…, http://…, www.…, or a bare domain.` };
-  return { scheme, host };
-}
-
 // ---------- Hosted delegation (stateless) ----------
 // The hosted endpoint has no filesystem: when a phase needs project content it
 // returns a delegation envelope for the calling agent to execute locally, then
@@ -425,7 +408,7 @@ function normalizeCloneDomain(raw) {
 const HOSTED_MODE = "hosted-delegated";
 // Phases that produce artifacts. On the hosted endpoint these write nothing, so
 // their result is wrapped with persisted:false + writeTargets + a write delegation.
-const WRITE_PHASES = new Set(["init", "vision", "strategize", "specify", "plan", "tasks", "tactics", "validate", "clone"]);
+const WRITE_PHASES = new Set(["init", "vision", "strategize", "specify", "plan", "tasks", "tactics", "validate"]);
 const MAX_ARTIFACT_FILES = 64;
 const MAX_ARTIFACT_BYTES = 262144; // 256 KB total across all artifactFiles
 const ALLOWED_ARTIFACT_PREFIXES = ["constitution.md", "vdd/", "specs/", "references/", "domain-primers/"];
@@ -870,15 +853,6 @@ function phaseHandlers(input) {
         gateResult: { passed: summary.allPassed && substancePassed, checks: summary.checksPassed, total: summary.checksRun },
       };
     },
-    clone() {
-      const rawDomain = desc || s;
-      if (!rawDomain) return needsInput(["description"], "Pass the target domain as description (bare domain, host, or URL); the clone pipeline then generates the dataset and manifest.");
-      const n = normalizeCloneDomain(rawDomain);
-      if (n.error) return { success: false, error: n.error };
-      const target = n.scheme + "://" + n.host;
-      const template = `# Clone\n${hdr("V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006")}## Target\n${target}\n\n## Pipeline Stages\n- [x] A-001 domain normalization → ${target}\n- [ ] A-002 crawl (browserless/fetch) → dataset\n- [ ] A-003 UI/UX capture + network evidence\n- [ ] A-004 schema inference\n- [ ] A-005 backend rebuild\n- [ ] A-006 dynamic site generation → vdd/clone-site/\n- [ ] A-007 AI-tool emission\n\n## Live Site\n\nRun the full clone pipeline (engine/CLI) to crawl the dataset and generate \`vdd/clone-site/\` (index.html + app.js + data/pages.json + style.css + vercel.json), then deploy the folder to Vercel/Netlify/GH Pages for a live URL.\n`;
-      return { success: true, artifact: `${root}/vdd/clone.md`, template, output: { normalized: target } };
-    },
   };
 }
 
@@ -900,13 +874,12 @@ const PHASE_META = {
   analyze: "VDD Cross-phase: Cross-artifact consistency analysis for one feature — acceptance-criteria (AC) count, unresolved [NEEDS CLARIFICATION] markers, [e.g.] placeholder density, and whether plan.md and tasks.md exist. Read-only; returns metrics without modifying files. Pass feature (the spec directory name). Use during planning and implementation to check a spec is complete; for the project-wide matrix use vdd_inspect, and for release validation use vdd_validate.",
   inspect: 'VDD Cross-phase: Read-only inspection of the current project in one call — scope selects the view. scope="project" (default) returns the bidirectional V→S→T→SP→PL→TK traceability matrix across all vdd/ artifacts; scope="feature" returns per-feature spec metrics (acceptance-criteria count, unresolved [NEEDS CLARIFICATION] markers, [e.g.] placeholder density, and whether plan.md/tasks.md exist). Never modifies files. Pass feature for the feature scope; for release-readiness validation with gates use vdd_validate, and to author a spec use vdd_specify. Output is a structured matrix/metrics object, not prose.',
   amend: "VDD Cross-phase: Plan a requirement-change cascade through the whole chain — identifies the highest affected level and returns the ordered steps to update downward V→S→T→SP→PL→TK and re-run affected gates (G1–G7). Read-only; returns the cascade plan without editing artifacts (the host agent applies the edits and commits). Pass the change as description. Use when a requirement changes after artifacts already exist; to build a phase from scratch the first time, run that phase's own tool instead of vdd_amend. The plan is an ordered step list naming the affected gates, not rewritten artifacts.",
-  clone: "Crawl and capture a target domain into a clone dataset + manifest — WordPress-aware schema inference, Payload collections, and a Next.js + Payload + Postgres scaffold manifest (vdd/clone-manifest.json). Pass the domain as description. Writes vdd/clone-dataset.json, vdd/clone-manifest.json, and vdd/clone.md, overwriting any existing versions in place. Open-world: makes network requests to the target site and reads its sitemap and same-origin links. Use for cloning an external site; it is not part of the VDD phase pipeline, so for the normal init→validate flow call those phase tools instead.",
-  "detect-environment": "VDD Environment Detection: Report which tools/MCPs each VDD phase requires vs treats as optional — across the 8-phase pipeline (init through validate) plus the cross-phase helpers (amend, clone, inspect, get-next-task) — and which of the host agent availableTools are present vs missing. Read-only; returns a capability report without modifying files. Run before vdd_strategize to plan research-subagent dispatch, or when a phase fails for lack of a tool; to inspect artifacts instead of capabilities use vdd_inspect. Returns a fixed-shape capability report; tool-name matching is normalized, so pass names as your host exposes them.",
+  "detect-environment": "VDD Environment Detection: Report which tools/MCPs each VDD phase requires vs treats as optional — across the 8-phase pipeline (init through validate) plus the cross-phase helpers (amend, inspect, get-next-task) — and which of the host agent availableTools are present vs missing. Read-only; returns a capability report without modifying files. Run before vdd_strategize to plan research-subagent dispatch, or when a phase fails for lack of a tool; to inspect artifacts instead of capabilities use vdd_inspect. Returns a fixed-shape capability report; tool-name matching is normalized, so pass names as your host exposes them.",
 };
 
 const SERVER_VERSION = "1.9.5";
 
-const PHASE_NAMES = ["init","vision","strategize","tactics","specify","clarify","plan","tasks","get-next-task","implement","validate","inspect","amend","clone","detect-environment"];
+const PHASE_NAMES = ["init","vision","strategize","tactics","specify","clarify","plan","tasks","get-next-task","implement","validate","inspect","amend","detect-environment"];
 
 // Cross-parameter notes appended to each tool description — mirrors
 // packages/vdd-engine/src/meta.ts PARAM_RELATIONSHIP_NOTES (keep in sync).
@@ -924,13 +897,12 @@ const PARAM_RELATIONSHIP_NOTES = {
   validate: ' Parameter relationships: feature narrows the check to one spec; artifactFiles maps artifact path to content for serverless runs and is omitted when resolving against a local projectRoot. On the hosted (stateless) endpoint, pass artifactFiles (the vdd/ artifacts) so the tool can run drift/orphan/substance checks; without it the tool returns a delegation envelope.',
   inspect: ' Parameter relationships: scope="feature" requires feature, while scope="project" (the default) ignores it; projectRoot must match the root used by earlier phases. On the hosted (stateless) endpoint, pass artifactFiles (path→content for the vdd/ artifacts) so the tool computes the real matrix/metrics; without it the tool returns a delegation envelope.',
   amend: ' Parameter relationships: description is the requirement change to cascade through the artifact chain; projectRoot must match the root used by earlier phases.',
-  clone: ' Parameter relationships: description is the target domain and statement is the desired outcome (both optional); maxPages, timeoutMs, concurrency, crawl, and browser tune the crawl and refresh=true bypasses a cached dataset.',
   "detect-environment": ' Parameter relationships: availableTools and capabilities are aliases; omit both to get the per-phase requirements without a present/missing comparison.',
 };
 
 // MCP annotation hints for the HOSTED endpoint. Unlike the stdio server
 // (packages/vdd-mcp/src/server.ts TOOL_ANNOTATIONS, where write phases really do
-// overwrite artifacts and strategize/clone reach the network), the hosted
+// overwrite artifacts and strategize reaches the network), the hosted
 // endpoint is stateless: it writes nothing and fetches nothing — it returns
 // artifacts and delegation envelopes. Its annotations truthfully say so; the
 // stdio↔hosted parity test therefore compares schemas and descriptions, not
@@ -950,7 +922,6 @@ const TOOL_ANNOTATIONS = {
   validate: { title: "Validate Impact", annotations: HOSTED_ANNOTATIONS },
   inspect: { title: "Inspect Project", annotations: HOSTED_ANNOTATIONS },
   amend: { title: "Amend Requirements", annotations: HOSTED_ANNOTATIONS },
-  clone: { title: "Clone Website", annotations: HOSTED_ANNOTATIONS },
   "detect-environment": { title: "Detect Environment", annotations: HOSTED_ANNOTATIONS },
 };
 
@@ -972,14 +943,6 @@ const P = {
   researchFindings: { type: "string", description: "Consolidated research subagent findings to synthesize into strategy.md (effect only on the second strategize call)" },
   artifactFiles: { type: "object", additionalProperties: { type: "string" }, description: "Map of vdd/-relative artifact path → full file text, for the hosted (stateless) endpoint, which cannot read the caller filesystem; without it the tool returns a delegation envelope" },
   codebaseAudit: { type: "string", description: "Repo scan (directory tree, manifests, modules, debt) produced by the host agent, for tactics on the hosted (stateless) endpoint which cannot scan the repo itself" },
-  // Crawl tuning applies to the local stdio server; the hosted endpoint returns the
-  // clone plan without crawling, so it accepts and ignores these fields.
-  maxPages: { type: "integer", exclusiveMinimum: 0, description: "Clone: max pages to crawl, 1-5000 (default 200). Local stdio server only; ignored by the hosted endpoint" },
-  timeoutMs: { type: "integer", exclusiveMinimum: 0, description: "Clone: per-request timeout in ms, 1000-60000 (default 10000). Local stdio server only; ignored by the hosted endpoint" },
-  concurrency: { type: "integer", exclusiveMinimum: 0, description: "Clone: concurrent crawl workers, 1-16 (default 8). Local stdio server only; ignored by the hosted endpoint" },
-  crawl: { type: "boolean", description: "Clone: run the crawl (default true). Local stdio server only; ignored by the hosted endpoint" },
-  browser: { type: "boolean", description: "Clone: run browser/static capture (default true). Local stdio server only; ignored by the hosted endpoint" },
-  refresh: { type: "boolean", description: "Clone: force re-crawl, ignore a fresh cached dataset. Local stdio server only; ignored by the hosted endpoint" },
 };
 
 // [propertyName, sharedFieldKey, required]
@@ -997,7 +960,6 @@ const PHASE_FIELDS = {
   validate: [["feature", "feature"], ["artifactFiles", "artifactFiles"], ["projectRoot", "projectRoot"]],
   inspect: [["scope", "scope"], ["feature", "feature"], ["artifactFiles", "artifactFiles"], ["projectRoot", "projectRoot"]],
   amend: [["description", "descriptionReq", true], ["projectRoot", "projectRoot"]],
-  clone: [["description", "description"], ["statement", "statement"], ["maxPages", "maxPages"], ["timeoutMs", "timeoutMs"], ["concurrency", "concurrency"], ["crawl", "crawl"], ["browser", "browser"], ["refresh", "refresh"], ["projectRoot", "projectRoot"]],
   "detect-environment": [["availableTools", "availableTools"], ["capabilities", "capabilities"], ["projectRoot", "projectRoot"]],
 };
 
@@ -1106,7 +1068,7 @@ const PROMPTS = [
       { name: "researchFindings", description: "Optional consolidated findings to skip the dispatch pass.", required: false },
       { name: "projectRoot", description: "Project root (default \".\").", required: false },
     ],
-    text: (a) => `Run VDD Phase 2 for projectRoot="${a.projectRoot || "."}".\n${HOSTED}\n1. Confirm vdd/vision.md exists and pass it via artifactFiles.\n2. Call vdd_strategize with availableTools (the tool names you actually have, e.g. ["brave-search","perplexity","context7","gh_grep","playwright","browserless","filesystem","shell"]) and projectRoot.\n3. Dispatch the returned research subagents in parallel and collect findings with citations.\n4. Re-call vdd_strategize with researchFindings${a.researchFindings ? ` (pre-supplied: ${a.researchFindings})` : ""} and write vdd/strategy.md.\n5. Report gate G2: every pillar traces to a vision goal and every goal has at least one pillar.`,
+    text: (a) => `Run VDD Phase 2 for projectRoot="${a.projectRoot || "."}".\n${HOSTED}\n1. Confirm vdd/vision.md exists and pass it via artifactFiles.\n2. Call vdd_strategize with availableTools (the tool names you actually have, e.g. ["brave-search","perplexity","context7","gh_grep","playwright","filesystem","shell"]) and projectRoot.\n3. Dispatch the returned research subagents in parallel and collect findings with citations.\n4. Re-call vdd_strategize with researchFindings${a.researchFindings ? ` (pre-supplied: ${a.researchFindings})` : ""} and write vdd/strategy.md.\n5. Report gate G2: every pillar traces to a vision goal and every goal has at least one pillar.`,
   },
   {
     name: "tactics",
@@ -1237,17 +1199,7 @@ const PROMPTS = [
     arguments: [
       { name: "availableTools", description: "Optional comma-separated host tool names.", required: false },
     ],
-    text: (a) => `Run VDD environment detection.\n1. Call vdd_detect_environment with availableTools (the names you actually have, e.g. ["brave-search","perplexity","context7","gh_grep","playwright","browserless","filesystem","shell"]${a.availableTools ? `; pre-supplied: ${a.availableTools}` : ""}).\n2. Report the per-phase required vs present/missing tools and the Phase 2 research dispatch plan. Do not edit files.`,
-  },
-  {
-    name: "clone",
-    title: "VDD Clone — Crawl and manifest",
-    description: "Crawl a domain into a clone dataset and manifest for the vdd-clone skill.",
-    arguments: [
-      { name: "description", description: "Domain to clone (https://example.com or example.com).", required: true },
-      { name: "projectRoot", description: "Project root (default \".\").", required: false },
-    ],
-    text: (a) => `Run the VDD clone workflow for "${a.description}" (projectRoot="${a.projectRoot || "."}").\n${HOSTED}\n1. Call vdd_clone with description="${a.description}" and projectRoot.\n2. Write vdd/clone-dataset.json, vdd/clone-manifest.json, and vdd/clone.md.\n3. Report page count, detected CMS/locales, and the manifest path. To make the clone live, use the vdd-clone skill.`,
+    text: (a) => `Run VDD environment detection.\n1. Call vdd_detect_environment with availableTools (the names you actually have, e.g. ["brave-search","perplexity","context7","gh_grep","playwright","filesystem","shell"]${a.availableTools ? `; pre-supplied: ${a.availableTools}` : ""}).\n2. Report the per-phase required vs present/missing tools and the Phase 2 research dispatch plan. Do not edit files.`,
   },
   {
     name: "e2e",
@@ -1279,7 +1231,7 @@ function handleJsonRpc(body) {
   const { method, params, id } = body || {};
 
   if (method === "initialize") {
-    return { jsonrpc: "2.0", id, result: { protocolVersion: "2025-06-18", serverInfo: { name: "vdd", title: "Vision Driven Design", version: SERVER_VERSION }, capabilities: { tools: { listChanged: false }, prompts: { listChanged: false } }, instructions: "Vision Driven Design (VDD): an 8-phase, spec-driven development methodology with bi-directional traceability. Start with vdd_init, then vdd_vision (pass a freeform statement). Before each implementation session call vdd_get_next_task. Read-only tools that write nothing are vdd_inspect, vdd_detect_environment, vdd_get_next_task, vdd_clarify, vdd_implement, and vdd_amend; other write tools overwrite their target artifacts unless their description says otherwise (vdd_validate writes only a new vdd/impact-report.generated.md without clobbering a hand-authored report). For a guided run, use the prompts start_vdd_project, init, vision, strategize, tactics, specify, clarify, plan, tasks, get-next-task, implement, validate, inspect, trace, analyze, amend, detect-environment, clone, e2e, implement_next_task or change_requirement." } };
+    return { jsonrpc: "2.0", id, result: { protocolVersion: "2025-06-18", serverInfo: { name: "vdd", title: "Vision Driven Design", version: SERVER_VERSION }, capabilities: { tools: { listChanged: false }, prompts: { listChanged: false } }, instructions: "Vision Driven Design (VDD): an 8-phase, spec-driven development methodology with bi-directional traceability. Start with vdd_init, then vdd_vision (pass a freeform statement). Before each implementation session call vdd_get_next_task. Read-only tools that write nothing are vdd_inspect, vdd_detect_environment, vdd_get_next_task, vdd_clarify, vdd_implement, and vdd_amend; other write tools overwrite their target artifacts unless their description says otherwise (vdd_validate writes only a new vdd/impact-report.generated.md without clobbering a hand-authored report). For a guided run, use the prompts start_vdd_project, init, vision, strategize, tactics, specify, clarify, plan, tasks, get-next-task, implement, validate, inspect, trace, analyze, amend, detect-environment, e2e, implement_next_task or change_requirement." } };
   }
 
   if (method === "tools/list") {
@@ -1348,21 +1300,21 @@ const HTML = `<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=Titillium+Web:wght@400;600;700&family=Raleway:wght@600;700&display=swap" rel="stylesheet">
 <title>VDD MCP Server — Vision Driven Design (MCP API)</title>
-<meta name="description" content="Public Model Context Protocol (MCP) server for Vision Driven Design (VDD) — 15 tools over streamable HTTP, no API key. Spec-driven development with bi-directional traceability for AI coding agents (Claude, Cursor, VS Code).">
+<meta name="description" content="Public Model Context Protocol (MCP) server for Vision Driven Design (VDD) — 14 tools over streamable HTTP, no API key. Spec-driven development with bi-directional traceability for AI coding agents (Claude, Cursor, VS Code).">
 <link rel="canonical" href="https://vdd.simonmak.com/api/mcp">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta name="keywords" content="MCP server, Model Context Protocol, spec-driven development, requirements traceability, AI coding agents, Claude, Cursor, VS Code, developer tools">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Vision Driven Design">
-<meta property="og:title" content="VDD MCP Server — 15 tools for spec-driven traceability">
-<meta property="og:description" content="Public MCP server (streamable HTTP, no API key): 15 tools, 8 phases, 7 quality gates, bi-directional V→S→T→SP→PL→TK traceability for AI coding agents.">
+<meta property="og:title" content="VDD MCP Server — 14 tools for spec-driven traceability">
+<meta property="og:description" content="Public MCP server (streamable HTTP, no API key): 14 tools, 8 phases, 7 quality gates, bi-directional V→S→T→SP→PL→TK traceability for AI coding agents.">
 <meta property="og:url" content="https://vdd.simonmak.com/api/mcp">
 <meta property="og:image" content="https://vdd.simonmak.com/og.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="640">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="VDD MCP Server — 15 tools for spec-driven traceability">
-<meta name="twitter:description" content="Public MCP server (streamable HTTP, no API key): 15 tools, 8 phases, 7 quality gates, bi-directional traceability for AI coding agents.">
+<meta name="twitter:title" content="VDD MCP Server — 14 tools for spec-driven traceability">
+<meta name="twitter:description" content="Public MCP server (streamable HTTP, no API key): 14 tools, 8 phases, 7 quality gates, bi-directional traceability for AI coding agents.">
 <meta name="twitter:image" content="https://vdd.simonmak.com/og.png">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Vision Driven Design MCP Server","alternateName":"VDD MCP Server","description":"Spec-driven development MCP server: 8 phases, bi-directional V→S→T→SP→PL→TK traceability, 7 quality gates.","url":"https://vdd.simonmak.com/api/mcp","applicationCategory":"DeveloperApplication","operatingSystem":"Any","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"sameAs":["https://github.com/simonmak-ascent/vision-driven-design","https://www.npmjs.com/package/@simonmak-ascent/mcp"]}
@@ -1515,7 +1467,7 @@ const HTML = `<!DOCTYPE html>
     <h1><abbr title="Vision Driven Design">VDD</abbr> <abbr title="Model Context Protocol">MCP</abbr> Server</h1>
     <p>Public <abbr title="Application Programming Interface">API</abbr> for <abbr title="Vision Driven Design">VDD</abbr> — bi-directional traceability with full template generation.</p>
     <p>
-      <span class="badge">15 tools</span>
+      <span class="badge">14 tools</span>
       <span class="badge">108 checks</span>
       <span class="badge">7 gates</span>
       <span class="badge">e2e chain</span>
