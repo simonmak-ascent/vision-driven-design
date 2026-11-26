@@ -9,7 +9,7 @@
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-com.ascent-partners%2Fvision-driven-design-4CAF50)](https://registry.modelcontextprotocol.io/v0/servers?search=com.ascent-partners/vision-driven-design)
 [![Glama MCP](https://glama.ai/mcp/connectors/com.ascent-partners/vision-driven-design/badges/score.svg)](https://glama.ai/mcp/connectors/com.ascent-partners/vision-driven-design)
 [![Agent Status](https://wdmisgfkoimdpvvduebj.supabase.co/functions/v1/mcp-badge?slug=vdd)](https://agentstatus.dev/mcp-index/vdd)
-[![Version](https://img.shields.io/badge/version-1.10.0-blue)](https://github.com/simonmak-ascent/vision-driven-design/releases)
+[![Version](https://img.shields.io/badge/version-1.10.1-blue)](https://github.com/simonmak-ascent/vision-driven-design/releases)
 [![MCP tools](https://img.shields.io/badge/MCP-14%20tools-4CAF50)](https://vdd.simonmak.com/api/mcp)
 [![API](https://img.shields.io/badge/API-vdd.simonmak.com-006b7d)](https://vdd.simonmak.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)

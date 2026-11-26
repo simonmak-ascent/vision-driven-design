@@ -1,6 +1,6 @@
 {
   "name": "@simonmak-ascent/engine",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "description": "Vision Driven Design shared engine \u2014 17 phase functions, bi-directional gate logic (7 gates, 108 checks), and phase/tool metadata for the VDD 8-phase chain.",
   "license": "MIT",
   "type": "module",
@@ -40,12 +40,13 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "zod": "^3.23.0"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0",
-    "vitest": "^2.1.0",
+    "vitest": "^4.1.11",
+    "vite": "^7.3.8",
     "playwright": "^1.48.0"
   },
   "publishConfig": {

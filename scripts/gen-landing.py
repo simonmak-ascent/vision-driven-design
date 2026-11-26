@@ -19,7 +19,7 @@ DOCS = "https://vdd.simonmak.com"
 REPO = "https://github.com/simonmak-ascent/vision-driven-design"
 NPM = "https://www.npmjs.com/package/@simonmak-ascent/mcp"
 REGISTRY = "com.ascent-partners/vision-driven-design"
-VERSION = "1.10.0"
+VERSION = "1.10.1"
 
 TECH = "https://www.ascent-partners.com/services/technology-advisory"
 CONTACT = "https://www.ascent-partners.com/about#contact"
