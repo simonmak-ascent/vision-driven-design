@@ -1,7 +1,8 @@
 {
   "functions": {
     "api/mcp.js": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "{packages/vdd-engine/dist/**,packages/vdd-mcp/dist/**}"
     }
   },
   "redirects": [
@@ -16,5 +17,6 @@
       "source": "/mcp",
       "destination": "/api/mcp"
     }
-  ]
+  ],
+  "buildCommand": "pnpm -r build && mkdir -p public && cp index.html public/"
 }

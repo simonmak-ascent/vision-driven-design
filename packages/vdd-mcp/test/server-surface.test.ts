@@ -1,42 +1,39 @@
 import { describe, expect, it } from 'vitest';
 
-import { MCP_TOOL_PHASES, TOOL_ANNOTATIONS } from '../src/server.js';
+import { rpc } from './harness.js';
 
-const DESTRUCTIVE = ['init', 'vision', 'strategize', 'tactics', 'specify', 'plan', 'tasks'];
-const READ_ONLY = ['clarify', 'get-next-task', 'implement', 'inspect', 'amend', 'detect-environment'];
-const OPEN_WORLD = ['strategize'];
+/**
+ * 2.0.0 registers three tools and no prompts. A fourth tool — or a prompt left
+ * behind — is the drift this case exists to catch, because the count is the only
+ * thing a host uses to decide what to show.
+ */
+describe('server surface', () => {
+  it('registers exactly the three judging tools', async () => {
+    const { result, status } = await rpc('tools/list');
 
-describe('MCP server tool metadata (stdio + Streamable HTTP)', () => {
-  it('exposes 14 tools (e2e excluded; trace+analyze folded into inspect; clone removed)', () => {
-    expect(MCP_TOOL_PHASES).toHaveLength(14);
+    expect(status).toBe(200);
+    expect(result.tools.map((tool: { name: string }) => tool.name).sort()).toEqual([
+      'vdd_amend',
+      'vdd_chain_validate',
+      'vdd_check',
+    ]);
   });
 
-  it('has a title and annotations for every tool', () => {
-    for (const phase of MCP_TOOL_PHASES) {
-      const meta = TOOL_ANNOTATIONS[phase];
-      expect(meta, phase).toBeTruthy();
-      expect(meta.title, phase).toBeTruthy();
-      expect(meta.annotations, phase).toBeTruthy();
+  it('registers every tool as read-only and idempotent', async () => {
+    const { result } = await rpc('tools/list');
+
+    for (const tool of result.tools) {
+      expect(tool.annotations, `${tool.name} has no annotations`).toBeTruthy();
+      expect(tool.annotations.readOnlyHint).toBe(true);
+      expect(tool.annotations.destructiveHint).toBe(false);
+      expect(tool.annotations.idempotentHint).toBe(true);
     }
   });
 
-  it('classifies destructive writers vs read-only tools', () => {
-    for (const phase of DESTRUCTIVE) {
-      expect(TOOL_ANNOTATIONS[phase].annotations.destructiveHint, phase).toBe(true);
-      expect(TOOL_ANNOTATIONS[phase].annotations.readOnlyHint, phase).toBeUndefined();
-    }
-    for (const phase of READ_ONLY) {
-      expect(TOOL_ANNOTATIONS[phase].annotations.readOnlyHint, phase).toBe(true);
-      expect(TOOL_ANNOTATIONS[phase].annotations.destructiveHint, phase).not.toBe(true);
-    }
-    expect(TOOL_ANNOTATIONS.validate.annotations.destructiveHint).toBe(false);
-  });
+  it('registers no prompts', async () => {
+    const { result, status } = await rpc('prompts/list');
 
-  it('marks openWorldHint on every tool, true only for strategize', () => {
-    for (const phase of MCP_TOOL_PHASES) {
-      const openWorld = TOOL_ANNOTATIONS[phase].annotations.openWorldHint;
-      expect(typeof openWorld, phase).toBe('boolean');
-      expect(openWorld, phase).toBe(OPEN_WORLD.includes(phase));
-    }
+    expect(status).toBe(200);
+    expect(result.prompts).toEqual([]);
   });
 });

@@ -8,6 +8,8 @@ on:
       - 'packages/**'
       - 'api/**'
       - 'scripts/**'
+      - 'skills/**'
+      - 'vercel.json'
       - 'docs/**'
       - 'package.json'
       - 'server.json'
@@ -60,22 +62,6 @@ jobs:
             echo "| $feature | $done/$total ($pct%) |" >> $GITHUB_STEP_SUMMARY
           done
 
-  gate-count-consistency:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Verify gate check count consistency
-        run: |
-          skl=$(grep -c "108" SKILL.md || echo 0)
-          rd=$(grep -c "108" README.md || echo 0)
-          qr=$(grep -c "108" references/quick-reference.md || echo 0)
-          if [ "$skl" -gt 0 ] && [ "$rd" -gt 0 ] && [ "$qr" -gt 0 ]; then
-            echo "PASS: Gate count (108) consistent across SKILL.md, README.md, quick-reference.md"
-          else
-            echo "WARN: Gate count may be inconsistent — check manually"
-          fi
-
   build-test:
     runs-on: ubuntu-latest
     steps:
@@ -100,4 +86,4 @@ jobs:
         run: pnpm test
 
       - name: Syntax-check Vercel handlers
-        run: node --check api/mcp.js && node --check api/_vdd-rpc.js
+        run: node --check api/mcp.js && node --check api/_vdd-rpc.cjs

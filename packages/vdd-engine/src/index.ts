@@ -16,8 +16,20 @@ export {
   amendImpact,
   opensBlocks,
   runPhaseCheck,
+  runChainCheck,
+  runAmend,
 } from './coverage.js';
-export type { CheckPhase, CountKey, PhaseConfig, Matrix, Child, InvariantResult } from './coverage.js';
+export type {
+  CheckPhase,
+  CountKey,
+  PhaseConfig,
+  Matrix,
+  Child,
+  InvariantResult,
+  ChainResult,
+  ChainPhaseResult,
+  AmendResult,
+} from './coverage.js';
 export type { VddPhaseFn } from './types.js';
 export {
   PHASE_NAMES,

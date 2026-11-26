@@ -1,189 +1,147 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { z } from 'zod';
-import { PHASES, PHASE_NAMES, PHASE_META, PARAM_RELATIONSHIP_NOTES, isProjectRootAllowed, projectRootError, type VddContext, type VddPhaseInput } from '@simonmak-ascent/engine';
-import { PROMPTS } from './prompts.js';
+import { CHECK_PHASES, runAmend, runChainCheck, runPhaseCheck } from '@simonmak-ascent/engine';
 
-// Shared field definitions, then a per-phase input schema so each tool advertises
-// only the parameters it actually reads (feeds Glama's "Parameter Semantics" score).
-const projectRoot = z.string().default('.').describe('Project root: directory that constitution.md and the vdd/ folder are written to and resolved against. Relative paths resolve from the current working directory; keep the same value across every phase (default ".")');
-const statement = z.string().optional().describe('Freeform vision statement (required for vision)');
-const statementReq = z.string().describe('Freeform vision statement');
-const actionItemId = z.string().optional().describe('Tactical action item ID, format A-### (e.g., "A-001"); must be an item id from vdd/tactics.md');
-// Mirrors the engine's choke-point validator (`isValidFeatureName` in engine.ts). The engine
-// remains authoritative — the CLI and direct imports bypass this schema — but rejecting here
-// gives MCP clients the error before a round trip. `feature-schema.test.ts` asserts they agree.
-export const FEATURE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
-const feature = z.string().regex(FEATURE_PATTERN).optional().describe('Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., "user-auth"); must reference a directory created earlier by vdd_specify');
-const featureReq = z.string().regex(FEATURE_PATTERN).describe('Feature name: the vdd/specs/<feature>/ directory, kebab-case (e.g., "user-auth"); must reference a directory created earlier by vdd_specify');
-const scope = z.enum(['project', 'feature']).optional().describe('Inspect scope: "project" (default) returns the traceability matrix; "feature" returns per-feature spec metrics (requires feature)');
-const taskId = z.string().describe('Task ID to implement, format TASK-### (e.g., "TASK-003"); must be an id listed in the feature\'s tasks.md (see vdd_get_next_task)');
-const description = z.string().optional().describe('Freeform description input');
-const descriptionReq = z.string().describe('Description of the requirement change');
-const availableTools = z.array(z.string()).optional().describe('MCP/tool names available to the host agent (e.g., ["brave-search","perplexity","context7","gh_grep","playwright","filesystem"])');
-const capabilities = z.array(z.string()).optional().describe('Alias for availableTools');
-const researchFindings = z.string().optional().describe('Consolidated research subagent findings to synthesize into strategy.md (effect only on the second strategize call)');
-const artifactFiles = z.record(z.string(), z.string()).optional().describe('Map of vdd/-relative artifact path → full file text, for the hosted (stateless) endpoint, which cannot read the caller filesystem; without it the tool returns a delegation envelope');
-const codebaseAudit = z.string().optional().describe('Repo scan (directory tree, manifests, modules, debt) produced by the host agent, for tactics on the hosted (stateless) endpoint which cannot scan the repo itself');
+import { loadSkillCatalog } from './skills.js';
 
-export const PHASE_INPUT_SCHEMAS: Record<string, Record<string, z.ZodType>> = {
-  init: { projectRoot },
-  vision: { statement: statementReq, projectRoot },
-  strategize: { availableTools, capabilities, researchFindings, projectRoot },
-  tactics: { projectRoot, artifactFiles, codebaseAudit },
-  specify: { feature, actionItemId, description, projectRoot },
-  clarify: { feature: featureReq, artifactFiles, projectRoot },
-  plan: { feature: featureReq, projectRoot },
-  tasks: { feature: featureReq, projectRoot },
-  'get-next-task': { feature: featureReq, artifactFiles, projectRoot },
-  implement: { taskId, artifactFiles, projectRoot },
-  validate: { feature, artifactFiles, projectRoot },
-  inspect: { scope, feature, artifactFiles, projectRoot },
-  amend: { description: descriptionReq, projectRoot },
-  'detect-environment': { availableTools, capabilities, projectRoot },
-};
+// 2.0.0's whole tool surface: three tools that judge an artifact, and nine
+// skills that tell the agent what to write. No tool generates content, calls a
+// model, or touches a filesystem — `content` is passed in, and the answer is a
+// matrix. Both surfaces (stdio here, the hosted handler in api/) build this same
+// server, so a local and a remote call cannot disagree.
 
-// MCP annotation hints feed Glama's Tool Definition Quality Score (Behavioral
-// Transparency dimension). Annotations describe the tool's OWN effect on the
-// filesystem, not the follow-on work the host agent performs from its output:
-//   - readOnlyHint: the tool writes nothing (it reads or returns instructions).
-//   - destructiveHint: true only when the tool overwrites an existing artifact;
-//     false when it is additive (writes a new generated file). The MCP default
-//     is true, so a non-read-only tool must set false to be shown as additive.
-//   - openWorldHint: the tool reaches external systems (web research).
-// `clarify`, `implement`, and `amend` return questions/instructions without
-// touching disk, so they are read-only; `validate` writes only a new generated
-// report and never clobbers a hand-authored one.
-export const TOOL_ANNOTATIONS: Record<string, {
-  title: string;
-  annotations: {
-    readOnlyHint?: boolean;
-    destructiveHint?: boolean;
-    idempotentHint?: boolean;
-    openWorldHint?: boolean;
+const declaredCounts = z
+  .record(z.string(), z.number())
+  .optional()
+  .describe(
+    'Counts you declared before generating, keyed goals / pillars / actions / specs / components / tasks. Each phase compares only the keys it consumes; omit it and no count is checked.',
+  );
+
+const priorArtifacts = z
+  .record(z.string(), z.string())
+  .optional()
+  .describe('Phase name → artifact text. The parent artifact supplies the parent ids this phase must serve.');
+
+const coverage = z.object({
+  forward_covered: z.array(z.string()).describe('Parents with at least one child (invariant A)'),
+  backward_sound: z.array(z.string()).describe('Children whose serves value names a known parent (invariant B)'),
+  dedicated: z.array(z.string()).describe('Parents with a child no other parent shares (invariant C)'),
+  matrix: z.record(z.string(), z.array(z.string())).describe('Parent id → child ids that declare it'),
+});
+
+const checkResult = z.object({
+  // The protocol's result marker, carried on the tool result itself so a client
+  // that validates the tool's output sees it without unwrapping the envelope.
+  resultType: z.literal('complete'),
+  status: z.enum(['PASS', 'FAIL']),
+  reasons: z.array(z.string()).describe('One line per failed check, naming the id to fix'),
+  declared_counts: z.record(z.string(), z.number()).nullable(),
+  actual_counts: z.record(z.string(), z.number()),
+  coverage,
+});
+
+const annotations = {
+  readOnlyHint: true,
+  destructiveHint: false,
+  idempotentHint: true,
+  openWorldHint: false,
+} as const;
+
+function text(result: object) {
+  const structured = { resultType: 'complete' as const, ...result };
+  return {
+    content: [{ type: 'text' as const, text: JSON.stringify(structured, null, 2) }],
+    structuredContent: structured as Record<string, unknown>,
   };
-}> = {
-  init: { title: 'Initialize Constitution', annotations: { destructiveHint: true, openWorldHint: false } },
-  vision: { title: 'Expand Vision', annotations: { destructiveHint: true, openWorldHint: false } },
-  strategize: { title: 'Research Strategy', annotations: { destructiveHint: true, openWorldHint: true } },
-  tactics: { title: 'Audit Tactics', annotations: { destructiveHint: true, openWorldHint: false } },
-  specify: { title: 'Generate Spec', annotations: { destructiveHint: true, openWorldHint: false } },
-  clarify: { title: 'Clarify Spec', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
-  plan: { title: 'Generate Plan', annotations: { destructiveHint: true, openWorldHint: false } },
-  tasks: { title: 'Generate Tasks', annotations: { destructiveHint: true, openWorldHint: false } },
-  'get-next-task': { title: 'Get Next Task', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
-  implement: { title: 'Implement Task', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
-  validate: { title: 'Validate Impact', annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false } },
-  inspect: { title: 'Inspect Project', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
-  amend: { title: 'Amend Requirements', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
-  'detect-environment': { title: 'Detect Environment', annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false } },
-};
+}
 
-// Documented output shape so clients and evaluators know what each tool returns
-// without the description having to restate it.
-const OUTPUT_SCHEMA = {
-  success: z.boolean().describe('Whether the phase completed successfully'),
-  artifact: z.string().optional().describe('Primary artifact produced or returned'),
-  gateResult: z.object({
-    passed: z.boolean().describe('Whether the quality gate passed'),
-    checks: z.number().describe('Number of checks run'),
-    total: z.number().describe('Total number of checks'),
-  }).optional().describe('Quality-gate result, when the phase runs a gate'),
-  output: z.record(z.string(), z.unknown()).optional().describe('Additional structured phase output'),
-  error: z.string().optional().describe('Error message when the phase fails'),
-  _phase: z.string().describe('VDD phase that produced this result'),
-  _sdt: z.string().describe('Strategy-and-Tactic instructions for the next step'),
-};
+// The number the release carries. 4.7 bumps all eight version values together;
+// until then this one must stay equal to the packages, or the pin below fails.
+export const VDD_VERSION = '1.10.1';
 
-// The `e2e` phase is intentionally NOT exposed as an MCP tool: it is a one-call
-// convenience that duplicates the phase sequence (the coherence dimension flags
-// it as redundant). It stays available via the CLI (`vdd e2e`).
-export const MCP_TOOL_PHASES = PHASE_NAMES.filter(
-  (name) => !['e2e', 'trace', 'analyze'].includes(name),
-);
+export async function createVddMcpServer(): Promise<McpServer> {
+  // `prompts` is declared and empty on purpose: 2.0.0 ships no prompts, and a
+  // client asking must be told "none" rather than "method not found", which is
+  // what the SDK answers when the capability is absent.
+  const server = new McpServer(
+    { name: 'vdd', title: 'Vision Driven Design', version: VDD_VERSION },
+    { capabilities: { prompts: {} } },
+  );
 
-export function createVddMcpServer(): McpServer {
-    const server = new McpServer({ name: 'vdd', title: 'Vision Driven Design', version: '1.10.1' });
-
-  for (const name of MCP_TOOL_PHASES) {
-    const toolName = `vdd_${name.replace(/-/g, '_')}`;
-    const meta = PHASE_META[name];
-    const toolMeta = TOOL_ANNOTATIONS[name];
-    server.registerTool(
-      toolName,
-      {
-        title: toolMeta?.title,
-        description: (meta?.description ?? `VDD Phase: ${name}`) + (PARAM_RELATIONSHIP_NOTES[name] ?? ''),
-        inputSchema: PHASE_INPUT_SCHEMAS[name],
-        outputSchema: OUTPUT_SCHEMA,
-        annotations: toolMeta?.annotations,
+  server.registerTool(
+    'vdd_check',
+    {
+      title: 'Check one VDD artifact',
+      description:
+        'Judge one VDD artifact against the coverage invariants: A every parent has a child, B every child names a known parent, C every parent has a dedicated child. Pass the artifact text and, for any phase with a parent, the parent artifact. Returns PASS or FAIL with one reason per failure and the coverage matrix. The procedure for writing the artifact is the skill of the same phase — see skill://vdd-<phase>/SKILL.md.',
+      inputSchema: {
+        phase: z.enum(CHECK_PHASES).describe('Phase of the artifact you are submitting'),
+        content: z.string().describe('The whole artifact text'),
+        declaredCounts,
+        priorArtifacts,
       },
-      async (params: Record<string, unknown>) => {
-        const root = String(params.projectRoot || '.');
-        // `projectRoot` is a write primitive (`mkdir -p` + `writeFile`); confine it at the surface.
-        // The engine stays usable from library tests with any temp root, so this check lives here.
-        if (!isProjectRootAllowed(root)) {
-          const refused = {
-            success: false,
-            error: projectRootError(root),
-            _phase: name,
-            _sdt: meta?.instructions ?? '',
-          };
-          return {
-            content: [{ type: 'text' as const, text: JSON.stringify(refused, null, 2) }],
-            structuredContent: refused as Record<string, unknown>,
-            isError: true,
-          };
-        }
-        const ctx: VddContext = { projectRoot: root, mode: 'auto' };
-        const input: VddPhaseInput = {
-          statement: params.statement as string | undefined,
-          actionItemId: params.actionItemId as string | undefined,
-          feature: params.feature as string | undefined,
-          taskId: params.taskId as string | undefined,
-          description: params.description as string | undefined,
-          availableTools: params.availableTools as string[] | undefined,
-          capabilities: params.capabilities as string[] | undefined,
-          researchFindings: params.researchFindings as string | undefined,
-          artifactFiles: params.artifactFiles as Record<string, string> | undefined,
-          codebaseAudit: params.codebaseAudit as string | undefined,
-          json: false,
-        };
-        const result = await PHASES[name](input, ctx);
-        const structured = {
-          ...result,
-          _phase: name,
-          _sdt: meta?.instructions ?? '',
-        };
-        const responseText = JSON.stringify(structured, null, 2);
-        return {
-          content: [{ type: 'text' as const, text: responseText }],
-          structuredContent: structured as Record<string, unknown>,
-        };
-      }
-    );
-  }
+      outputSchema: checkResult,
+      annotations,
+    },
+    async ({ phase, content, declaredCounts: counts, priorArtifacts: prior }) =>
+      text(runPhaseCheck(phase, content, counts, prior)),
+  );
 
-  for (const prompt of PROMPTS) {
-    const shape: Record<string, z.ZodType> = {};
-    for (const arg of prompt.arguments) {
-      shape[arg.name] = arg.required ? z.string().describe(arg.description) : z.string().optional().describe(arg.description);
-    }
-    server.registerPrompt(
-      prompt.name,
-      { title: prompt.title, description: prompt.description, argsSchema: z.object(shape) },
-      (args: Record<string, unknown>) => ({
-        description: prompt.description,
-        messages: [{ role: 'user' as const, content: { type: 'text' as const, text: prompt.text(args as Record<string, string | undefined>) } }],
+  server.registerTool(
+    'vdd_chain_validate',
+    {
+      title: 'Validate a whole VDD chain',
+      description:
+        'Judge every artifact of a chain at once and add the cross-phase check: every vision goal must reach a task. Returns the same shape as vdd_check plus a per-phase breakdown. Use it at the end of a cycle, or whenever a change touches more than one artifact.',
+      inputSchema: {
+        artifacts: z
+          .record(z.string(), z.string())
+          .describe('Phase name → artifact text: vision, strategy, tactics, specs, plan, tasks'),
+        declaredCounts,
+      },
+      outputSchema: checkResult.extend({
+        phases: z.array(z.object({ phase: z.string(), status: z.enum(['PASS', 'FAIL']), reasons: z.array(z.string()) })),
       }),
-    );
-  }
+      annotations,
+    },
+    async ({ artifacts, declaredCounts: counts }) => text(runChainCheck(artifacts, counts)),
+  );
+
+  server.registerTool(
+    'vdd_amend',
+    {
+      title: 'Analyse an amendment',
+      description:
+        'Judge the amended artifact, then list the downstream artifacts that still reference an id it no longer declares. The phase is inferred from the artifact itself. Use it before editing a vision, strategy, tactics, spec, plan or tasks file that other artifacts already depend on.',
+      inputSchema: {
+        content: z.string().describe('The amended artifact text'),
+        priorArtifacts: z
+          .record(z.string(), z.string())
+          .describe('Phase name → the text that phase had before the change, including the amended phase itself'),
+        declaredCounts,
+        changeDescription: z.string().optional().describe('What changed, for the human reading the impact list'),
+      },
+      outputSchema: checkResult.extend({
+        changeDescription: z.string().nullable(),
+        phase: z.string().nullable(),
+        impactedArtifacts: z.array(z.object({ phase: z.string(), reason: z.string() })),
+      }),
+      annotations,
+    },
+    async ({ content, priorArtifacts: prior, declaredCounts: counts, changeDescription }) =>
+      text(runAmend(content, counts, prior, changeDescription)),
+  );
+
+  // The skills are served as resources through SEP-2640's extension; attaching it
+  // is what makes `skills/list`, `skills/get` and the `skill://` resources exist
+  // on both surfaces. It must run before the server connects.
+  (await loadSkillCatalog()).attach(server);
 
   return server;
 }
 
-export async function startStdioServer() {
-  const server = createVddMcpServer();
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+export async function startStdioServer(): Promise<void> {
+  const server = await createVddMcpServer();
+  await server.connect(new StdioServerTransport());
 }

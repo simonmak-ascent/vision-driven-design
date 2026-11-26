@@ -5,13 +5,13 @@ on:
     paths:
       - "packages/vdd-engine/src/meta.ts"
       - "packages/vdd-mcp/**"
-      - "api/_vdd-rpc.js"
+      - "api/_vdd-rpc.cjs"
   push:
     branches: [main]
     paths:
       - "packages/vdd-engine/src/meta.ts"
       - "packages/vdd-mcp/**"
-      - "api/_vdd-rpc.js"
+      - "api/_vdd-rpc.cjs"
 
 permissions:
   contents: read

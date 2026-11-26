@@ -422,7 +422,21 @@ export function runPhaseCheck(
   const matrix = buildMatrix(parents, children);
   const invariants = checkInvariants(matrix, phase, children);
 
-  const counts = actualCounts(phase, parents, childIds(content, phase).length);
+  const childIdsFound = childIds(content, phase);
+  // A parentless phase has no invariants to fail, so an artifact that declares no
+  // ids at all would pass every check by having nothing to check. `constitution` is
+  // excluded deliberately: its children are prose artifact names, not ids.
+  if (cfg.parentPrefix === null && cfg.countKey !== null && childIdsFound.length === 0) {
+    return {
+      status: 'FAIL',
+      reasons: [`${phase} declares no ${cfg.childPrefix}-### id`],
+      declared_counts: declaredCounts ?? null,
+      actual_counts: actualCounts(phase, parents, 0),
+      coverage: empty,
+    };
+  }
+
+  const counts = actualCounts(phase, parents, childIdsFound.length);
   const reasons = [
     ...invariants.reasons,
     ...checkCounts(declaredCounts, counts, phase),
@@ -442,5 +456,149 @@ export function runPhaseCheck(
     declared_counts: declaredCounts ?? null,
     actual_counts: counts,
     coverage,
+  };
+}
+
+/** One phase's line in the chain breakdown. */
+export interface ChainPhaseResult {
+  readonly phase: CheckPhase;
+  readonly status: 'PASS' | 'FAIL';
+  readonly reasons: string[];
+}
+
+export interface ChainResult {
+  readonly status: 'PASS' | 'FAIL';
+  readonly reasons: string[];
+  readonly declared_counts: Record<string, number> | null;
+  readonly actual_counts: Record<string, number>;
+  readonly coverage: Coverage;
+  readonly phases: ChainPhaseResult[];
+}
+
+export interface AmendResult {
+  readonly status: 'PASS' | 'FAIL';
+  readonly changeDescription: string | null;
+  readonly reasons: string[];
+  readonly declared_counts: Record<string, number> | null;
+  readonly actual_counts: Record<string, number>;
+  readonly coverage: Coverage;
+  readonly phase: CheckPhase | null;
+  readonly impactedArtifacts: ImpactedArtifact[];
+}
+
+/** Every id reachable from `start` in at most `depth` steps, following parent → child. */
+function descendants(start: string, matrix: Matrix, depth: number): string[] {
+  let frontier = [start];
+  const seen = new Set<string>();
+  for (let step = 0; step < depth && frontier.length > 0; step += 1) {
+    const next: string[] = [];
+    for (const id of frontier) {
+      for (const child of matrix[id] ?? []) {
+        if (!seen.has(child)) {
+          seen.add(child);
+          next.push(child);
+        }
+      }
+    }
+    frontier = next;
+  }
+  return [...seen];
+}
+
+/**
+ * Every phase in the chain, plus the cross-phase check the single-artifact call
+ * cannot make: a goal with no path down to a task is a chain that looks complete
+ * phase by phase and delivers nothing.
+ *
+ * `CHAIN`, never `CHECK_PHASES`: `validate` fails closed and `constitution` is
+ * content-unchecked, so iterating the phase enum would put one permanent failure
+ * in every chain and one meaningless PASS beside it.
+ */
+export function runChainCheck(
+  artifacts: Partial<Record<CheckPhase, string>>,
+  declaredCounts?: Record<string, number>,
+): ChainResult {
+  const phases: ChainPhaseResult[] = [];
+  const reasons: string[] = [];
+  const matrix: Matrix = {};
+  const forward: string[] = [];
+  const backward: string[] = [];
+  const dedicated: string[] = [];
+  const actual: Record<string, number> = {};
+
+  for (const phase of CHAIN) {
+    const content = artifacts[phase];
+    if (content === undefined) {
+      phases.push({ phase, status: 'FAIL', reasons: [`${phase} artifact is required`] });
+      reasons.push(`${phase}: artifact is required`);
+      continue;
+    }
+
+    const result = runPhaseCheck(phase, content, declaredCounts, artifacts);
+    phases.push({ phase, status: result.status, reasons: result.reasons });
+    reasons.push(...result.reasons.map((reason) => `${phase}: ${reason}`));
+
+    for (const [parent, children] of Object.entries(result.coverage.matrix)) {
+      matrix[parent] = [...new Set([...(matrix[parent] ?? []), ...children])];
+    }
+    forward.push(...result.coverage.forward_covered);
+    backward.push(...result.coverage.backward_sound);
+    dedicated.push(...result.coverage.dedicated);
+    Object.assign(actual, result.actual_counts);
+  }
+
+  const goals = extractIds(artifacts.vision ?? '', 'V');
+  const unreached = goals.filter((goal) => !descendants(goal, matrix, CHAIN.length).some((id) => id.startsWith('TK-')));
+  for (const goal of unreached) reasons.push(`${goal} reaches no task`);
+
+  const coverage: Coverage = {
+    forward_covered: [...new Set(forward)],
+    backward_sound: [...new Set(backward)],
+    dedicated: [...new Set(dedicated)],
+    matrix,
+  };
+
+  return {
+    status: reasons.length === 0 ? 'PASS' : 'FAIL',
+    reasons,
+    declared_counts: declaredCounts ?? null,
+    actual_counts: actual,
+    coverage,
+    phases,
+  };
+}
+
+/**
+ * The amendment path. `vdd_amend` carries no `phase`, so the phase is inferred
+ * from the artifact's own junction field or child prefix; the artifact is then
+ * judged exactly as `vdd_check` would judge it, and the downstream artifacts that
+ * name a removed id are listed for rework.
+ */
+export function runAmend(
+  content: string,
+  declaredCounts: Record<string, number> | undefined,
+  priorArtifacts: Partial<Record<CheckPhase, string>>,
+  changeDescription?: string,
+): AmendResult {
+  const phase = inferPhase(content);
+  if (phase === null) {
+    return {
+      status: 'FAIL',
+      changeDescription: changeDescription ?? null,
+      reasons: ['cannot tell which phase this artifact belongs to — it carries no serves_* field and no child ids'],
+      declared_counts: declaredCounts ?? null,
+      actual_counts: {},
+      coverage: { forward_covered: [], backward_sound: [], dedicated: [], matrix: {} },
+      phase: null,
+      impactedArtifacts: [],
+    };
+  }
+
+  const result = runPhaseCheck(phase, content, declaredCounts, priorArtifacts);
+  return {
+    ...result,
+    changeDescription: changeDescription ?? null,
+    phase,
+    impactedArtifacts: amendImpact(phase, content, priorArtifacts),
   };
 }

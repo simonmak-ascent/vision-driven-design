@@ -293,6 +293,19 @@ describe('coverage engine', () => {
     expect(opensBlocks('- [V-001](vdd/vision.md)\n', 'vision')).toBe(false);
   });
 
+  // A parentless phase has no invariant that can fail, so an artifact declaring no
+  // id would pass by having nothing to check. Vision is the only phase this
+  // applies to — the constitution's children are prose names — and the guard must
+  // not fire on a template that lists `- V-### → OBJ-###`.
+  it('fails a vision artifact that declares no V-### id', () => {
+    const empty = runPhaseCheck('vision', '# vision.md\n\n## Purpose\nProse only.\n');
+    expect(empty.status).toBe('FAIL');
+    expect(empty.reasons).toEqual(['vision declares no V-### id']);
+
+    const template = runPhaseCheck('vision', '# vision.md\n\n## Chain projection\n- V-001 → OBJ-001\n');
+    expect(template.status).toBe('PASS');
+  });
+
   it('reports no impact when nothing was removed', () => {
     expect(amendImpact('strategy', STRATEGY_THREE, { strategy: STRATEGY_THREE, tactics: 'S-002' })).toEqual([]);
   });

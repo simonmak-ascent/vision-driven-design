@@ -1,21 +1,20 @@
 import http from 'node:http';
-import { randomUUID } from 'node:crypto';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/server';
 import { createVddMcpServer } from './server.js';
 
-// Streamable-HTTP entrypoint. Exposes the same 16 VDD MCP tools over the MCP
-// Streamable HTTP transport so any remote client can connect on a TCP port —
-// used when self-hosting the server. (Glama builds its own container from the
-// stdio entrypoint; it does not use this one.)
+// Streamable-HTTP entrypoint for self-hosting. Serves the same three tools and
+// the same nine skills as the stdio surface, and nothing else: 2.0.0 is
+// stateless, so there is no session id to mint and no session state to scale.
 //
 // Returns the underlying http.Server so callers (and tests) can read the bound
 // port and close it. PORT is read per-call so tests can pass 0 for an ephemeral
 // port.
 export async function startHttpServer(): Promise<http.Server> {
   const PORT = Number(process.env.PORT ?? 3000);
-  const mcpServer = createVddMcpServer();
+  const mcpServer = await createVddMcpServer();
   const transport = new WebStandardStreamableHTTPServerTransport({
-    sessionIdGenerator: () => randomUUID(),
+    // Stateless: a per-request envelope, no `Mcp-Session-Id`, nothing to resume.
+    sessionIdGenerator: undefined,
   });
   await mcpServer.connect(transport);
 
@@ -65,7 +64,15 @@ export async function startHttpServer(): Promise<http.Server> {
     }
   });
 
-  await new Promise<void>((resolve) => httpServer.listen(PORT, resolve));
+  await new Promise<void>((resolve, reject) => {
+    // A port already in use must reject: a resolve-only promise leaves the caller
+    // waiting on an 'error' event that never reaches it.
+    httpServer.once('error', reject);
+    httpServer.listen(PORT, () => {
+      httpServer.off('error', reject);
+      resolve();
+    });
+  });
   const address = httpServer.address();
   const actualPort = typeof address === 'object' && address ? address.port : PORT;
   console.log(`VDD MCP Streamable HTTP listening on http://localhost:${actualPort}/`);

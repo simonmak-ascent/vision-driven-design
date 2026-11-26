@@ -73,7 +73,7 @@ describe('skill manifest', () => {
       expect(entry!.sha256).toBe(createHash('sha256').update(text).digest('hex'));
       expect(entry!.size).toBe(Buffer.byteLength(text));
       expect(entry!.uri).toBe(`skill://${name}/SKILL.md`);
-      expect(entry!.body).toBe(frontmatter(text).body);
+      expect(entry!.text).toBe(text);
     });
   }
 
@@ -90,7 +90,7 @@ describe('skill manifest', () => {
 
   for (const [skill, phase] of JUNCTION_SKILLS) {
     it(`${skill} names exactly ${phase}'s junction field`, () => {
-      const body = getSkill(skill)!.body;
+      const body = getSkill(skill)!.text;
       const fields = [...new Set(body.match(/serves_[a-z_]+/g) ?? [])];
       expect(fields).toEqual([PHASE_CONFIG[phase].servesField]);
       expect(body).toContain(`${PHASE_CONFIG[phase].childPrefix}-`);
@@ -100,7 +100,7 @@ describe('skill manifest', () => {
   it('lists every skill without its body', () => {
     const listed = listSkills();
     expect(listed.map((skill) => skill.name).sort()).toEqual(DIRECTORY_NAMES);
-    for (const skill of listed) expect(skill).not.toHaveProperty('body');
+    for (const skill of listed) expect(skill).not.toHaveProperty('text');
   });
 
   it('is not stale: the committed manifest equals a fresh generation', () => {

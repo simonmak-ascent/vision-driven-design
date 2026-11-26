@@ -1,56 +1,82 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { PHASES, isProjectRootAllowed, projectRootError, type VddContext, type VddPhaseInput } from '@simonmak-ascent/engine';
+import { readFile } from 'node:fs/promises';
+
+import { CHECK_PHASES, runAmend, runChainCheck, runPhaseCheck, type CheckPhase } from '@simonmak-ascent/engine';
+
+// Three subcommands, because there are three tools. Each prints the JSON result
+// the tool returns — the CLI adds no judgement of its own.
 
 const program = new Command();
-program.name('vdd').description('Vision Driven Design CLI').version('1.10.1');
+program.name('vdd').description('Vision Driven Design — judge a chain, do not generate one').version('1.10.1');
 
-const PHASE_DESC: Record<string, { desc: string; args: string[] }> = {
-  init:        { desc: 'Generate constitution.md', args: [] },
-  vision:      { desc: 'Expand freeform vision → vision.md', args: ['statement'] },
-  strategize:  { desc: 'Research and synthesize strategy.md', args: [] },
-  tactics:     { desc: 'Audit repo → tactics.md', args: [] },
-  specify:     { desc: 'Generate spec.md', args: ['idOrDesc'] },
-  clarify:     { desc: 'Clarify ambiguities', args: ['feature'] },
-  plan:        { desc: 'Generate plan.md + contracts/', args: ['feature'] },
-  tasks:       { desc: 'Generate tasks.md', args: ['feature'] },
-  'get-next-task': { desc: 'Next uncompleted task', args: ['feature'] },
-  implement:   { desc: 'Execute a task', args: ['taskId'] },
-  validate:    { desc: 'Full-chain traceability report', args: [] },
-  trace:       { desc: 'Bidirectional traceability matrix', args: [] },
-  analyze:     { desc: 'Cross-artifact analysis', args: ['feature'] },
-  amend:       { desc: 'Cascade change through chain', args: ['description'] },
-  e2e:         { desc: 'End-to-end: vision → validate in one command', args: ['statement'] },
-  'detect-environment': { desc: 'Report per-phase tool/MCP requirements', args: [] },
-};
-
-let jsonMode = false;
-program.option('--json', 'JSON output').hook('preAction', (cmd) => { jsonMode = cmd.opts().json; });
-
-function collect(v: string, prev: string[]): string[] { return prev.concat([v]); }
-program.option('--tool <name>', 'Available MCP/tool name (repeatable)', collect, [] as string[]);
-
-for (const [name, { desc, args }] of Object.entries(PHASE_DESC)) {
-  const cmd = program.command(name).description(desc);
-  for (const arg of args) cmd.argument(`<${arg}>`, `${arg} for ${name}`);
-  cmd.action(async (...argValues: string[]) => {
-    const opts = program.opts<{ tool?: string[] }>();
-    const availableTools = opts.tool ?? [];
-    const ctx: VddContext = { projectRoot: process.cwd(), mode: 'auto' };
-    if (!isProjectRootAllowed(ctx.projectRoot)) {
-      console.error(projectRootError(ctx.projectRoot));
-      process.exitCode = 1;
-      return;
-    }
-    const input: VddPhaseInput = { json: jsonMode, availableTools, capabilities: availableTools };
-    if (args[0] === 'statement') input.statement = argValues[0];
-    else if (args[0] === 'idOrDesc') { input.description = argValues[0]; input.actionItemId = argValues[0]; }
-    else if (args[0] === 'feature') input.feature = argValues[0];
-    else if (args[0] === 'taskId') input.taskId = argValues[0];
-    else if (args[0] === 'description') input.description = argValues[0];
-    const result = await PHASES[name](input, ctx);
-    console.log(jsonMode ? JSON.stringify(result) : result.success ? `✓ ${result.artifact || 'Done'}` : `✗ ${result.error}`);
-  });
+async function readArtifact(path: string): Promise<string> {
+  return readFile(path, 'utf8');
 }
 
-program.parse();
+program
+  .command('check')
+  .description('Judge one artifact: vdd_check')
+  .argument('<phase>', 'constitution | vision | strategy | tactics | specs | plan | tasks | validate')
+  .argument('<file>', 'the artifact text')
+  .option('--prior <phase=file...>', 'parent artifact, e.g. --prior strategy=vdd/strategy.md')
+  .option('--counts <json>', 'declaredCounts, as JSON')
+  .action(async (phase: string, file: string, opts: { prior?: string[]; counts?: string }) => {
+    // Validated here rather than cast: a wrong phase would otherwise reach the
+    // engine's phase table and throw a TypeError instead of a usage error.
+    if (!(CHECK_PHASES as readonly string[]).includes(phase)) {
+      program.error(`unknown phase "${phase}" — expected one of ${CHECK_PHASES.join(', ')}`, { exitCode: 2 });
+    }
+    const priorArtifacts: Record<string, string> = {};
+    for (const pair of opts.prior ?? []) {
+      const [name, path] = pair.split('=');
+      priorArtifacts[name] = await readArtifact(path);
+    }
+    const result = runPhaseCheck(
+      phase as CheckPhase,
+      await readArtifact(file),
+      opts.counts ? JSON.parse(opts.counts) : undefined,
+      priorArtifacts,
+    );
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+    process.exitCode = result.status === 'PASS' ? 0 : 1;
+  });
+
+program
+  .command('chain')
+  .description('Judge a whole chain: vdd_chain_validate')
+  .argument('<vision>', 'vision artifact')
+  .argument('<strategy>', 'strategy artifact')
+  .argument('<tactics>', 'tactics artifact')
+  .argument('<specs>', 'spec or specs artifact')
+  .argument('<plan>', 'plan artifact')
+  .argument('<tasks>', 'tasks artifact')
+  .option('--counts <json>', 'declaredCounts, as JSON')
+  .action(async (vision: string, strategy: string, tactics: string, specs: string, plan: string, tasks: string, opts: { counts?: string }) => {
+    const artifacts: Record<string, string> = {};
+    for (const [phase, path] of Object.entries({ vision, strategy, tactics, specs, plan, tasks })) {
+      artifacts[phase] = await readArtifact(path);
+    }
+    const result = runChainCheck(artifacts, opts.counts ? JSON.parse(opts.counts) : undefined);
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+    process.exitCode = result.status === 'PASS' ? 0 : 1;
+  });
+
+program
+  .command('amend')
+  .description('Judge an amendment and its impact: vdd_amend')
+  .argument('<file>', 'the amended artifact')
+  .option('--prior <phase=file...>', 'prior artifact text, including the amended phase')
+  .option('--counts <json>', 'declaredCounts, as JSON')
+  .action(async (file: string, opts: { prior?: string[]; counts?: string }) => {
+    const priorArtifacts: Record<string, string> = {};
+    for (const pair of opts.prior ?? []) {
+      const [name, path] = pair.split('=');
+      priorArtifacts[name] = await readArtifact(path);
+    }
+    const result = runAmend(await readArtifact(file), opts.counts ? JSON.parse(opts.counts) : undefined, priorArtifacts);
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+    process.exitCode = result.status === 'PASS' ? 0 : 1;
+  });
+
+program.parseAsync(process.argv);
