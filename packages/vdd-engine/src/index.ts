@@ -1,6 +1,23 @@
 export { PHASES, isValidFeatureName } from './engine.js';
 export { allowedProjectRoots, isProjectRootAllowed, projectRootError } from './project-root.js';
 export { VddContext, VddOutput, VddPhaseInput, VddMode, Constitution } from './types.js';
+export { Coverage, CheckResult, ImpactedArtifact } from './types.js';
+export {
+  CHECK_PHASES,
+  CHAIN,
+  PHASE_CONFIG,
+  extractIds,
+  extractChildren,
+  buildMatrix,
+  checkInvariants,
+  checkCounts,
+  checkCrossKeyActual,
+  inferPhase,
+  amendImpact,
+  opensBlocks,
+  runPhaseCheck,
+} from './coverage.js';
+export type { CheckPhase, CountKey, PhaseConfig, Matrix, Child, InvariantResult } from './coverage.js';
 export type { VddPhaseFn } from './types.js';
 export {
   PHASE_NAMES,

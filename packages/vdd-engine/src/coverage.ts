@@ -63,7 +63,7 @@ export const PHASE_CONFIG: Record<CheckPhase, PhaseConfig> = {
   // Plan §8 dropped G0's six content checks to the skill checklist, and the
   // constitution's children are prose artifact names rather than ids, so this
   // phase has no automated check in 2.0.0: a PASS here means "nothing was
-  // checked", and the nine artifact names are asserted by skills/vdd-constitution.
+  // checked", and the template's eight sections are asserted by skills/vdd-constitution.
   constitution: { parentPhase: null, parentPrefix: null, childPrefix: 'ART', servesField: null, countKey: null, childLabel: 'artifact' },
   vision: { parentPhase: null, parentPrefix: null, childPrefix: 'V', servesField: null, countKey: 'goals', childLabel: 'goal' },
   strategy: { parentPhase: 'vision', parentPrefix: 'V', childPrefix: 'S', servesField: 'serves_goal', countKey: 'pillars', childLabel: 'pillar' },

@@ -210,7 +210,7 @@ describe('coverage engine', () => {
     expect(result.coverage.backward_sound).toEqual(['A-001', 'A-002']);
   });
 
-  // The specs junction's count rule is `specs == count(MUST actions)`. The
+  // The specs junction's count rule is `specs == count(SP blocks)`. The
   // filtered parent set is not the population `declaredCounts.actions`
   // describes, so a declared `actions` is not compared on a specs call.
   it('does not compare declared actions against the MUST-filtered parent set', () => {
