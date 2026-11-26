@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { z } from 'zod';
-import { CHECK_PHASES, runAmend, runChainCheck, runPhaseCheck } from '@simonmak-ascent/engine';
+import { CHECK_PHASES, CheckResult, runAmend, runChainCheck, runPhaseCheck } from '@simonmak-ascent/engine';
 
 import { loadSkillCatalog } from './skills.js';
 
@@ -23,23 +23,9 @@ const priorArtifacts = z
   .optional()
   .describe('Phase name → artifact text. The parent artifact supplies the parent ids this phase must serve.');
 
-const coverage = z.object({
-  forward_covered: z.array(z.string()).describe('Parents with at least one child (invariant A)'),
-  backward_sound: z.array(z.string()).describe('Children whose serves value names a known parent (invariant B)'),
-  dedicated: z.array(z.string()).describe('Parents with a child no other parent shares (invariant C)'),
-  matrix: z.record(z.string(), z.array(z.string())).describe('Parent id → child ids that declare it'),
-});
-
-const checkResult = z.object({
-  // The protocol's result marker, carried on the tool result itself so a client
-  // that validates the tool's output sees it without unwrapping the envelope.
-  resultType: z.literal('complete'),
-  status: z.enum(['PASS', 'FAIL']),
-  reasons: z.array(z.string()).describe('One line per failed check, naming the id to fix'),
-  declared_counts: z.record(z.string(), z.number()).nullable(),
-  actual_counts: z.record(z.string(), z.number()),
-  coverage,
-});
+// The wire contract is the engine's published schema plus the protocol's result
+// marker — not a second copy of it, so the two cannot drift.
+const checkResult = CheckResult.extend({ resultType: z.literal('complete') });
 
 const annotations = {
   readOnlyHint: true,

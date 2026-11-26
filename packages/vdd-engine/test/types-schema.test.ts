@@ -3,91 +3,58 @@
  *
  * This file imports ONLY from `../src/index.js` — the `main`/`types` entry — so
  * what it pins is what a consumer of `@simonmak-ascent/engine` actually receives.
- * Every other engine test imports `../src/engine.js` or `../src/types.js`
- * directly, which would keep passing if `src/index.ts` lost a re-export. That
- * divergence is deliberate.
+ * Every other engine test imports `../src/coverage.js` directly, which would keep
+ * passing if `src/index.ts` lost a re-export. That divergence is deliberate.
  *
- * The delegation envelope is exercised through `VddOutput`, because `Delegation`
- * itself is not re-exported from the entry point and should not be: adding it
- * would be a public-API change for a dependency patch.
+ * 2.0.0 replaced the generation types with the verdict: `Coverage`,
+ * `CheckResult`, `ImpactedArtifact`.
  */
 import { describe, expect, it } from 'vitest';
 
-import {
-  Constitution,
-  VddContext,
-  VddMode,
-  VddOutput,
-  VddPhaseInput,
-} from '../src/index.js';
+import { CheckResult, Coverage, ImpactedArtifact, PHASE_CONFIG, runPhaseCheck } from '../src/index.js';
 
 describe('published schema surface', () => {
-  it('VddMode admits the two chain modes and nothing else', () => {
-    expect(VddMode.parse('auto')).toBe('auto');
-    expect(VddMode.parse('gated')).toBe('gated');
-    expect(VddMode.safeParse('interactive').success).toBe(false);
+  it('Coverage requires all four members', () => {
+    expect(Coverage.safeParse({}).success).toBe(false);
+    expect(
+      Coverage.parse({ forward_covered: [], backward_sound: [], dedicated: [], matrix: {} }),
+    ).toEqual({ forward_covered: [], backward_sound: [], dedicated: [], matrix: {} });
   });
 
-  it('Constitution defaults mode and accepts string maps', () => {
-    const parsed = Constitution.parse({
-      stack: { language: 'typescript' },
-      conventions: { files: 'kebab-case' },
-    });
-    expect(parsed.mode).toBe('auto');
-    expect(parsed.stack).toEqual({ language: 'typescript' });
+  it('CheckResult accepts a real engine result and refuses missing coverage or matrix', () => {
+    const result = runPhaseCheck('vision', '## Chain projection\n- V-001 → OBJ-001\n');
+    expect(CheckResult.parse(result).status).toBe('PASS');
+
+    const { coverage: _dropped, ...withoutCoverage } = result;
+    expect(CheckResult.safeParse(withoutCoverage).success).toBe(false);
+
+    // The matrix is the field this release publishes; removing it must fail on
+    // its own, not because a sibling member went with it.
+    const { matrix: _matrix, ...coverageWithoutMatrix } = result.coverage;
+    expect(CheckResult.safeParse({ ...result, coverage: coverageWithoutMatrix }).success).toBe(false);
   });
 
-  it('VddContext requires projectRoot and defaults the mode', () => {
-    expect(VddContext.parse({ projectRoot: '/tmp/project' }).mode).toBe('auto');
-    expect(VddContext.safeParse({ mode: 'auto' }).success).toBe(false);
+  it('CheckResult refuses a status outside PASS / FAIL', () => {
+    const result = runPhaseCheck('vision', '## Chain projection\n- V-001 → OBJ-001\n');
+    expect(CheckResult.safeParse({ ...result, status: 'MAYBE' }).success).toBe(false);
   });
 
-  it('VddOutput.mode admits only the two report modes', () => {
-    expect(VddOutput.parse({ success: true, mode: 'local' }).mode).toBe('local');
-    expect(VddOutput.parse({ success: true, mode: 'hosted-delegated' }).mode).toBe(
-      'hosted-delegated',
-    );
-    expect(VddOutput.safeParse({ success: true, mode: 'remote' }).success).toBe(false);
+  it('ImpactedArtifact names a phase and a reason', () => {
+    expect(ImpactedArtifact.parse({ phase: 'tactics', reason: 'references removed S-002' }).phase).toBe('tactics');
+    expect(ImpactedArtifact.safeParse({ phase: 'tactics' }).success).toBe(false);
   });
 
-  it('VddPhaseInput defaults json to false', () => {
-    expect(VddPhaseInput.parse({}).json).toBe(false);
-    expect(VddPhaseInput.parse({ json: true, feature: 'x' }).json).toBe(true);
-  });
-
-  it('VddOutput round-trips a delegation envelope', () => {
-    // Unknown keys are stripped, not preserved — the zod 3 → 4 claim this file exists to pin.
-    expect(VddOutput.parse({ success: true, extra: 1 })).toEqual({ success: true });
-    const parsed = VddOutput.parse({
-      success: true,
-      persisted: false,
-      mode: 'hosted-delegated',
-      delegation: {
-        id: 'd-1',
-        goal: 'write vdd/vision.md',
-        kind: 'write',
-        promptTemplate: 'v1',
-        requiredTools: ['write'],
-        expectedReturn: { path: 'vdd/vision.md' },
-        writeTargets: ['vdd/vision.md'],
-        nextTool: 'vdd_validate',
-      },
-    });
-    expect(parsed.delegation?.kind).toBe('write');
-    expect(parsed.delegation?.writeTargets).toEqual(['vdd/vision.md']);
-    // An unknown kind must be refused, not coerced.
-    const bad = VddOutput.safeParse({
-      success: true,
-      delegation: {
-        id: 'd-2',
-        goal: 'x',
-        kind: 'teleport',
-        promptTemplate: 'v1',
-        requiredTools: [],
-        expectedReturn: {},
-        nextTool: 'vdd_validate',
-      },
-    });
-    expect(bad.success).toBe(false);
+  it('PHASE_CONFIG is the published phase table', () => {
+    expect(Object.keys(PHASE_CONFIG)).toEqual([
+      'constitution',
+      'vision',
+      'strategy',
+      'tactics',
+      'specs',
+      'plan',
+      'tasks',
+      'validate',
+    ]);
+    expect(PHASE_CONFIG.tactics.servesField).toBe('serves_pillar');
   });
 });

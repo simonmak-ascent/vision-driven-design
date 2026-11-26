@@ -56,15 +56,18 @@ Call `vdd_check` once. It is the only tool this phase needs:
 
 ## Step 4 — Handle the result
 
-- `status: "PASS"` — with `declaredCounts.goals` sent, the declared count matches the number of
-  `V-###` blocks. If it was omitted, nothing was checked: for the vision that count is the only
-  automated rule. A, B and C do not apply — the vision has no parent, so there is no junction.
+- `status: "PASS"` — the artifact declares at least one `V-###` id and, when `declaredCounts.goals`
+  was sent, the declared count matches the number of `V-###` blocks. Omitting the count skips that
+  comparison; it does not skip the id check, which fails an artifact that declares none. A, B and C
+  do not apply — the vision has no parent, so there is no junction.
 - `status: "FAIL"` — read `coverage.matrix`. An empty row is a parent with no child; a child missing
   from every row is an orphan; `reasons` names each one in the order to fix them. Regenerate and
   resubmit, at most three times. After the third failure, show `reasons` to the human and stop.
 
 ## Gate criteria
 
-- The declared goal count equals the number of `V-###` blocks the artifact declares.
+- The artifact declares at least one `V-###` id; an artifact that declares none FAILs with
+  `vision declares no V-### id`.
+- The declared goal count, when sent, equals the number of `V-###` blocks.
 - The projection binds one `V-###` to one `OBJ-###`, and no metric appears on a projection line.
 - A, B and C do not apply: the vision has no parent, so there is no junction to check.

@@ -35,7 +35,7 @@
   },
   "author": "simonmak-ascent",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist tsconfig.tsbuildinfo && tsc",
     "check": "tsc --noEmit",
     "test": "vitest run"
   },

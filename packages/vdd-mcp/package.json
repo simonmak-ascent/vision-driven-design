@@ -45,7 +45,7 @@
   },
   "author": "simonmak-ascent",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "check": "tsc --noEmit"
   },
   "dependencies": {

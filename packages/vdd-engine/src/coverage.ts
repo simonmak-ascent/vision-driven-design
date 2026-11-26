@@ -12,8 +12,8 @@
  * different inputs, and merging them is how a fixture gets specified that its
  * own engine cannot satisfy.
  *
- * The phase a `vdd_check` call names is a `CheckPhase`, not the legacy 17-name
- * `PhaseName` in `meta.ts` — one identifier per concept.
+ * The phase a `vdd_check` call names is a `CheckPhase` — one identifier per
+ * concept, and the only phase type 2.0.0 has.
  */
 
 import type { CheckResult, Coverage, ImpactedArtifact } from './types.js';

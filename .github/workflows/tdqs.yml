@@ -3,13 +3,13 @@ name: MCP Tool Definition Quality
 on:
   pull_request:
     paths:
-      - "packages/vdd-engine/src/meta.ts"
+      - "packages/vdd-engine/src/**"
       - "packages/vdd-mcp/**"
       - "api/_vdd-rpc.cjs"
   push:
     branches: [main]
     paths:
-      - "packages/vdd-engine/src/meta.ts"
+      - "packages/vdd-engine/src/**"
       - "packages/vdd-mcp/**"
       - "api/_vdd-rpc.cjs"
 
