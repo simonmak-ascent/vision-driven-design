@@ -69,3 +69,31 @@ export const VddPhaseInput = z.object({
 export type VddPhaseInput = z.infer<typeof VddPhaseInput>;
 
 export type VddPhaseFn = (input: VddPhaseInput, context: VddContext) => Promise<VddOutput>;
+
+// ── 2.0.0 ────────────────────────────────────────────────────────────────────
+// The coverage matrix and the result every tool returns. Every parent the prior
+// artifact declares is a row; an all-zero row is a parent no child names, which
+// is exactly what invariant A reports.
+
+export const Coverage = z.object({
+  forward_covered: z.array(z.string()).describe('Parents with at least one child (invariant A)'),
+  backward_sound: z.array(z.string()).describe('Children whose serves value names a known parent (invariant B)'),
+  dedicated: z.array(z.string()).describe('Parents with a child no other parent shares (invariant C)'),
+  matrix: z.record(z.string(), z.array(z.string())).describe('Parent id → child ids that declare it'),
+});
+export type Coverage = z.infer<typeof Coverage>;
+
+export const ImpactedArtifact = z.object({
+  phase: z.string(),
+  reason: z.string(),
+});
+export type ImpactedArtifact = z.infer<typeof ImpactedArtifact>;
+
+export const CheckResult = z.object({
+  status: z.enum(['PASS', 'FAIL']),
+  reasons: z.array(z.string()),
+  declared_counts: z.record(z.string(), z.number()).nullable(),
+  actual_counts: z.record(z.string(), z.number()),
+  coverage: Coverage,
+});
+export type CheckResult = z.infer<typeof CheckResult>;
