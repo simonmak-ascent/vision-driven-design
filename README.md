@@ -106,7 +106,7 @@ VDD follows Goldratt's **recursive Strategy-Tactic decomposition**: every phase 
 
 Every code commit traces back to the original vision statement:
 ```
-V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006 → commit
+V-001 → S-001 → A-001 → SP-001 → PL-001 → TK-001 → commit
 ```
 
 ### The pipeline and its 7 gates

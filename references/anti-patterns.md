@@ -78,8 +78,8 @@ The most common VDD failure modes, their symptoms, and how to fix them.
 
 **Symptoms:**
 - vision.md has `> Impact Chain: V-001`
-- strategy.md has `> Impact Chain: V-001 → S-002`
-- tactics.md has `> Impact Chain: V-001 → S-002 → T-003`
+- strategy.md has `> Impact Chain: V-001 → S-001`
+- tactics.md has `> Impact Chain: V-001 → S-001 → A-001`
 - spec.md is missing the Impact Chain header entirely
 - Traceability matrix can't traverse past Tactics
 
@@ -105,7 +105,7 @@ The most common VDD failure modes, their symptoms, and how to fix them.
 ## Anti-Pattern 9: One Context for All Tasks
 
 **Symptoms:**
-- AI "remembers" a wrong architectural decision from TASK-002 and applies it to TASK-008
+- AI "remembers" a wrong architectural decision from TK-002 and applies it to TK-008
 - Accumulated hallucinations contaminate later tasks
 - The agent gets confused between what was specified vs what was implemented differently
 
@@ -313,14 +313,14 @@ The AI picks an answer. It's wrong. Now you have drift baked into the implementa
 
 Example:
 ```markdown
-- [ ] **TASK-003** [M] Write tests for UserRepository.create()
+- [ ] **TK-003** [M] Write tests for UserRepository.create()
   - Tests: AC-1 (success path), AC-E1 (duplicate email), AC-E2 (invalid input)
-  - Depends on: TASK-001
+  - Depends on: TK-001
 
-- [ ] **TASK-004** [M] Implement UserRepository.create()
+- [ ] **TK-004** [M] Implement UserRepository.create()
   - Contract: `vdd/specs/[feature]/contracts/user-api.md → POST /users`
   - Satisfies: AC-1, AC-E1, AC-E2
-  - Depends on: TASK-003
+  - Depends on: TK-003
 ```
 
 ---
@@ -328,7 +328,7 @@ Example:
 ## Anti-Pattern 23: Oversized Tasks
 
 **Symptoms:**
-- TASK-007 touches 8 files and takes 4 hours
+- TK-007 touches 8 files and takes 4 hours
 - AI loses context mid-task and asks what the endpoint signature should be
 - Multiple unrelated changes in one commit make rollback difficult
 - "This is all one logical unit" — but it's actually several units

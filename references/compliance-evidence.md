@@ -1,6 +1,6 @@
 # Compliance Evidence Templates
 
-> Impact Chain: V-001 → S-002 → T-003 → A-033
+> Impact Chain: V-001 → S-001 → A-001 → SP-001
 
 Templates enabling VDD adopters to produce DO-178C, CMMI, IEC 62304, and ISO 29148 audit evidence directly from VDD artifacts. VDD's bidirectional traceability chain already generates the evidence — these templates show auditors where to find it.
 
@@ -8,7 +8,7 @@ Templates enabling VDD adopters to produce DO-178C, CMMI, IEC 62304, and ISO 291
 
 | DO-178C Objective | VDD Artifact | Evidence Location |
 |------------------|-------------|-------------------|
-| High-level requirements traceable to system requirements | `vdd/specs/[feature]/spec.md` | Impact Chain: V-XXX → S-XXX → T-XXX → SP-XXX |
+| High-level requirements traceable to system requirements | `vdd/specs/[feature]/spec.md` | Impact Chain: V-XXX → S-XXX → A-XXX → SP-XXX |
 | Low-level requirements derived from high-level | `vdd/specs/[feature]/plan.md` | AC Coverage Map: every AC → component |
 | Source code traceable to low-level requirements | Commit history | `feat(scope): TASK-XXX → AC-ID → Tactical-ID` |
 | Test cases verify requirements | `vdd/specs/[feature]/tasks.md` | Test-first ordering; Satisfies Declaration |

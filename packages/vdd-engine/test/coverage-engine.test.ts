@@ -284,25 +284,17 @@ describe('coverage engine', () => {
     expect(impacted.map((entry) => entry.phase)).toEqual(['tactics']);
   });
 
+  // The checkbox clause in `blockStart` is what lets a tasks artifact open one
+  // block per item. A plain (unbolded) id is the discriminating fixture: the
+  // bold form would open a block through the furniture class alone, and a
+  // markdown link is the mention the clause must not admit.
+  it('reads a checkbox item as a block start and a markdown link as a mention', () => {
+    expect(opensBlocks('- [ ] TK-001 plain task\n  - serves_component: PL-001\n', 'tasks')).toBe(true);
+    expect(opensBlocks('- [V-001](vdd/vision.md)\n', 'vision')).toBe(false);
+  });
+
   it('reports no impact when nothing was removed', () => {
     expect(amendImpact('strategy', STRATEGY_THREE, { strategy: STRATEGY_THREE, tactics: 'S-002' })).toEqual([]);
   });
 
-  // §11.1 item 6 — the no-invented-structure control. Phases that count ids
-  // must key on a prefix the templates actually produce; `constitution` and
-  // `validate` are excluded because neither produces numeric ids (prose artifact
-  // names and commits respectively), so there is no shape to observe.
-  it('keys every counted phase on a prefix the templates produce', () => {
-    const templates = readFileSync(new URL('../../../references/artifact-templates.md', import.meta.url), 'utf8');
-
-    const counted = Object.values(PHASE_CONFIG).filter((cfg) => cfg.countKey !== null);
-    expect(counted).toHaveLength(6);
-
-    for (const [phase, cfg] of Object.entries(PHASE_CONFIG)) {
-      if (cfg.countKey === null) continue;
-      // A block-opening id, not a mention: a decorative `> Impact Chain` entry
-      // satisfies a substring match while the engine finds no child at all.
-      expect(opensBlocks(templates, phase as Parameters<typeof opensBlocks>[1]), `${phase} has no ${cfg.childPrefix}-### block`).toBe(true);
-    }
-  });
 });

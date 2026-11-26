@@ -702,7 +702,7 @@ PRODUCE:
 
 1. Forward Coverage Table:
    For each level, list parents and their child coverage:
-   V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006 → [commits]
+   V-001 → S-001 → A-001 → SP-001 → PL-001 → TK-001 → [commits]
 
 2. Backward Authorization Table:
    For each child, verify authorized parent exists.

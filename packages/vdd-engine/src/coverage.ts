@@ -119,14 +119,17 @@ export function extractIds(content: string, prefix: string): string[] {
 /**
  * Where a child's block begins, or `null` when the id is named only *inside* a
  * line. An id is a block start when the line it opens carries nothing before it
- * but markdown furniture (`#`, `-`, `*`, `>`, `|`, digits, dots). A chain header
+ * but markdown furniture (`#`, `-`, `*`, `>`, `|`, digits, dots) — or a task
+ * checkbox, which a tasks artifact puts before every item and which is spelled
+ * out here rather than by admitting `[` and `]` generally, so a markdown link
+ * (`- [V-001](vdd/vision.md)`) is a mention and not a block start. A chain header
  * — `> Impact Chain: V-001 → S-002 → T-003` — puts prose before every id on the
  * line, so none of them opens a block; the same rule keeps a mention inside a
  * sentence from starting one. This is what makes `amendImpact` see a removed
  * section even while a stale header still names its id.
  */
 function blockStart(content: string, id: string): number | null {
-  const re = new RegExp(`^[ \\t>*#|\\-.\\d]*${id}(?![\\d-])`, 'm');
+  const re = new RegExp(`^(?:[ \\t]*[-*][ \\t]\\[[ xX]\\][ \\t]*)?[ \\t>*#|\\-.\\d]*${id}(?![\\d-])`, 'm');
   const match = re.exec(content);
   return match ? match.index + match[0].indexOf(id) : null;
 }

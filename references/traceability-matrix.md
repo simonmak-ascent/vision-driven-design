@@ -9,7 +9,7 @@ The bi-directional traceability matrix (RTM) is the audit mechanism that proves 
 ### Full Chain
 
 ```
-Vision (V-XXX) ──→ Strategy (S-XXX) ──→ Tactics (T-XXX) ──→ Spec (SP-XXX)
+Vision (V-XXX) ──→ Strategy (S-XXX) ──→ Tactics (A-XXX) ──→ Spec (SP-XXX)
                                                                   ↓
 Validate ←── Implementation ←── Tasks (TK-XXX) ←── Plan (PL-XXX)
 ```
@@ -26,8 +26,8 @@ Generated: [YYYY-MM-DD] | Command: /vdd:trace
 | Parent ID | Parent Artifact | Child IDs | All Covered? | Gaps |
 |-----------|----------------|-----------|-------------|------|
 | V-001 | vision.md | S-002 | Yes | — |
-| S-002 | strategy.md | T-003 | Yes | — |
-| T-003 | tactics.md | SP-004, SP-005 | Yes | — |
+| S-002 | strategy.md | A-001 | Yes | — |
+| A-001 | tactics.md | SP-004, SP-005 | Yes | — |
 | SP-004 | spec.md (Feature A) | PL-006 | Yes | — |
 | SP-005 | spec.md (Feature B) | PL-007 | Yes | — |
 | PL-006 | plan.md (Feature A) | TK-008..TK-012 | Yes | — |
@@ -39,13 +39,13 @@ Generated: [YYYY-MM-DD] | Command: /vdd:trace
 | Child ID | Child Artifact | Parent ID | Authorized? | Issue |
 |----------|---------------|-----------|-------------|-------|
 | S-002 | strategy.md | V-001 | Yes | — |
-| T-003 | tactics.md | S-002 | Yes | — |
-| SP-004 | spec.md (Feature A) | T-003, A-001 | Yes | — |
-| SP-005 | spec.md (Feature B) | T-003, A-002 | Yes | — |
+| A-001 | tactics.md | S-002 | Yes | — |
+| SP-004 | spec.md (Feature A) | A-001 | Yes | — |
+| SP-005 | spec.md (Feature B) | A-001 | Yes | — |
 | PL-006 | plan.md (Feature A) | SP-004 | Yes | — |
 | PL-007 | plan.md (Feature B) | SP-005 | Yes | — |
-| TK-008 | tasks.md TASK-001 | PL-006 | Yes | — |
-| commit a1b2c3d | feat(Feature A): TASK-008 | TK-008 | Yes | — |
+| TK-008 | tasks.md | PL-006 | Yes | — |
+| commit a1b2c3d | feat(Feature A): TK-008 | TK-008 | Yes | — |
 
 ## Orphan Detection
 
@@ -183,7 +183,7 @@ jobs:
 |-------|--------|---------|-----------|
 | Vision | V- | V-001 | vision.md header |
 | Strategy | S- | S-002 | strategy.md header |
-| Tactics | T- | T-003 | tactics.md header |
+| Tactics | A- | A-001 | tactics.md header |
 | Spec | SP- | SP-004 | spec.md header |
 | Plan | PL- | PL-005 | plan.md header |
 | Tasks | TK- | TK-006 | tasks.md header |

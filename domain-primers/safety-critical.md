@@ -34,11 +34,11 @@ Loaded during Phase 2 (Strategy) when the vision involves aerospace, medical dev
 
 | VDD Phase | Safety Integration |
 |-----------|-------------------|
-| Phase 1 (Vision) | Identify safety-critical actors and hazard scenarios in Impact Model |
+| Phase 1 (Vision) | Identify safety-critical actors and hazard scenarios in §4 (5Ws) and §5 (possibility space) |
 | Phase 4 (Specs) | Add `[SAFETY]` ACs alongside `[MUST]` ACs — every safety-critical behavior gets a verifiable AC |
 | Phase 5 (Plan) | Safety architecture: redundancy, isolation, fail-safe defaults, watchdog timers |
 | Phase 6 (Tasks) | Safety verification tasks precede functional tasks (test-first for safety) |
-| Phase 7 (Implement) | Traceability: `feat(scope): TASK-XXX → AC-SAFETY-YYY → HAZARD-ZZZ` |
+| Phase 7 (Implement) | Traceability: `feat(scope): TK-XXX → AC-SAFETY-YYY → HAZARD-ZZZ` |
 | Phase 8 (Validate) | Safety coverage matrix: Hazard → Safety AC → Test → Evidence |
 
 ### Toolchain for Safety-Critical VDD

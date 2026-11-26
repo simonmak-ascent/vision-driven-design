@@ -48,7 +48,7 @@ Each gate: Forward check (parent→children coverage) + Backward check (children
 ## Impact Chain Format
 
 ```
-> Impact Chain: V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006
+> Impact Chain: V-001 → S-001 → A-001 → SP-001 → PL-001 → TK-001
 ```
 
 ## ID Prefixes
@@ -57,8 +57,7 @@ Each gate: Forward check (parent→children coverage) + Backward check (children
 |--------|-------|---------|
 | V- | Vision | V-001 |
 | S- | Strategy | S-002 |
-| T- | Tactics | T-003 |
-| A- | Action Item | A-001 |
+| A- | Tactics (action item) | A-001 |
 | SP- | Spec | SP-004 |
 | PL- | Plan | PL-005 |
 | TK- | Tasks | TK-006 |

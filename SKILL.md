@@ -165,7 +165,7 @@ Each gate verifies both directions and validates 4 S&T assumptions:
 These commands are MCP prompts on the stdio server and the hosted endpoint, so they appear in
 MCP-aware clients as `/vdd:<name>` (for example `/vdd:init` in OpenCode 2). `trace` and `analyze`
 are read-only aliases over `vdd_inspect`; `e2e` is a host-agent workflow over the phase tools;
-`implement` takes the `TASK-###` returned by `/vdd:get-next-task`.
+`implement` takes the `TK-###` returned by `/vdd:get-next-task`.
 
 | Command | Phase | Action |
 |---------|-------|--------|
