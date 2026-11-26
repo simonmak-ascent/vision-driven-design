@@ -44,7 +44,7 @@ function text(result: object) {
 
 // The number the release carries. 4.7 bumps all eight version values together;
 // until then this one must stay equal to the packages, or the pin below fails.
-export const VDD_VERSION = '1.10.1';
+export const VDD_VERSION = '2.0.0';
 
 export async function createVddMcpServer(): Promise<McpServer> {
   // `prompts` is declared and empty on purpose: 2.0.0 ships no prompts, and a

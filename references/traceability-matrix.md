@@ -1,6 +1,6 @@
 # Traceability Matrix
 
-The bi-directional traceability matrix (RTM) is the audit mechanism that proves the VDD chain is complete. It can be generated at any time with `/vdd:trace` and is automatically generated during Phase 8 (Validate).
+The bi-directional traceability matrix (RTM) is the audit mechanism that proves the VDD chain is complete. `vdd_chain_validate` returns its machine-checked half — the two coverage tables, the per-invariant rows and the goal→task path check. The orphan, drift, AC-coverage and readiness sections below are the agent's review, written from the code, the history and the tests.
 
 ---
 
@@ -19,7 +19,7 @@ Validate ←── Implementation ←── Tasks (TK-XXX) ←── Plan (PL-XX
 ```markdown
 # Bi-Directional Traceability Matrix
 
-Generated: [YYYY-MM-DD] | Command: /vdd:trace
+Generated: [YYYY-MM-DD] | Command: vdd_chain_validate
 
 ## Forward Coverage (Parent → Children)
 
@@ -32,7 +32,7 @@ Generated: [YYYY-MM-DD] | Command: /vdd:trace
 | SP-005 | spec.md (Feature B) | PL-007 | Yes | — |
 | PL-006 | plan.md (Feature A) | TK-008..TK-012 | Yes | — |
 | PL-007 | plan.md (Feature B) | TK-013..TK-015 | Partial | TK-014 missing test task |
-| TK-008..TK-015 | tasks.md | commits a1b2c3d..f9e8d7c | Yes | — |
+| TK-008..TK-015 | tasks.md | commits a1b2c3d..f9e8d7c *(agent)* | Yes | — |
 
 ## Backward Authorization (Child → Parent)
 
@@ -45,7 +45,7 @@ Generated: [YYYY-MM-DD] | Command: /vdd:trace
 | PL-006 | plan.md (Feature A) | SP-004 | Yes | — |
 | PL-007 | plan.md (Feature B) | SP-005 | Yes | — |
 | TK-008 | tasks.md | PL-006 | Yes | — |
-| commit a1b2c3d | feat(Feature A): TK-008 | TK-008 | Yes | — |
+| commit a1b2c3d *(agent)* | feat(Feature A): TK-008 | TK-008 | Yes | — |
 
 ## Orphan Detection
 
@@ -70,15 +70,15 @@ Generated: [YYYY-MM-DD] | Command: /vdd:trace
 | AC-E1 | MUST | user.test.ts → test_invalidEmail | user-repo.ts → validateEmail | PASS |
 | AC-3 | SHOULD | — | — | NOT IMPLEMENTED |
 
-## S&T Assumption Status (All Gates)
+## Coverage Status (All Junctions)
 
-| Gate | Assumption | Status | Evidence |
-|------|-----------|--------|----------|
-| G1 (V→S) | Necessity | VALID | Strategy research was required to identify viable approaches |
-| G1 (V→S) | Achievability | VALID | All vision goals have implementation paths |
-| G1 (V→S) | Sufficiency | VALID | Strategy covers all vision goals |
-| G1 (V→S) | Warnings | MONITORED | 2/3 identified risks did not materialize; 1 monitored |
-| ... | ... | ... | ... |
+| Junction | Invariant A | Invariant B | Invariant C |
+|----------|-------------|-------------|-------------|
+| V→S | every goal has a pillar | every `serves_goal` names a goal | every goal has a dedicated pillar |
+| S→A | every pillar has an action | every `serves_pillar` names a pillar | every pillar has a dedicated action |
+| A→SP | every MUST action has a spec | every `serves_action` names a MUST action | every MUST action has a dedicated spec |
+| SP→PL | every spec has a component | every `serves_spec` names a spec | every spec has a dedicated component |
+| PL→TK | every component has a task | every `serves_component` names a component | every component has a dedicated task |
 
 ## Drift Detection Summary
 
@@ -102,27 +102,29 @@ Generated: [YYYY-MM-DD] | Command: /vdd:trace
 - [Condition 1]
 ```
 
+The tool supplies the two coverage tables and the per-invariant rows above. The orphan, drift, AC-coverage and readiness sections that follow are the agent's own review: the tool reads no directory, no git history and no test file, so it cannot produce them.
+
 ---
 
 ## Automated RTM Generation
 
-The `/vdd:trace` command reads all VDD artifacts and generates the matrix automatically.
+`vdd_chain_validate` takes every artifact at once and returns the matrices together with the goal→task path check.
 
-### Algorithm
+### What the check does
+
+It reads only the text you pass. For each phase in the chain it extracts the child ids that open a
+block, reads the `serves_*` field from each block, and builds `matrix[parent] = [children]`. Then:
 
 ```
-1. Walk vdd/ directory for all .md files
-2. Extract Impact Chain headers from each file
-3. Build parent → child map from chain headers
-4. Build child → parent map (reverse of above)
-5. Detect orphans: files modified in git that have no task coverage
-6. Detect uncovered: parent artifacts with no children
-7. Scan test files for AC references
-8. Scan implementation files for contract references
-9. Run drift checks (API signatures vs contracts, DB schema vs data-model)
-10. Validate S&T assumptions from each gate's documentation
-11. Output RTM markdown
+1. Every parent row must have at least one child            (invariant A)
+2. Every child must name a parent the artifact declares     (invariant B)
+3. Every parent must have a child no other parent shares    (invariant C)
+4. Every declared count the phase consumes must equal the text
+5. Every `V-###` must reach a `TK-###` through the merged matrices
 ```
+
+It reads no directory, no git history, no test file and no contract: the artifacts are its only
+input. Drift between code and contract is a review question, not a machine check in 2.0.0.
 
 ### CI/CD Integration
 

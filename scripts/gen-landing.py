@@ -19,7 +19,7 @@ DOCS = "https://vdd.simonmak.com"
 REPO = "https://github.com/simonmak-ascent/vision-driven-design"
 NPM = "https://www.npmjs.com/package/@simonmak-ascent/mcp"
 REGISTRY = "com.ascent-partners/vision-driven-design"
-VERSION = "1.10.1"
+VERSION = "2.0.0"
 
 TECH = "https://www.ascent-partners.com/services/technology-advisory"
 CONTACT = "https://www.ascent-partners.com/about#contact"
@@ -32,19 +32,19 @@ L = {
         "nav": "Open Tooling",
         "name": "Vision Driven Design",
         "type": "MCP server",
-        "value": "Give AI coding agents a spec-driven methodology — 8 phases with bi-directional traceability and 7 quality gates.",
-        "thesis": "A methodology for AI coding agents: eight phases, seven gates — so “done” means traceable, not just working.",
+        "value": "Give AI coding agents a spec-driven methodology — 8 phases with bi-directional traceability, judged by three coverage invariants.",
+        "thesis": "A methodology for AI coding agents: eight phases, three invariants — so “done” means traceable, not just working.",
         "stats": [
-            ("14", "tools"),
+            ("3", "tools"),
             ("8", "phases"),
-            ("108", "gate checks"),
+            ("9", "skills"),
             ("MIT", "open source"),
         ],
         "caps_h": "Capabilities",
         "caps": [
-            "14 tools over Streamable HTTP",
+            "3 tools and 9 skills over Streamable HTTP",
             "Vision → strategy → tactics → specs → plan → tasks → implement → validate",
-            "7 bi-directional gates (108 checks); DO-178C / IEC 62304 / CMMI alignment",
+            "Three coverage invariants over a parent→child matrix; DO-178C / IEC 62304 / CMMI alignment",
         ],
         "standards_h": "Standards",
         "standards": ["DO-178C", "IEC 62304", "CMMI"],
@@ -75,19 +75,19 @@ L = {
         "nav": "开放工具",
         "name": "Vision Driven Design",
         "type": "MCP 服务器",
-        "value": "为 AI 编码代理提供规格驱动的方法论——8 个阶段、双向可追溯性及 7 个质量门。",
-        "thesis": "面向 AI 编码代理的方法论：八个阶段、七道质量门——让「完成」意味着可追溯，而非仅仅能跑。",
+        "value": "为 AI 编码代理提供规格驱动的方法论——8 个阶段、双向可追溯性及三项覆盖不变量。",
+        "thesis": "面向 AI 编码代理的方法论：八个阶段、三项不变量——让「完成」意味着可追溯，而非仅仅能跑。",
         "stats": [
-            ("14", "个工具"),
+            ("3", "个工具"),
             ("8", "个阶段"),
-            ("108", "项质量检查"),
+            ("9", "项技能"),
             ("MIT", "开源"),
         ],
         "caps_h": "能力",
         "caps": [
-            "通过 Streamable HTTP 提供 14 个工具",
+            "通过 Streamable HTTP 提供 3 个工具与 9 项技能",
             "愿景 → 策略 → 战术 → 规格 → 计划 → 任务 → 实施 → 验证",
-            "7 个双向质量门（108 项检查）；对齐 DO-178C / IEC 62304 / CMMI",
+            "三项覆盖不变量（A 前向、B 后向、C 专属）；对齐 DO-178C / IEC 62304 / CMMI",
         ],
         "standards_h": "准则",
         "standards": ["DO-178C", "IEC 62304", "CMMI"],
@@ -118,19 +118,19 @@ L = {
         "nav": "開放工具",
         "name": "Vision Driven Design",
         "type": "MCP 伺服器",
-        "value": "為 AI 編碼代理提供規格驅動的方法論——8 個階段、雙向可追溯性及 7 個質量門。",
-        "thesis": "面向 AI 編碼代理的方法論：八個階段、七道質量門——讓「完成」意味著可追溯，而非僅僅能跑。",
+        "value": "為 AI 編碼代理提供規格驅動的方法論——8 個階段、雙向可追溯性及三項覆蓋不變量。",
+        "thesis": "面向 AI 編碼代理的方法論：八個階段、三項不變量——讓「完成」意味著可追溯，而非僅僅能跑。",
         "stats": [
-            ("14", "個工具"),
+            ("3", "個工具"),
             ("8", "個階段"),
-            ("108", "項質量檢查"),
+            ("9", "項技能"),
             ("MIT", "開源"),
         ],
         "caps_h": "能力",
         "caps": [
-            "透過 Streamable HTTP 提供 14 個工具",
+            "透過 Streamable HTTP 提供 3 個工具與 9 項技能",
             "願景 → 策略 → 戰術 → 規格 → 計劃 → 任務 → 實施 → 驗證",
-            "7 個雙向質量門（108 項檢查）；對齊 DO-178C / IEC 62304 / CMMI",
+            "三項覆蓋不變量（A 前向、B 後向、C 專屬）；對齊 DO-178C / IEC 62304 / CMMI",
         ],
         "standards_h": "準則",
         "standards": ["DO-178C", "IEC 62304", "CMMI"],

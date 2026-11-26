@@ -1,7 +1,7 @@
 {
   "name": "@simonmak-ascent/cli",
-  "version": "1.10.1",
-  "description": "Vision Driven Design CLI \u2014 16 subcommands driving the 8-phase VDD chain (Vision \u2192 Strategy \u2192 Tactics \u2192 Spec \u2192 Plan \u2192 Tasks \u2192 Implement \u2192 Validate) with 7 bi-directional quality gates.",
+  "version": "2.0.0",
+  "description": "Vision Driven Design CLI — 3 subcommands driving the 8-phase VDD chain (Vision → Strategy → Tactics → Spec → Plan → Tasks → Implement → Validate) with three coverage invariants.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

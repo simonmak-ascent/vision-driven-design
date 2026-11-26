@@ -255,7 +255,7 @@ Derived from: `vdd/vision.md`
 
 ## S&T Assumptions (Strategy → Tactics)
 
-<!-- Filled by AI during Gate G2 — how this Strategy decomposes into Tactics -->
+<!-- Filled by the agent: how this Strategy decomposes into Tactics -->
 
 **Necessity:** Why is Tactical-level action-item breakdown necessary to execute this Strategy?
 
@@ -320,7 +320,7 @@ Derived from: `vdd/strategy.md`
 
 ## Prioritized Action Items
 
-<!-- Each action item feeds directly into a spec.md via /vdd:specify.
+<!-- Each action item feeds directly into a spec.md via the `vdd-specs` skill.
      Priority follows MoSCoW: [MUST] = required for vision, [SHOULD] = important, [COULD] = nice -->
 
 | ID | Action Item | Priority | Serves | Estimated Spec Size | Dependencies |
@@ -349,7 +349,7 @@ A-002 (UI) ────┘
 
 ## S&T Assumptions (Tactics → Specs)
 
-<!-- Filled by AI during Gate G3 — how Tactics decompose into Specs -->
+<!-- Filled by the agent: how Tactics decompose into Specs -->
 
 **Necessity:** Why are Spec-level requirements necessary to execute these Tactical action items?
 
@@ -842,7 +842,7 @@ Date: [YYYY-MM-DD]
 | Achievability (V→S) | Yes | All strategic pillars have implementation paths |
 | Sufficiency (V→S) | Yes | Strategy covers all vision goals |
 | Warnings (V→S) | Yes | All warnings monitored; no violations detected |
-| ... (repeat for all 7 gates) | ... | ... |
+| ... (one row per invariant: A, B, C) | ... | ... |
 
 ## Drift Report
 

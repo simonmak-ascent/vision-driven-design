@@ -29,7 +29,7 @@ test('AC-E1: Empty title rejected', async ({ page }) => {
   await expect(page.locator('text=Title must be between')).toBeVisible();
 });
 ```
-- **Phase 8 (Validate)**: Gate G7 checks that every UI MUST AC has a passing Playwright test.
+- **Phase 8 (Validate)**: the review confirms that every UI MUST acceptance criterion has a passing Playwright test; the tool checks the chain, not the test runner.
 
 ### Browserless — Headless Automation & Visual Regression
 
@@ -59,7 +59,7 @@ await browserless.run_performance_audit({
 ### Linting & Type-Checking (ESLint, TypeScript strict mode)
 
 - Must be in CI pipeline. VDD's constitution declares the lint/typecheck rules.
-- Gate G6 checks: no lint violations in committed code.
+- The implement-phase checklist: no lint violations in committed code.
 
 ### Accessibility Audit (axe-core / Lighthouse a11y)
 
@@ -91,7 +91,7 @@ Sentry.init({
   environment: process.env.NODE_ENV,
 });
 ```
-- **Phase 8 (Validate)**: Impact report must include Sentry error rate and p95 latency compared to vision success metrics. Drift detection: if production error rate exceeds vision threshold, gate G7 fails.
+- **Phase 8 (Validate)**: Impact report must include Sentry error rate and p95 latency compared to vision success metrics. Drift is a review judgement: if the production error rate exceeds the vision threshold, the report says so — no automated check compares them.
 
 ### Monitoring & Alerting (Prometheus + Grafana / Datadog / New Relic)
 

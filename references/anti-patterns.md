@@ -40,7 +40,7 @@ The most common VDD failure modes, their symptoms, and how to fix them.
 
 ---
 
-## Anti-Pattern 4: Skipping the Bi-Directional Gates
+## Anti-Pattern 4: Skipping the Coverage Check
 
 **Symptoms:**
 - Gates are treated as optional formalities
@@ -48,7 +48,7 @@ The most common VDD failure modes, their symptoms, and how to fix them.
 - Backward verification is never run — no one checks if children trace to approved parents
 - Orphans accumulate (code with no spec, specs with no tactical origin)
 
-**Fix:** In full-auto mode, gates are self-gates but they ARE run. AI must output the gate report for every junction. In gated mode, human must review the gate report before proceeding. Gates that are skipped produce untraceable work.
+**Fix:** In full-auto mode the check is self-imposed, but it IS run. The agent must call `vdd_check` and read the matrix at every junction. In gated mode, the human must review the matrix before proceeding. Gates that are skipped produce untraceable work.
 
 ---
 
@@ -59,7 +59,7 @@ The most common VDD failure modes, their symptoms, and how to fix them.
 - strategy.md has pillars for "enterprise supply chain", "commodities trading desk", "agricultural insurance"
 - Strategy invents scope the vision never asked for
 
-**Fix:** Backward verification (Gate G1-B1.4): every strategic pillar must trace to a specific vision goal. If a pillar can't trace back, it's out of scope. AI must remove or justify it.
+**Fix:** Backward verification (invariant B): every strategic pillar must trace to a specific vision goal. If a pillar can't trace back, it's out of scope. AI must remove or justify it.
 
 ---
 
@@ -83,7 +83,7 @@ The most common VDD failure modes, their symptoms, and how to fix them.
 - spec.md is missing the Impact Chain header entirely
 - Traceability matrix can't traverse past Tactics
 
-**Fix:** Every artifact template includes the Impact Chain header. CI/CD should check for its presence. The `/vdd:trace` command will flag broken chains.
+**Fix:** Every artifact template includes the Impact Chain header. CI/CD should check for its presence. The `vdd_chain_validate` command will flag broken chains.
 
 ---
 
@@ -96,7 +96,7 @@ The most common VDD failure modes, their symptoms, and how to fix them.
 
 **Fix:** Lock contracts/ after Phase 5 approval. If a contract needs to change:
 1. Stop Phase 7
-2. Run `/vdd:amend` to cascade the change
+2. Run `vdd_amend` to cascade the change
 3. Update spec, plan, contracts, tasks
 4. Resume Phase 7 from affected task
 
@@ -120,7 +120,7 @@ The most common VDD failure modes, their symptoms, and how to fix them.
 - spec.md now describes what was built, not what was wanted
 - Future features are planned against a spec that documents past drift
 
-**Fix:** Code must conform to spec. Never the reverse. If the spec is genuinely wrong, run `/vdd:amend` to update the full chain — don't patch spec.md in isolation.
+**Fix:** Code must conform to spec. Never the reverse. If the spec is genuinely wrong, run `vdd_amend` to update the full chain — don't patch spec.md in isolation.
 
 ---
 
@@ -143,7 +143,9 @@ The most common VDD failure modes, their symptoms, and how to fix them.
 - Strategy lacks UX considerations, accessibility requirements, browser support matrix
 - Implementation discovers missing patterns weeks later
 
-**Fix:** Phase 2 Step 2.1 is mandatory: AI must load domain-primers matching the vision's target domains. The AI must cite domain-primer research in strategy.md. If a domain is declared but not researched, Gate G1 fails.
+**Fix:** Phase 2 Step 2.1 is mandatory: AI must load domain-primers matching the vision's target domains. The AI must cite domain-primer research in strategy.md. This one has no automated check: the coverage invariants judge ids and serves links, not whether the
+research was done, so an un-researched domain passes the tool and fails in review. The skill's
+checklist is the only place it is caught — which is why it is a checklist item and not a gate.
 
 ---
 
@@ -303,7 +305,7 @@ The AI picks an answer. It's wrong. Now you have drift baked into the implementa
 **Symptoms:**
 - tasks.md has entries like "Implement UserRepository" with no AC citation
 - During Phase 7, AI asks "what should happen when the user isn't found?"
-- Gate G6 cannot be verified — unknown which ACs each task was supposed to cover
+- the goal→task path check cannot be verified — unknown which ACs each task was supposed to cover
 - Test tasks pass but the wrong behavior is tested
 - Two tasks implement overlapping behavior; one AC is never covered
 
@@ -355,12 +357,12 @@ A task that can be described in one sentence is the right size.
 
 **The trap:** VDD's chain produces artifacts automatically. If the gates only check traceability (does X trace to Y?) but don't check substance (did X actually change anything?), the methodology becomes a ceremony factory — producing process artifacts that look complete but deliver zero impact.
 
-**Fix:** Every VDD gate must include a substance check:
-- **G1**: Strategy pillars must cite research. "Improve UX" with no citation = rejected.
-- **G3**: Specs must have ≥1 MUST AC. Zero MUSTs = rejected.
-- **G6**: Commits must change behavior. Comment-only changes = rejected.
-- **G7**: Full-chain substance audit — if any artifact is purely ceremonial, the chain is tainted.
+**Fix:** the check must run over the artifact text, not over the claim that it was written:
+- A strategy pillar must cite the research that produced it — "improve UX" with no source is not a pillar.
+- A spec must carry at least one MUST acceptance criterion. Zero MUSTs means nothing is required.
+- An action item must change behaviour. A comment-only change has no task behind it.
+- The chain check reports the matrix it built: a goal with no path to a task is visible as an unreached goal.
 
-The substance principle: **"What did this actually change?"** If the answer is "nothing" or "added a comment," the gate fails regardless of traceability coverage.
+The substance principle: **"What did this actually change?"** If the answer is "nothing" or "added a comment," the artifact fails regardless of how neatly it traces.
 
 Run `scripts/vdd-substance-audit.sh` to automatically detect low-substance artifacts.

@@ -8,7 +8,7 @@ import { CHECK_PHASES, runAmend, runChainCheck, runPhaseCheck, type CheckPhase }
 // the tool returns — the CLI adds no judgement of its own.
 
 const program = new Command();
-program.name('vdd').description('Vision Driven Design — judge a chain, do not generate one').version('1.10.1');
+program.name('vdd').description('Vision Driven Design — judge a chain, do not generate one').version('2.0.0');
 
 async function readArtifact(path: string): Promise<string> {
   return readFile(path, 'utf8');

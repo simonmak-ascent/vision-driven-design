@@ -8,7 +8,7 @@
 // import. Nothing about a tool — its schema, its checks, its output — is stated
 // twice.
 
-const SERVER_VERSION = '1.10.1';
+const SERVER_VERSION = '2.0.0';
 
 const DOCS = {
   name: 'vdd',

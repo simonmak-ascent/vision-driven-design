@@ -1,5 +1,43 @@
 # Changelog
 
+## [2.0.0] - 2026-11-27
+
+A capability collapse: fourteen generation tools and twenty prompts become three tools that judge an
+artifact, plus nine skills that tell an agent how to write one. Nothing generates content, calls a
+model or writes a file — you pass the text in, and the answer is a coverage matrix.
+
+### Removed
+- **Fourteen tools**, including `vdd_init`, `vdd_vision`, `vdd_strategize`, `vdd_tactics`,
+  `vdd_specify`, `vdd_clarify`, `vdd_plan`, `vdd_tasks`, `vdd_get_next_task`, `vdd_implement`,
+  `vdd_validate`, `vdd_inspect`, `vdd_detect_environment`, and `vdd_amend` in its old shape.
+- **Twenty prompts**, and `prompts/list` now answers `{prompts: []}`.
+- **The seven counted gates and their check catalogue**, replaced by three coverage invariants.
+- `api/_vdd-rpc.js` (1,536 lines), `packages/vdd-engine/src/engine.ts` (1,593 lines), `meta.ts` and
+  `project-root.ts`; six test files went with the code they named.
+- `projectRoot`, `feature`, the delegation envelope and every filesystem write. The server is pure.
+
+### Added
+- **`vdd_check`**, **`vdd_chain_validate`**, **`vdd_amend`** — one implementation, behind stdio and
+  the Vercel function alike.
+- **Three invariants** over a parent→child matrix: A forward completeness, B backward soundness, C a
+  dedicated child per parent — the structural answer to the "A-001-only" artifact.
+- **Nine skills** served as `skill://<name>/SKILL.md` through the Skills extension (SEP-2640).
+- **MCP revision `2026-07-28`**: stateless, `server/discover`, `resultType` on every result, and no
+  `Mcp-Session-Id` ever minted.
+- `references/coverage-invariants.md`, `docs/migration-2.0.md`, and a count-parity control that fails
+  the suite when a retired claim survives on the live surface.
+
+### Migration
+- `docs/migration-2.0.md` names the successor for every removed tool and prompt, including the three
+  tools and four prompts that have none.
+- Declared-vs-declared count pairs are gone: `vdd_check` compares what you declared with what the text
+  contains, and the tactics phase reports the cross-key gap the reference fixture pins.
+
+### Supersedes
+- `docs/plan.md`'s C-series (a five-tool registry) and `docs/plan-vision-skill-only.md` (1.11.0,
+  paused): the surface is three tools, not five, and the skill manifest is compiled into `dist`
+  rather than loaded at runtime.
+
 ## [1.10.1] - 2026-11-26
 
 ### Security

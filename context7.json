@@ -1,7 +1,7 @@
 {
   "$schema": "https://context7.com/schema/context7.json",
   "projectTitle": "Vision Driven Design (VDD)",
-  "description": "Spec-driven development methodology and MCP server for AI coding agents: 8 phases from vision to validation, bi-directional V→S→T→SP→PL→TK traceability, and 7 quality gates, exposed as 14 `vdd_*` tools over stdio or Streamable HTTP.",
+  "description": "Spec-driven development methodology and MCP server for AI coding agents: 8 phases from vision to validation, bi-directional V→S→A→SP→PL→TK traceability, and three coverage invariants, exposed as 3 `vdd_*` tools over stdio or Streamable HTTP.",
   "folders": [
     "docs",
     "references",
@@ -10,12 +10,11 @@
   ],
   "rules": [
     "Connect the hosted endpoint https://vdd.simonmak.com/api/mcp (Streamable HTTP, no API key) or run locally with `npx -y @simonmak-ascent/mcp`.",
-    "Run `vdd_init` first (writes constitution.md), then follow the phase order vdd_vision → vdd_strategize → vdd_tactics → vdd_specify → vdd_clarify → vdd_plan → vdd_tasks → vdd_get_next_task → vdd_implement → vdd_validate.",
-    "Use the same `projectRoot` for every phase; later phases resolve artifacts under vdd/ against it.",
-    "vdd_get_next_task, vdd_implement, vdd_clarify, vdd_inspect and vdd_amend are read-only: they return instructions and the host agent performs the file edits and commits.",
-    "The hosted endpoint is stateless with no filesystem: filesystem-dependent tools return a delegation envelope — re-call the same tool with artifactFiles (and codebaseAudit for vdd_tactics) for the real result, or run the local stdio server (npx -y @simonmak-ascent/mcp).",
-    "To change an existing constitution or requirement, use vdd_amend to plan the downward V→S→T→SP→PL→TK cascade instead of re-running earlier phases.",
-    "Run vdd_detect_environment before vdd_strategize to check which host tools each phase requires."
+    "Read the phase's skill first (`skills/<name>/SKILL.md`, served as `skill://<name>/SKILL.md`), write the artifact yourself, then call `vdd_check` with `{phase, content, priorArtifacts}`.",
+    "`vdd_check` judges one artifact; `vdd_chain_validate` judges all six at once and checks every goal reaches a task; `vdd_amend` lists the downstream artifacts a change invalidates.",
+    "No tool writes files, reads a filesystem or calls a model. There is no `projectRoot` and no write path: the host agent owns every edit.",
+    "A PASS requires invariants A, B and C together: every parent has a child, every child names a known parent, every parent has a dedicated child.",
+    "`prompts/list` returns `[]`. 2.0.0 ships no prompts — the nine skills are the procedures."
   ],
   "excludeFolders": [
     "node_modules",
