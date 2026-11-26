@@ -5,6 +5,13 @@ on:
     paths:
       - 'vdd/**'
       - 'references/**'
+      - 'packages/**'
+      - 'api/**'
+      - 'scripts/**'
+      - 'docs/**'
+      - 'package.json'
+      - 'server.json'
+      - 'vitest.config.ts'
   push:
     branches: [main]
 

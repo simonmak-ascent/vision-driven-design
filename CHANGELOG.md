@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.10.1] - 2026-11-26
+
+### Security
+- **`zod` 3.23 → 4.6.6** in `@simonmak-ascent/engine`. Closes Dependabot alerts 5 and 6 (high).
+- **`zod` declaration removed from `@simonmak-ascent/cli`** — it never imported it; the package
+  consumed zod only transitively through the engine.
+- **`vitest` 2.1 → 4.1.11** in `vdd-engine` and `vdd-mcp`, with `vite` 7 declared because vitest 4
+  requires it as a peer. Closes alerts 1–4 (two critical, two medium).
+
+### Added
+- `packages/vdd-engine/test/types-schema.test.ts` pins the engine's **published** schema surface by
+  importing only from `src/index.js` — every other engine test imports the internals, so a lost
+  re-export in the entry point would previously have gone unnoticed.
+
+### Upgrade notes — consuming `@simonmak-ascent/engine`
+The exported schemas (`VddContext`, `VddOutput`, `VddPhaseInput`, `VddMode`, `Constitution`) are now
+built by zod 4. If you use them:
+- compose or extend them only with `zod@^4.6.6`; a zod 3 copy in the same process will not interoperate;
+- errors thrown by `.parse()` are zod 4 `ZodError` objects — read `.issues` and `z.treeifyError()`,
+  not `.errors`; `format()` and `flatten()` are deprecated;
+- `instanceof` against a zod 3 `ZodError` no longer matches.
+- If those three actions are not acceptable in a patch release note, the correct version is `2.0.0`,
+  not `1.10.1` — this release is deliberately a patch, not an oversight.
+
 ## [1.10.0] - 2026-11-26
 
 ### Added (MCP prompts — full phase command set)
