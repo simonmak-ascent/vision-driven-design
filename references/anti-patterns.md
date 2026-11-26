@@ -48,7 +48,7 @@ The most common VDD failure modes, their symptoms, and how to fix them.
 - Backward verification is never run — no one checks if children trace to approved parents
 - Orphans accumulate (code with no spec, specs with no tactical origin)
 
-**Fix:** In full-auto mode the check is self-imposed, but it IS run. The agent must call `vdd_check` and read the matrix at every junction. In gated mode, the human must review the matrix before proceeding. Gates that are skipped produce untraceable work.
+**Fix:** In full-auto mode the check is self-imposed, but it IS run. The agent must call `vdd_check` and read the matrix at every junction. In gated mode, the human must review the matrix before proceeding. A check that is skipped produces untraceable work.
 
 ---
 

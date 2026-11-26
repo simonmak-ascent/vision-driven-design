@@ -74,7 +74,7 @@ vdd/
 | "Show me traceability from requirements to code" | Impact Chain headers + `vdd_chain_validate` output |
 | "Prove every requirement was tested" | AC Coverage table in impact-report.md |
 | "How do you handle requirement changes?" | `vdd_amend` — cascading change log |
-| "Where are your risk controls?" | `[SAFETY]` ACs + safety gate checklist |
+| "Where are your risk controls?" | `[SAFETY]` ACs + safety checklist |
 | "How do you know the code matches the spec?" | The task→goal path check in `vdd_chain_validate` |
 | "What's your peer review process?" | Critic agents (Phase 4–6) + PR review (Phase 7) + human sign-off (gated mode) |
 | "How do you manage configuration?" | `constitution.md` (immutable rules) + git (versioned artifacts) |

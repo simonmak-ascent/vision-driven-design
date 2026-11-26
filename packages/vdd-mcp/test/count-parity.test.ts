@@ -107,6 +107,8 @@ const RETIRED = [
   '1.10.1',
   'Bi-Directional Gates',
   'gate report',
+  'safety gate checklist',
+  'Gates that are skipped',
   'drift report',
   'drift detection',
   'Auto-Generated',
