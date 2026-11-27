@@ -29,8 +29,18 @@ jobs:
       - name: Build workspace packages
         run: pnpm -r build
 
+      # A tag is not evidence the suite passed: CI runs on pull requests and pushes to
+      # branches, and a tag push is a separate event. 2.0.0 shipped with a hosted endpoint
+      # that returned 500 for every method, so the suite runs here, on the tree the tag
+      # points at, before anything reaches the registry. What catches that class is
+      # `hosted-bundle.test.ts` — added by the fix, not by this step: it rebuilds the
+      # bundle from the dist just built and calls the real handler from a directory with
+      # no `node_modules` above it, which is the deploy's own condition.
+      - name: Check and test the tagged tree
+        run: pnpm check && pnpm test
+
       - name: Publish packages
-        run: pnpm -r publish --access public --no-git-checks
+        run: pnpm -r publish --access public --no-git-checks --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
