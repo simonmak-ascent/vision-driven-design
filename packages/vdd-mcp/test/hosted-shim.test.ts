@@ -45,7 +45,11 @@ describe('hosted CJS adapter', () => {
         method: 'tools/call',
         params: {
           name: 'vdd_check',
-          arguments: { phase: 'vision', content: '## Chain projection\n- V-001 → OBJ-001\n' },
+          arguments: {
+            phase: 'vision',
+            content:
+              '## §3 Vision, goal, objectives\n- OBJ-001 — metric: m · baseline → target: 1 → 2\n\n## Chain projection\n- V-001 → OBJ-001\n',
+          },
           _meta: META,
         },
       },

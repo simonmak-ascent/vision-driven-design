@@ -83,7 +83,7 @@ src/
 
 ## vision.md Template
 
-*Created once per product/feature. Projects the selected objectives of a v16 vision-framework artifact into the chain. Human provides a freeform statement; AI formalises it into this template. The objective id is authoritative — see `docs/vision-framework-v17.md`.*
+*Created once per product/feature. Projects the selected objectives of a v18 vision-framework artifact into the chain, and carries v18 §2's field inventory. Human provides a freeform statement; AI formalises it into this template. The objective id is authoritative — see `docs/vision-framework-v17.md` and `docs/vision-framework-v18.md`.*
 
 ```markdown
 # Vision
@@ -101,61 +101,69 @@ Last updated: [YYYY-MM-DD]
 - verbatim: [the human's words, or a redacted summary where the host or repo is not approved for the classification]
 - classification: [outcome | problem | solution | mixed]
 - preset: [product | feature | lean]
-- sensitivity: [public | internal | confidential | personal | unclassified] — basis: [why]
+- sensitivity: [public | internal | confidential | personal | unclassified]
+- sensitivity_rule: [one handling rule for this label — public may egress; every other label is local-only unless agreed]
 - research_mode: [egress | local-only]
+- egress_agreement: [the human's verbatim words, with the date] — required when research_mode is egress
 - owner: [name] · date: [YYYY-MM-DD]
-- egress agreement: [the human's verbatim words, with the date] — required when research_mode is egress
-- claim ledger: represented [n] · deferred+trigger [n] · rejected+reason [n] · out_of_scope+reason [n]
-- questions: [text — default — answer or hypothesis — consent]
-- evidence used per task: [observation and problem ids]
-- fan_out: [one integer within the preset bound] · candidate count = clusters × fan_out
+- claim_ledger: represented [n] · deferred+trigger [n] · rejected+reason [n] · out_of_scope+reason [n]
+- locator: [the source location for each represented claim and each observation]
+- questions: [text — default — answer or hypothesis — validated_by]
+- validated_by: [name and date for an answered question; the retirement owner for a default]
+- evidence_by_task: [the observation and problem ids each research task produced]
 - grid: [problems × material actors × approaches — every cell has a candidate or `excused + reason`]
+- grid_sampling: [the rule by which cells were sampled — a not-sampled cell carries its reason]
+- gate_criteria: [the ordinal criteria and thresholds §6 decides against, declared before §5]
 
 ### §1 Observations (1–5)
 
-| ID | Text | Quote | Locator | Source | Date | Type | Triangulated | Limitation | Recency window | Stale |
-|----|------|-------|---------|--------|------|------|--------------|------------|----------------|-------|
-| OB-001 | [what was observed] | [verbatim quote] | [page or section] | [source] | [YYYY-MM-DD] | primary · preprint · vendor · news · other | true · false | required when false | … | true · false |
+| ID | Text | Quote | Locator | Source | Date | Type | Triangulated | Limitation | Searched | revalidate_by | Stale |
+|----|------|-------|---------|--------|------|------|--------------|------------|----------|---------------|-------|
+| OB-001 | [what was observed] | [verbatim quote] | [page or section] | [publisher] | [YYYY-MM-DD] | primary · preprint · vendor · news · other | true · false | required when false | [date retrieved] | [date or trigger] | true · false |
 
 ### §2 Problems (1–5)
 
-| ID | Text | Observations | Baseline or measurement plan | Unit | Hypothesis | Hypothesis reason |
-|----|------|--------------|------------------------------|------|------------|-------------------|
-| PR-001 | [the problem] | OB-001 | [how it is measured today, or how it will be] | [unit] | true · false | required when true |
+| ID | Text | Observations | Baseline or measurement plan | Unit | Hypothesis | hypothesis_reason | hypothesis_test | disconfirming_result |
+|----|------|--------------|------------------------------|------|------------|-------------------|-----------------|----------------------|
+| PR-001 | [the problem] | OB-001 | [how it is measured today, or how it will be] | [unit] | true · false | required when true | [the test that could disconfirm it] | [a value in unit, with direction and date, at which it is abandoned] |
 
 ### §3 Vision, goal, objectives
 
 - statement: [one sentence — the future state this product creates]
 - horizon: [when it is true]
-- GOAL: [the outcome the objectives add up to]
-- non-goals: [what this vision explicitly does not do — the `out_of_scope` claim-ledger entries and their reasons]
+- goal: [the outcome the objectives add up to]
+- non_goals: [what this vision explicitly does not do — the `out_of_scope` claim-ledger entries and their reasons]
 - objectives:
-  - OBJ-001 — metric: [name] · baseline → target: [value → value] · horizon: [when] · software_role: [what the software does] · allocated_agent: [reallocate only]
-  - OBJ-002 — metric: [name] · baseline → target: [value → value] · horizon: [when] · software_role: [what the software does] · allocated_agent: [reallocate only]
+  - OBJ-001 — metric: [name] · baseline → target: [value → value] · horizon: [when] · software_role: [what the software does] · instrument: [the named measurement instrument] · allocated_agent: [reallocate only]
+  - OBJ-002 — metric: [name] · baseline → target: [value → value] · horizon: [when] · software_role: [what the software does] · instrument: [the named measurement instrument] · allocated_agent: [reallocate only]
 
 ### §4 5Ws
 
 - 4.0 principles: [3–7, each testable]
-- 4.1a forces: [industry analysis; a force is a tag on an actor — rivalry | entrants | substitutes | suppliers | buyers | contextual — never a standalone actor]
-- 4.1b actors: [affected · decides · blocks · pays · supplies — each with interest, influence, stance, salience, engagement, material, source. No software components]
+- 4.1a forces: [the industry screen — rivalry | entrants | substitutes | suppliers | buyers | contextual; a force is a tag, never a standalone actor]
+- 4.1b actors: [affected · decides · blocks · pays · supplies — actor-first, no software components]
+  - [actor] — interest: [what they want] · influence: [high | medium | low] · stance: [supportive | neutral | resistant] · power: [yes | no] · legitimacy: [yes | no] · urgency: [yes | no] · salience_class: [definitive (3) | expectant (2) | latent (1), derived not judged] · engagement: [how] · material: [true when interest is non-empty and stance is stated] · source: [where this is evidenced]
 - 4.2 where: [place] · 4.3 when: [time window]
 - 4.4 envelope: [constraints, regulatory and technical domains]
-- 4.5 impacts: [actor, measurement, objective]
-- 4.6 approaches: [the approaches considered]
+- context: [users · tasks · equipment · environment — ISO 9241-11]
+- 4.5 impacts: [actor, measurement, objective — at least two actors]
+- 4.6 approaches: [2–4, each mapped to impacts]
 
 ### §5 Software possibility space
 
-| ID | Capability | PR | OBJ | Impacts | Where | When | Actor | Approach | M (metric, baseline/plan, target, method) | Evidence tier | Principles | Horizon | Capability key | derives_from | Lenses |
-|----|-----------|----|-----|---------|-------|------|-------|----------|-------------------------------------------|---------------|------------|---------|----------------|--------------|--------|
-| C-001 | [one verb + object] | PR-001 | OBJ-001 | [impact] | … | … | … | … | [metric, baseline/plan, target, method] | EV1 · EV2 · EV3 | … | … | … | … | … |
+| ID | Capability | PR | OBJ | Impacts | Where | When | Actor | Approach | M (metric, baseline/plan, target, method) | Evidence | downgrades | Principles | Horizon | capability_key | derives_from |
+|----|-----------|----|-----|---------|-------|------|-------|----------|-------------------------------------------|----------|------------|------------|---------|----------------|--------------|
+| C-001 | [one verb + object: an outcome-bearing ability, not a feature] | PR-001 | OBJ-001 | [impact] | … | … | … | … | [metric, baseline/plan, target, method] | [named source or method] | [GRADE domains that lower certainty: risk of bias, inconsistency, indirectness, imprecision, publication bias] | … | … | … | … |
 
-No scores, ranks, buckets or confidence levels.
+The capabilities table is the possibility space: each row is an outcome-bearing ability the software
+provides. No aggregate scores, ranks, buckets or confidence levels.
 
 ### §6 Decision
 
-- owner: [name] · date: [YYYY-MM-DD] · outcome: [approve | reallocate | …] · criteria: [what was checked]
-- review date: [YYYY-MM-DD]
-- review points: [the four review points, each with its recorded answer, reviewer principal, at, and the displayed evidence ids — at V3 and V11 the quote and locator for every supporting observation]
+- owner: [name] · date: [YYYY-MM-DD] · outcome: [go | clarify | kill | reallocate] · criteria: [the gate_criteria met, with its threshold]
+- review_date: [YYYY-MM-DD, after the decision date]
+- review_points: [the four reviews — principal, at, displayed evidence ids; at V3 and V11 the quote and locator for every supporting observation]
+- allocated_agent: [the receiving agent, on a reallocate outcome]
 
 ## Chain projection
 
