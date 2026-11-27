@@ -13,22 +13,15 @@ Navigation map for all VDD reference files.
 ### Templates
 - All 11 artifact templates — artifact-templates.md
 
-### Prompts
-- All phase prompts + gate verification — prompt-patterns.md
-- Multi-agent review pattern — prompt-patterns.md
+### Skills
+- The nine procedures — `skills/<name>/SKILL.md`, served as `skill://<name>/SKILL.md`
 
 ### Phase Details
 - Step-by-step — workflow-phases.md
-- S&T mapping — workflow-phases.md
 
-### Quality & Gates
-- 7 bidirectional gate checklists — quality-gates.md
-- CI/CD integration — quality-gates.md
+### Quality
+- Invariants A–C, the two count rules, the reference fixture — coverage-invariants.md
 
-### AI & Agent Patterns
-- Recursive S&T, context management — ai-agent-patterns.md
-- Parallel research subagents, bidirectional verification pairs — ai-agent-patterns.md
-- Auto-mode execution — ai-agent-patterns.md
 
 ### Anti-Patterns (24)
 - All 24 failure modes and fixes — anti-patterns.md
@@ -50,17 +43,17 @@ Navigation map for all VDD reference files.
 
 ## By Phase
 
-| Phase | Templates | Prompts | Details | Quality |
-|-------|-----------|---------|---------|---------|
-| 0 — Constitution | constitution.md | constitution-prompts | workflow-phases#phase-0 | Gate 0 |
-| 1 — Vision | vision.md | vision-prompts | workflow-phases#phase-1 | self-check |
-| 2 — Strategy | strategy.md | strategy-prompts + G1 | workflow-phases#phase-2 | Gate 1 |
-| 3 — Tactics | tactics.md | tactics-prompts + G2 | workflow-phases#phase-3 | Gate 2 |
-| 4 — Specs | spec.md | specs-prompts + G3 | workflow-phases#phase-4 | Gate 3 |
-| 5 — Plan | plan.md, data-model.md, contracts | plan-prompts + G4 | workflow-phases#phase-5 | Gate 4 |
-| 6 — Tasks | tasks.md | tasks-prompts + G5 | workflow-phases#phase-6 | Gate 5 |
-| 7 — Implement | — | implement-prompts + G6 | workflow-phases#phase-7 | Gate 6 |
-| 8 — Validate | impact-report.md | validate-prompts + G7 | workflow-phases#phase-8 | Gate 7 |
+| Phase | Template | Skill | Details |
+|-------|----------|-------|---------|
+| 0 — Constitution | constitution.md | `vdd-constitution` | workflow-phases#phase-0 |
+| 1 — Vision | vision.md | `vdd-vision` | workflow-phases#phase-1 |
+| 2 — Strategy | strategy.md | `vdd-strategy` | workflow-phases#phase-2 |
+| 3 — Tactics | tactics.md | `vdd-tactics` | workflow-phases#phase-3 |
+| 4 — Specs | spec.md | `vdd-specs` | workflow-phases#phase-4 |
+| 5 — Plan | plan.md, data-model.md, contracts | `vdd-plan` | workflow-phases#phase-5 |
+| 6 — Tasks | tasks.md | `vdd-tasks` | workflow-phases#phase-6 |
+| 7 — Implement | — | `vdd-implement` | workflow-phases#phase-7 |
+| 8 — Validate | the whole chain | `vdd-validate` | workflow-phases#phase-8 |
 
 ## File List
 
@@ -69,9 +62,7 @@ Navigation map for all VDD reference files.
 | quick-reference.md | One-page cheat sheet |
 | workflow-phases.md | Phase order and steps (authoritative) |
 | artifact-templates.md | 11 artifact templates (authoritative) |
-| prompt-patterns.md | AI prompts (authoritative) |
-| quality-gates.md | 7 gates with 108 checks (authoritative) |
-| ai-agent-patterns.md | Agent orchestration (authoritative) |
+| coverage-invariants.md | invariants A–C, count rules (authoritative) |
 | anti-patterns.md | 24 failure modes (authoritative) |
 | traceability-matrix.md | RTM format + CI/CD |
 | compliance-evidence.md | Evidence maps |

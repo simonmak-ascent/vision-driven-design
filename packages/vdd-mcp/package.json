@@ -1,7 +1,7 @@
 {
   "name": "@simonmak-ascent/mcp",
-  "version": "1.10.1",
-  "description": "Vision Driven Design MCP server \u2014 14 tools for bi-directional traceability across an 8-phase, spec-driven development chain (Vision \u2192 Strategy \u2192 Tactics \u2192 Spec \u2192 Plan \u2192 Tasks) with 7 quality gates.",
+  "version": "2.0.0",
+  "description": "Vision Driven Design MCP server — 3 tools and 9 skills for bi-directional traceability across an 8-phase, spec-driven development chain (Vision → Strategy → Tactics → Spec → Plan → Tasks) with three coverage invariants.",
   "mcpName": "com.ascent-partners/vision-driven-design",
   "license": "MIT",
   "type": "module",
@@ -45,7 +45,7 @@
   },
   "author": "simonmak-ascent",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "check": "tsc --noEmit"
   },
   "dependencies": {

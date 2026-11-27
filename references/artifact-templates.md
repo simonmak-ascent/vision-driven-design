@@ -83,100 +83,89 @@ src/
 
 ## vision.md Template
 
-*Created once per product/feature. The root of all traceability. Human provides a freeform statement; AI formalizes into this template.*
+*Created once per product/feature. Projects the selected objectives of a v16 vision-framework artifact into the chain. Human provides a freeform statement; AI formalises it into this template. The objective id is authoritative — see `docs/vision-framework-v17.md`.*
 
 ```markdown
 # Vision
 
 > Impact Chain: V-001
 
-Status: Approved
+Status: Draft
 Version: 1.0
 Last updated: [YYYY-MM-DD]
 
-## Vision Statement
+## Artifact
 
-<!-- Non-technical 1-3 paragraphs describing the intended impact.
-     Who benefits? What changes in their world? Why does it matter? -->
+### §0 Input
 
-[Human's freeform vision, expanded and formalized by AI]
+- verbatim: [the human's words, or a redacted summary where the host or repo is not approved for the classification]
+- classification: [outcome | problem | solution | mixed]
+- preset: [product | feature | lean]
+- sensitivity: [public | internal | confidential | personal | unclassified] — basis: [why]
+- research_mode: [egress | local-only]
+- owner: [name] · date: [YYYY-MM-DD]
+- egress agreement: [the human's verbatim words, with the date] — required when research_mode is egress
+- claim ledger: represented [n] · deferred+trigger [n] · rejected+reason [n] · out_of_scope+reason [n]
+- questions: [text — default — answer or hypothesis — consent]
+- evidence used per task: [observation and problem ids]
+- fan_out: [one integer within the preset bound] · candidate count = clusters × fan_out
+- grid: [problems × material actors × approaches — every cell has a candidate or `excused + reason`]
 
-## Impact Model
+### §1 Observations (1–5)
 
-### Goal (the desired future state)
+| ID | Text | Quote | Locator | Source | Date | Type | Triangulated | Limitation | Recency window | Stale |
+|----|------|-------|---------|--------|------|------|--------------|------------|----------------|-------|
+| OB-001 | [what was observed] | [verbatim quote] | [page or section] | [source] | [YYYY-MM-DD] | primary · preprint · vendor · news · other | true · false | required when false | … | true · false |
 
-[1 sentence — the measurable outcome this product aims to create]
+### §2 Problems (1–5)
 
-### Actors (who must behave differently)
+| ID | Text | Observations | Baseline or measurement plan | Unit | Hypothesis | Hypothesis reason |
+|----|------|--------------|------------------------------|------|------------|-------------------|
+| PR-001 | [the problem] | OB-001 | [how it is measured today, or how it will be] | [unit] | true · false | required when true |
 
-| Actor | Current State | Desired State | Benefit |
-|-------|--------------|---------------|---------|
-| [Primary user] | [What they do today] | [What they will do] | [Why it's better] |
-| [Secondary user] | [What they do today] | [What they will do] | [Why it's better] |
+### §3 Vision, goal, objectives
 
-### Impacts (the behavioral changes that produce the goal)
+- statement: [one sentence — the future state this product creates]
+- horizon: [when it is true]
+- GOAL: [the outcome the objectives add up to]
+- non-goals: [what this vision explicitly does not do — the `out_of_scope` claim-ledger entries and their reasons]
+- objectives:
+  - OBJ-001 — metric: [name] · baseline → target: [value → value] · horizon: [when] · software_role: [what the software does] · allocated_agent: [reallocate only]
+  - OBJ-002 — metric: [name] · baseline → target: [value → value] · horizon: [when] · software_role: [what the software does] · allocated_agent: [reallocate only]
 
-| Impact ID | Description | Actor | Measurement |
-|-----------|-------------|-------|-------------|
-| I-001 | [Behavioral change] | [Actor] | [How to measure] |
-| I-002 | [Behavioral change] | [Actor] | [How to measure] |
+### §4 5Ws
 
-## Stakeholder Map
+- 4.0 principles: [3–7, each testable]
+- 4.1a forces: [industry analysis; a force is a tag on an actor — rivalry | entrants | substitutes | suppliers | buyers | contextual — never a standalone actor]
+- 4.1b actors: [affected · decides · blocks · pays · supplies — each with interest, influence, stance, salience, engagement, material, source. No software components]
+- 4.2 where: [place] · 4.3 when: [time window]
+- 4.4 envelope: [constraints, regulatory and technical domains]
+- 4.5 impacts: [actor, measurement, objective]
+- 4.6 approaches: [the approaches considered]
 
-| Role | Interest | Influence | Engagement Strategy |
-|------|----------|-----------|-------------------|
-| [Primary user] | [What they care about] | High | [How to involve them] |
-| [Decision maker] | [What they care about] | High | [How to involve them] |
-| [Secondary beneficiary] | [What they care about] | Medium | [How to involve them] |
+### §5 Software possibility space
 
-## Success Metrics
+| ID | Capability | PR | OBJ | Impacts | Where | When | Actor | Approach | M (metric, baseline/plan, target, method) | Evidence tier | Principles | Horizon | Capability key | derives_from | Lenses |
+|----|-----------|----|-----|---------|-------|------|-------|----------|-------------------------------------------|---------------|------------|---------|----------------|--------------|--------|
+| C-001 | [one verb + object] | PR-001 | OBJ-001 | [impact] | … | … | … | … | [metric, baseline/plan, target, method] | EV1 · EV2 · EV3 | … | … | … | … | … |
 
-### Lagging Indicators (the outcomes — measured months after launch)
+No scores, ranks, buckets or confidence levels.
 
-| Metric | Target | Measurement Method |
-|--------|--------|-------------------|
-| [e.g., User retention at day 30] | [e.g., > 40%] | [e.g., Analytics event + cohort analysis] |
-| [e.g., Net Promoter Score] | [e.g., > 50] | [e.g., In-app survey at day 14] |
+### §6 Decision
 
-### Leading Indicators (early signals — measured during build & launch)
+- owner: [name] · date: [YYYY-MM-DD] · outcome: [approve | reallocate | …] · criteria: [what was checked]
+- review date: [YYYY-MM-DD]
+- review points: [the four review points, each with its recorded answer, reviewer principal, at, and the displayed evidence ids — at V3 and V11 the quote and locator for every supporting observation]
 
-| Metric | Target | Measurement Method |
-|--------|--------|-------------------|
-| [e.g., Activation rate] | [e.g., > 60%] | [e.g., Completed key journey within first session] |
-| [e.g., Time to first value] | [e.g., < 5 min] | [e.g., Analytics event timing] |
+## Chain projection
 
-## Constraints & Boundaries
+<!-- One V-id per selected objective, in objective order. The objective is
+     authoritative: its metric, baseline and target are stated once, in §3, and
+     referenced here — never restated. Every objective needs a V-id, and every
+     V-id needs its own objective: the chain's dedicated-pillar rule starts here. -->
+- V-001 → OBJ-001
+- V-002 → OBJ-002
 
-### Constraints (non-negotiable)
-
-- [e.g., Must serve users in regions X, Y, Z]
-- [e.g., Must comply with regulation ABC]
-- [e.g., Must work offline in low-connectivity environments]
-
-### Boundaries (explicitly out of vision scope)
-
-- [e.g., Not targeting enterprise customers in v1]
-- [e.g., Not replacing existing system X — complementing it]
-
-## Target Domains
-
-<!-- Check all that apply. Load corresponding domain-primers during Strategy phase. -->
-- [ ] WebApp
-- [ ] Data Storage
-- [ ] ETL
-- [ ] Infrastructure
-
-## S&T Assumptions (Vision → Strategy)
-
-<!-- Filled by AI during Gate G1 — how this Vision decomposes into Strategy -->
-
-**Necessity:** Why is Strategy-level research necessary to achieve this Vision?
-
-**Achievability:** Why is this Vision achievable given the planned Strategy approach?
-
-**Sufficiency:** Why is the planned Strategy approach sufficient to realize this Vision?
-
-**Warnings:** What must go right / be avoided for Strategy to succeed?
 ```
 
 ---
@@ -188,7 +177,7 @@ Last updated: [YYYY-MM-DD]
 ```markdown
 # Strategy
 
-> Impact Chain: V-001 → S-002
+> Impact Chain: V-001 → S-001
 
 Status: Draft
 Version: 1.0
@@ -198,7 +187,7 @@ Last updated: [YYYY-MM-DD]
 Derived from: `vdd/vision.md`
 
 ## Domain Primers Loaded
-<!-- Determined by vision's Target Domains -->
+<!-- Determined by the domains in vision §4.4's envelope -->
 - [domain-primer 1]
 - [domain-primer 2]
 
@@ -221,7 +210,9 @@ Derived from: `vdd/vision.md`
 <!-- 3-5 pillars. Each pillar is a major theme that decomposes the vision into actionable domains.
      Every pillar maps to at least one vision goal. -->
 
-### Pillar 1: [Name]
+### S-001: [Name]
+
+- serves_goal: V-001
 
 **Rationale:** [Why this pillar exists — what vision goal does it serve?]
 
@@ -231,14 +222,18 @@ Derived from: `vdd/vision.md`
 
 **Expected Impact:** [How will this pillar contribute to the success metrics?]
 
-### Pillar 2: [Name]
+### S-002: [Name]
+
+- serves_goal: V-002
 
 **Rationale:** [Why this pillar exists]
 **Vision Trace:** [Which vision goal does this serve?]
 **Key Research Finding:** [Evidence]
 **Expected Impact:** [Contribution to metrics]
 
-### Pillar N: [Name]
+### S-003: [Name]
+
+- serves_goal: V-002
 
 **Rationale:** [...]
 **Vision Trace:** [...]
@@ -260,7 +255,7 @@ Derived from: `vdd/vision.md`
 
 ## S&T Assumptions (Strategy → Tactics)
 
-<!-- Filled by AI during Gate G2 — how this Strategy decomposes into Tactics -->
+<!-- Filled by the agent: how this Strategy decomposes into Tactics -->
 
 **Necessity:** Why is Tactical-level action-item breakdown necessary to execute this Strategy?
 
@@ -284,7 +279,7 @@ Derived from: `vdd/vision.md`
 ```markdown
 # Tactics
 
-> Impact Chain: V-001 → S-002 → T-003
+> Impact Chain: V-001 → S-001 → A-001
 
 Status: Draft
 Version: 1.0
@@ -306,34 +301,34 @@ Derived from: `vdd/strategy.md`
 
 | Debt Item | Location | Severity | Impact on Strategy |
 |-----------|----------|----------|-------------------|
-| [e.g., No input validation] | `src/api/` | High | Blocks Pillar 1 (security) |
-| [e.g., Missing indexes] | `db/schema.ts` | Medium | Slows Pillar 2 (analytics) |
+| [e.g., No input validation] | `src/api/` | High | Blocks S-001 (security) |
+| [e.g., Missing indexes] | `db/schema.ts` | Medium | Slows S-002 (analytics) |
 
 ### Reusable Assets
 
 | Asset | How It Supports Strategy | Effort to Reuse |
 |-------|------------------------|----------------|
-| [e.g., Shared component library] | Accelerates Pillar 1 UI | Low |
-| [e.g., Existing API patterns] | Consistent with Pillar 2 | Low |
+| [e.g., Shared component library] | Accelerates S-001 UI | Low |
+| [e.g., Existing API patterns] | Consistent with S-002 | Low |
 
 ## Gap Analysis
 
 | Gap | Strategic Pillar Affected | Impact if Unaddressed |
 |-----|--------------------------|----------------------|
-| [e.g., No mobile-responsive layout] | Pillar 1 (UX) | Vision target audience unreachable |
-| [e.g., No analytics pipeline] | Pillar 2 (Data) | Cannot measure success metrics |
+| [e.g., No mobile-responsive layout] | S-001 (UX) | Vision target audience unreachable |
+| [e.g., No analytics pipeline] | S-002 (Data) | Cannot measure success metrics |
 
 ## Prioritized Action Items
 
-<!-- Each action item feeds directly into a spec.md via /vdd:specify.
+<!-- Each action item feeds directly into a spec.md via the `vdd-specs` skill.
      Priority follows MoSCoW: [MUST] = required for vision, [SHOULD] = important, [COULD] = nice -->
 
-| ID | Action Item | Priority | Strategy Pillar | Estimated Spec Size | Dependencies |
-|----|------------|----------|----------------|--------------------|--------------|
-| A-001 | [e.g., User authentication with SSO] | MUST | Pillar 1 | M | None |
-| A-002 | [e.g., Responsive dashboard redesign] | MUST | Pillar 1 | L | None |
-| A-003 | [e.g., Analytics data pipeline] | SHOULD | Pillar 2 | M | A-001 |
-| A-004 | [e.g., Export to CSV] | COULD | Pillar 2 | S | A-003 |
+| ID | Action Item | Priority | Serves | Estimated Spec Size | Dependencies |
+|----|------------|----------|--------|--------------------|--------------|
+| A-001 | [e.g., User authentication with SSO] | MUST | serves_pillar: S-001 | M | None |
+| A-002 | [e.g., Responsive dashboard redesign] | MUST | serves_pillar: S-001 | L | None |
+| A-003 | [e.g., Analytics data pipeline] | SHOULD | serves_pillar: S-002 | M | A-001 |
+| A-004 | [e.g., Export to CSV] | COULD | serves_pillar: S-003 | S | A-003 |
 
 ## Dependency Map
 
@@ -354,7 +349,7 @@ A-002 (UI) ────┘
 
 ## S&T Assumptions (Tactics → Specs)
 
-<!-- Filled by AI during Gate G3 — how Tactics decompose into Specs -->
+<!-- Filled by the agent: how Tactics decompose into Specs -->
 
 **Necessity:** Why are Spec-level requirements necessary to execute these Tactical action items?
 
@@ -372,16 +367,17 @@ A-002 (UI) ────┘
 *Enhanced from SDD. Adds impact-chain header and tactical-origin reference. Generated per action item.*
 
 ```markdown
-# [Feature Name]
+# SP-001: [Feature Name]
 
-> Impact Chain: V-001 → S-002 → T-003 → SP-004
+> Impact Chain: V-001 → S-001 → A-001 → SP-001
 
 Status: Draft
 Version: 1.0
 Last updated: [YYYY-MM-DD]
 
 ## Tactical Origin
-Implements: `vdd/tactics.md` → Action Item [A-XXX]
+- serves_action: A-001
+Implements: `vdd/tactics.md` → Action Item [A-001]
 
 ## Overview
 <!-- 1-2 sentences describing the feature for a non-technical stakeholder -->
@@ -474,9 +470,10 @@ This feature will NOT include [capability]. Reason: [why it's excluded from this
 ```markdown
 # Technical Plan: [Feature Name]
 
-> Impact Chain: V-001 → S-002 → T-003 → SP-004 → PL-005
+> Impact Chain: V-001 → S-001 → A-001 → SP-001 → PL-001
 
 ## Spec Reference
+- serves_spec: SP-001
 Implements: `vdd/specs/[branch]/spec.md`
 
 ## Architecture Overview
@@ -484,14 +481,16 @@ Implements: `vdd/specs/[branch]/spec.md`
 
 ## Component Breakdown
 
-### [Component 1 Name]
+### PL-001: [Component 1 Name]
+- serves_spec: SP-001
 - **Responsibility:** [What it does]
 - **Location:** `[file path]`
 - **Accepts:** [inputs]
 - **Returns:** [outputs]
 - **AC Coverage:** AC-1, AC-2
 
-### [Component 2 Name]
+### PL-002: [Component 2 Name]
+- serves_spec: SP-001
 - **Responsibility:** [What it does]
 - **Location:** `[file path]`
 - **Accepts:** [inputs]
@@ -553,7 +552,7 @@ Implements: `vdd/specs/[branch]/spec.md`
 ```markdown
 # Data Model: [Feature Name]
 
-> Impact Chain: V-001 → S-002 → T-003 → SP-004 → PL-005
+> Impact Chain: V-001 → S-001 → A-001 → SP-001 → PL-001
 
 ## Spec Reference
 Implements: `vdd/specs/[branch]/spec.md`
@@ -597,7 +596,7 @@ Implements: `vdd/specs/[branch]/spec.md`
 ```markdown
 # API Contract: [Endpoint Name]
 
-> Impact Chain: V-001 → S-002 → T-003 → SP-004 → PL-005
+> Impact Chain: V-001 → S-001 → A-001 → SP-001 → PL-001
 
 ## [HTTP METHOD] [/path/:param]
 
@@ -658,7 +657,7 @@ Implements: `vdd/specs/[branch]/spec.md`
 ```markdown
 # Task List: [Feature Name]
 
-> Impact Chain: V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006
+> Impact Chain: V-001 → S-001 → A-001 → SP-001 → PL-001 → TK-001
 
 ## Plan Reference
 Implements: `vdd/specs/[branch]/plan.md`
@@ -667,31 +666,36 @@ Implements: `vdd/specs/[branch]/plan.md`
 
 ### Setup
 
-- [ ] **TASK-001** [S] Set up [component/module] skeleton
+- [ ] **TK-001** [S] Set up [component/module] skeleton
+  - serves_component: PL-001
   - Creates: `[file path]`
   - Depends on: none
 
 ### [Component Group]
 
-- [ ] **TASK-002** [M] [P] Write tests for [component]
+- [ ] **TK-002** [M] [P] Write tests for [component]
+  - serves_component: PL-001
   - Tests: AC-1, AC-2 from `vdd/specs/[branch]/spec.md`
-  - Depends on: TASK-001
+  - Depends on: TK-001
 
-- [ ] **TASK-003** [M] Implement [component]
+- [ ] **TK-003** [M] Implement [component]
+  - serves_component: PL-001
   - Contract: `vdd/specs/[branch]/contracts/[file].md`
   - Satisfies: AC-1, AC-2
-  - Depends on: TASK-002
+  - Depends on: TK-002
 
 ### Integration
 
-- [ ] **TASK-006** [L] Integration test: full [feature] flow
+- [ ] **TK-006** [L] Integration test: full [feature] flow
+  - serves_component: PL-001
   - Tests: AC-1 through AC-4
-  - Depends on: TASK-003, TASK-005
+  - Depends on: TK-003, TK-005
 
 ### Cleanup
 
-- [ ] **TASK-007** [S] Update API documentation
-  - Depends on: TASK-006
+- [ ] **TK-007** [S] Update API documentation
+  - serves_component: PL-001
+  - Depends on: TK-006
 
 ## Legend
 - `[S]` Small — under 1 hour
@@ -709,7 +713,7 @@ Implements: `vdd/specs/[branch]/plan.md`
 ```markdown
 # Research: [Feature Name or Decision Topic]
 
-> Impact Chain: V-001 → S-002 → T-003 → SP-004
+> Impact Chain: V-001 → S-001 → A-001 → SP-001
 
 ## Context
 <!-- Why was this research needed? What decision does it inform? -->
@@ -774,7 +778,7 @@ Implements: `vdd/specs/[branch]/plan.md`
 ```markdown
 # Impact Verification Report
 
-> Full Chain: V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006 → [commits]
+> Full Chain: V-001 → S-001 → A-001 → SP-001 → PL-001 → TK-001 → [commits]
 
 Date: [YYYY-MM-DD]
 
@@ -783,11 +787,11 @@ Date: [YYYY-MM-DD]
 | Level | Artifact | Status |
 |-------|----------|--------|
 | Vision | V-001 | Approved |
-| Strategy | S-002 | Approved |
-| Tactics | T-003 | Approved |
-| Spec | SP-004 | All MUST ACs pass |
-| Plan | PL-005 | All components implemented |
-| Tasks | TK-006 | All tasks complete |
+| Strategy | S-001 | Approved |
+| Tactics | A-001 | Approved |
+| Spec | SP-001 | All MUST ACs pass |
+| Plan | PL-001 | All components implemented |
+| Tasks | TK-001 | All tasks complete |
 | Code | [N commits] | All tests pass |
 | Impact | [metrics gathered] | [results] |
 
@@ -795,20 +799,20 @@ Date: [YYYY-MM-DD]
 
 | Parent | Children | All Covered? |
 |--------|----------|-------------|
-| V-001 (Vision) | S-002 (Strategy) | Yes |
-| S-002 (Strategy) | T-003 (Tactics) | Yes |
-| T-003 (Tactics) | SP-004 (Spec) | Yes |
-| SP-004 (Spec) | PL-005 (Plan) | Yes |
-| PL-005 (Plan) | TK-006 (Tasks) | Yes |
-| TK-006 (Tasks) | [N commits] | Yes |
+| V-001 (Vision) | S-001 (Strategy) | Yes |
+| S-001 (Strategy) | A-001 (Tactics) | Yes |
+| A-001 (Tactics) | SP-001 (Spec) | Yes |
+| SP-001 (Spec) | PL-001 (Plan) | Yes |
+| PL-001 (Plan) | TK-001 (Tasks) | Yes |
+| TK-001 (Tasks) | [N commits] | Yes |
 
 ## Backward Authorization (Child → Parent)
 
 | Child | Authorized Parent | Valid? |
 |-------|------------------|--------|
-| [Every task] | PL-005 | Yes |
-| [Every component] | SP-004 | Yes |
-| [Every AC] | T-003 | Yes |
+| [Every task] | PL-001 | Yes |
+| [Every component] | SP-001 | Yes |
+| [Every AC] | A-001 | Yes |
 | [Every code artifact] | [Spec AC] | Yes |
 
 ## Orphan Detection
@@ -838,7 +842,7 @@ Date: [YYYY-MM-DD]
 | Achievability (V→S) | Yes | All strategic pillars have implementation paths |
 | Sufficiency (V→S) | Yes | Strategy covers all vision goals |
 | Warnings (V→S) | Yes | All warnings monitored; no violations detected |
-| ... (repeat for all 7 gates) | ... | ... |
+| ... (one row per invariant: A, B, C) | ... | ... |
 
 ## Drift Report
 

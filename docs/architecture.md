@@ -9,7 +9,7 @@ The product has two kinds of content and they were previously mixed in both plac
 
 The old split shipped procedure as MCP tools (writing template files, returning instruction
 text) *and* as skill prose, and shipped verification as a thin `validate` while the real
-108-check suite sat unused inside `e2e`. Both surfaces could drift, and did: the published
+three-check suite sat unused inside `e2e`. Both surfaces could drift, and did: the published
 package served 3 prompts while `main` served 21.
 
 This document fixes the ownership. It is the authority for any future surface change;
@@ -25,7 +25,7 @@ Each concern has exactly one owner. The other layers may *reference* it, never r
 |---|---|---|---|
 | What to do, in what order, why | **Skill** | `SKILL.md`, `references/`, `domain-primers/` | tool descriptions, code comments |
 | Artifact templates | **Skill** | `references/artifact-templates.md` | engine source |
-| Gate definitions and their ids | **Skill** | `references/quality-gates.md` (G1–G7) | engine prose |
+| Gate definitions and their ids | **Skill** | `references/coverage-invariants.md` (G1–G7) | engine prose |
 | Gate *implementations* | **Engine** | `packages/vdd-engine/src/engine.ts` (`gate0`–`gate7`) | any doc |
 | Surface text (tool/CLI description) | **Engine** | `packages/vdd-engine/src/meta.ts` (`PHASE_META`) | README, SKILL.md |
 | Surface shape (which ops exist, inputs, annotations) | **Engine** | `packages/vdd-engine/src/capabilities.ts` | server.ts, cli.ts, api/ |
@@ -89,7 +89,7 @@ Capability {
 The layers are not independent — they are coupled at exactly two points, and both are checked.
 
 1. **Tool → skill.** Every capability carries `skillAnchor`, the place in the skill that
-   defines the rule it enforces (for example `references/quality-gates.md#gate-3`). The tool's
+   defines the rule it enforces (for example `references/coverage-invariants.md`). The tool's
    output cites gate ids; the agent reads their definition from the skill.
 2. **Skill → tool.** Every phase section in the skill names the capability that verifies it,
    and no phase invents its own check. `SKILL.md` is the procedure; `vdd verify` is the verdict.
@@ -236,8 +236,8 @@ From the internal architecture review and the security review. Each is a blocker
   `package.json` ×3 (mcp, engine, cli — each description carries a stale count), `context7.json:4,16`,
   `glama.json`, `server.json`, `llms.txt:14`,
   `docs/deployment.md:3-10,34-63`, `references/quick-reference.md`, `references/INDEX.md`,
-  `references/quality-gates.md`, `CONTRIBUTING.md`, `docs/social-preview.svg`, `api/_vdd-rpc.js`.
-  The `108` count and the `15 tools` claim are the two strings that drift first.
+  `references/coverage-invariants.md`, `CONTRIBUTING.md`, `docs/social-preview.svg`, `api/_vdd-rpc.js`.
+  The `three` count and the `15 tools` claim are the two strings that drift first.
 - V13 This is a breaking release: fourteen `PHASES` keys leave the map (the 13 authoring/alias
   keys plus `detect-environment`), `index.ts` re-exports change, and `_vdd-rpc.js` owns
   `SERVER_VERSION` (`:892`). Name the new owner and bump the workspace to 2.0.0.

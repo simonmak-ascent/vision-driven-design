@@ -9,8 +9,8 @@
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-com.ascent-partners%2Fvision-driven-design-4CAF50)](https://registry.modelcontextprotocol.io/v0/servers?search=com.ascent-partners/vision-driven-design)
 [![Glama MCP](https://glama.ai/mcp/connectors/com.ascent-partners/vision-driven-design/badges/score.svg)](https://glama.ai/mcp/connectors/com.ascent-partners/vision-driven-design)
 [![Agent Status](https://wdmisgfkoimdpvvduebj.supabase.co/functions/v1/mcp-badge?slug=vdd)](https://agentstatus.dev/mcp-index/vdd)
-[![Version](https://img.shields.io/badge/version-1.10.1-blue)](https://github.com/simonmak-ascent/vision-driven-design/releases)
-[![MCP tools](https://img.shields.io/badge/MCP-14%20tools-4CAF50)](https://vdd.simonmak.com/api/mcp)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue)](https://github.com/simonmak-ascent/vision-driven-design/releases)
+[![MCP tools](https://img.shields.io/badge/MCP-3%20tools-4CAF50)](https://vdd.simonmak.com/api/mcp)
 [![API](https://img.shields.io/badge/API-vdd.simonmak.com-006b7d)](https://vdd.simonmak.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -65,24 +65,20 @@ graph LR
 curl -sSL https://raw.githubusercontent.com/simonmak-ascent/vision-driven-design/main/scripts/install.sh | bash
 ```
 
-Then in your project:
+Then in your project, the agent follows the nine skills — `vdd-constitution`, `vdd-vision`,
+`vdd-strategy`, `vdd-tactics`, `vdd-specs`, `vdd-plan`, `vdd-tasks`, `vdd-implement`,
+`vdd-validate` — and calls `vdd_check` after each artifact. The tools judge; the skills instruct.
+Nothing writes to your filesystem on your behalf.
 
-```bash
-/vdd:init                          # Generate project constitution
-/vdd:vision "your vision here"     # The only human input required
-
-# Or run end-to-end in one command:
-/vdd:e2e "your vision here"        # Full chain: init→vision→...→validate
+```json
+{"phase": "tactics", "content": "<tactics.md>", "priorArtifacts": {"strategy": "<strategy.md>"}}
 ```
 
-The AI handles the rest — researching, auditing, generating specs, planning, implementing, and validating — with self-gating at 7 bi-directional verification junctions.
+The AI researches, audits and writes; **three coverage invariants** — A forward completeness, B
+backward soundness, C a dedicated child per parent — decide whether an artifact is complete, and
+the matrix that produced the verdict comes back with it.
 
-**[Skill reference →](SKILL.md)** — commands, the 8-phase chain, and the quality gates.
-
-```bash
-# Want human gates? Add to constitution.md:
-## VDD Mode: Gated
-```
+**[Skill reference →](SKILL.md)** — the eight phases and the nine procedures.
 
 ---
 
@@ -100,33 +96,32 @@ VDD follows Goldratt's **recursive Strategy-Tactic decomposition**: every phase 
 | **5. Plan** | L4 Tactic → L5 Strategy | `plan.md`, `data-model.md`, `contracts/` |
 | **6. Tasks** | L5 Tactic → L6 Strategy | `tasks.md` — Test-first atomic tasks |
 | **7. Implement** | L6 Tactic → L7 Strategy | Code — Per-task commits with full traceability |
-| **8. Validate** | L7 Tactic — Did it work? | `impact-report.md` — Drift + impact verification |
+| **8. Validate** | the whole chain — did every goal reach a task? | `vdd_chain_validate` — the chain result |
 
-**7 bi-directional gates** verify both directions at every junction (108 total checks). Each gate validates 4 S&T assumptions: Necessity, Achievability, Sufficiency, Warnings.
+**Three coverage invariants** verify every junction: A forward completeness, B backward soundness, C a dedicated child per parent. The tool returns the matrix it built.
 
 Every code commit traces back to the original vision statement:
 ```
-V-001 → S-002 → T-003 → SP-004 → PL-005 → TK-006 → commit
+V-001 → S-001 → A-001 → SP-001 → PL-001 → TK-001 → commit
 ```
 
-### The pipeline and its 7 gates
+### The pipeline and its coverage invariants
 
 ```mermaid
 flowchart TB
     C["Phase 0 · Constitution<br/>constitution.md"] --> V["Phase 1 · Vision<br/>vision.md"]
-    V -.->|G1| S["Phase 2 · Strategy<br/>strategy.md"]
-    S -.->|G2| T["Phase 3 · Tactics<br/>tactics.md"]
-    T -.->|G3| SP["Phase 4 · Specs<br/>spec.md"]
-    SP -.->|G4| PL["Phase 5 · Plan<br/>plan.md · data-model · contracts"]
-    PL -.->|G5| TK["Phase 6 · Tasks<br/>tasks.md"]
-    TK -.->|G6| I["Phase 7 · Implement<br/>code + per-task commits"]
-    I -.->|G7| VA["Phase 8 · Validate<br/>impact-report.md"]
+    V -.->|check| S["Phase 2 · Strategy<br/>strategy.md"]
+    S -.->|check| T["Phase 3 · Tactics<br/>tactics.md"]
+    T -.->|check| SP["Phase 4 · Specs<br/>spec.md"]
+    SP -.->|check| PL["Phase 5 · Plan<br/>plan.md · data-model · contracts"]
+    PL -.->|check| TK["Phase 6 · Tasks<br/>tasks.md"]
+    TK -.->|check| I["Phase 7 · Implement<br/>code + per-task commits"]
+    I -.->|check| VA["Phase 8 · Validate<br/>chain result"]
 ```
 
 ### Bi-directional traceability
 
-Each gate checks **forward** (parent → children) and **backward** (children → parent),
-108 checks in total.
+Each check compares **forward** (parent → children) and **backward** (children → parent), over **three invariants** at every junction — and it returns the matrix that shows why.
 
 ```mermaid
 flowchart LR
@@ -144,9 +139,9 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    CH["Requirement change<br/>/vdd:amend"] --> FIND["Find the highest affected level"]
+    CH["Requirement change<br/>vdd_amend"] --> FIND["Find the highest affected level"]
     FIND --> U1["Update Vision"] --> U2["Update Strategy"] --> U3["Update Tactics"] --> U4["Update Specs"] --> U5["Update Plan"] --> U6["Update Tasks"]
-    U6 --> REG["Re-run affected gates G1–G7"]
+    U6 --> REG["Re-run the invariants over the affected artifacts"]
     REG --> IMPL["Re-implement only the changed tasks"]
 ```
 
@@ -154,26 +149,17 @@ flowchart TB
 
 ## Commands
 
-| Command | Phase | Action |
-|---------|-------|--------|
-| `/vdd:init` | 0 | Generate `constitution.md` from project context |
-| `/vdd:vision "statement"` | 1 | Expand freeform vision → structured `vision.md` |
-| `/vdd:strategize` | 2 | Load domain primers, spawn research subagents, synthesize `strategy.md` |
-| `/vdd:tactics` | 3 | Audit repo → gap analysis → `tactics.md` |
-| `/vdd:specify <ID \| "desc">` | 4 | Generate `spec.md` (or freeform — skips V/S/T) |
-| `/vdd:clarify <feature>` | 4 | Clarification pass on a spec |
-| `/vdd:plan <feature>` | 5 | Generate `plan.md`, `data-model.md`, `contracts/` |
-| `/vdd:tasks <feature>` | 6 | Generate `tasks.md` |
-| `/vdd:get-next-task <feature>` | 7 | Extract next uncompleted task |
-| `/vdd:implement <task-id>` | 7 | Execute single task, verify, commit |
-| `/vdd:validate` | 8 | Full-chain traceability + drift + impact report |
-| `/vdd:trace` | any | Bidirectional traceability matrix |
-| `/vdd:analyze <feature>` | any | Cross-artifact consistency analysis |
-| `/vdd:amend "what changed"` | any | Cascade requirement change through full chain |
-| `/vdd:detect-environment` | any | Report per-phase tool/MCP requirements + available capabilities |
-| `/vdd:e2e "vision statement"` | 0–8 | **End-to-end**: run full 8-phase chain in one call, writes all 10+ template files |
+Three, because there are three tools:
 
----
+```bash
+vdd check <phase> <file> [--prior <phase=file>] [--counts '<json>']
+vdd chain <vision> <strategy> <tactics> <specs> <plan> <tasks>
+vdd amend <file> --prior <phase=file>
+```
+
+Each prints the JSON result the tool returns and exits 1 on `FAIL`. Over MCP, the same three tools
+are `vdd_check`, `vdd_chain_validate` and `vdd_amend`, and the nine skills tell the agent what to
+write before it calls one.
 
 ## Installation
 
@@ -229,7 +215,7 @@ pnpm -r build
 
 ## MCP API
 
-VDD is available as a public MCP server at `https://vdd.simonmak.com` — 14 tools, no API key required — over the MCP **Streamable HTTP** transport at `https://vdd.simonmak.com/api/mcp` (also reachable at `/mcp`). The legacy SSE endpoint is retired: `https://vdd.simonmak.com/api/sse` now returns an HTTP 308 redirect to `/api/mcp`.
+VDD is available as a public MCP server at `https://vdd.simonmak.com` — 3 tools, no API key required — over the MCP **Streamable HTTP** transport at `https://vdd.simonmak.com/api/mcp` (also reachable at `/mcp`). The legacy SSE endpoint is retired: `https://vdd.simonmak.com/api/sse` now returns an HTTP 308 redirect to `/api/mcp`.
 
 ### Agent Configuration
 
@@ -255,27 +241,19 @@ VDD is available as a public MCP server at `https://vdd.simonmak.com` — 14 too
 
 **Any Streamable HTTP client** (Smithery, Claude Code, …) — MCP server URL: `https://vdd.simonmak.com/api/mcp`
 
-### MCP Tools (14)
+### Tools and skills (3 + 9)
 
-`vdd_init`, `vdd_vision`, `vdd_strategize`, `vdd_tactics`, `vdd_specify`, `vdd_clarify`, `vdd_plan`, `vdd_tasks`, `vdd_get_next_task`, `vdd_implement`, `vdd_validate`, `vdd_inspect`, `vdd_amend`, `vdd_detect_environment`.
+| Tool | Input | Returns |
+|---|---|---|
+| `vdd_check` | `{phase, content, declaredCounts?, priorArtifacts?}` | `{status, reasons, coverage}` |
+| `vdd_chain_validate` | `{artifacts, declaredCounts?}` | the same, plus `phases[]` and a reason for every goal that reaches no task |
+| `vdd_amend` | `{content, priorArtifacts, changeDescription?}` | the same, plus `phase` and `impactedArtifacts[]` |
 
-The one-call `e2e` shortcut is not an MCP tool (it duplicates the phase sequence); use the CLI `vdd e2e "vision"` instead.
+Nine skills carry the procedures, served as `skill://<name>/SKILL.md` through `skills/list`
+and `skills/get`. `prompts/list` answers `{prompts: []}` — 2.0.0 ships none.
 
-Each tool advertises only the parameters it reads. Shared inputs include `statement`, `projectRoot`, `actionItemId`, `feature`, `taskId`, `description`, and `availableTools`/`capabilities` (aliases) plus `researchFindings`. Filesystem-dependent tools additionally accept `artifactFiles` (path→content) — and `vdd_tactics` accepts `codebaseAudit` — for the hosted endpoint.
-
-### Hosted vs local (filesystem)
-
-The hosted endpoint (`https://vdd.simonmak.com/api/mcp`) is **stateless and has no filesystem**. It returns artifacts and, for filesystem-dependent phases, a **delegation envelope** for the calling agent to execute locally:
-
-- Artifact-producing phases (`vdd_init`, `vdd_vision`, `vdd_strategize`, `vdd_tactics`, `vdd_specify`, `vdd_plan`, `vdd_tasks`, `vdd_validate`) return their content with `persisted: false` and a `writeTargets` list — the agent writes them.
-- Read phases (`vdd_tactics`, `vdd_clarify`, `vdd_get_next_task`, `vdd_inspect`, `vdd_validate`, `vdd_implement`) return a `delegation` envelope when given no content; re-call the **same tool** with `artifactFiles` (and `codebaseAudit` for tactics) to receive the real result.
-
-For direct read/write of a local project, run the **local stdio server** instead — `npx -y @simonmak-ascent/mcp` (see [Local MCP](#local-mcp-from-source)). It performs real filesystem I/O and returns `mode: "local"`, `persisted: true`.
-
-
-### MCP Prompts (20)
-
-The three project-flow prompts — `start_vdd_project` (vision → validated task list), `implement_next_task` (one test-first task with traceability) and `change_requirement` (cascade a change and re-run the gates) — plus one per phase (`init`, `vision`, `strategize`, `tactics`, `specify`, `clarify`, `plan`, `tasks`, `get-next-task`, `implement`, `validate`) and the cross-phase set (`inspect`, `trace`, `analyze`, `amend`, `detect-environment`, `e2e`). Clients surface them as `/vdd:<name>`; available on the stdio server and the hosted endpoint. See [`SKILL.md`](SKILL.md#command-reference).
+Both surfaces are pure: the artifact text is an argument, the verdict is the return value, and no session state exists.
+`docs/migration-2.0.md` names the successor for every removed tool and prompt.
 
 ### MCP Registry (Glama)
 
@@ -298,7 +276,7 @@ Maintainer notes:
 
 | Method | Description |
 |--------|-------------|
-| POST `/api/mcp` | Streamable HTTP — JSON-RPC `initialize`, `tools/list`, `tools/call` (stateless) |
+| POST `/api/mcp` | Streamable HTTP — `server/discover`, `tools/list`, `tools/call`, `skills/list` (stateless) |
 | GET `/api/mcp` | HTML docs page for browsers; 405 for MCP clients (no server-initiated stream) |
 | DELETE `/api/mcp` | 204 — no session state to terminate |
 | `/api/sse` | Retired — HTTP 308 redirect to `/api/mcp` |
@@ -315,7 +293,7 @@ curl -X POST https://vdd.simonmak.com/api/mcp \
 # tools/call example
 curl -X POST https://vdd.simonmak.com/api/mcp \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"vdd_validate","arguments":{"projectRoot":"."}},"id":1}'
+  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"vdd_check","arguments":{"phase":"vision","content":"<vision.md>"}},"id":1}'
 ```
 
 The full TypeScript engine (`packages/vdd-engine`, `packages/vdd-mcp`, `packages/vdd-cli`) is included in this repo.
@@ -355,10 +333,10 @@ VDD is benchmarked against NASA SE, CMMI REQM, DO-178C, IEC 62304, DORA, ISO 291
 | File | Contents |
 |------|----------|
 | [`SKILL.md`](SKILL.md) | Full command reference and workflow |
-| [`docs/deployment.md`](docs/deployment.md) | Local stdio / HTTP / hosted modes and the delegation contract |
+| [`docs/deployment.md`](docs/deployment.md) | Local stdio and Streamable HTTP — the same pure server over two transports |
 | [`references/workflow-phases.md`](references/workflow-phases.md) | Step-by-step phase instructions (authoritative) |
 | [`references/artifact-templates.md`](references/artifact-templates.md) | Copy-paste templates for all 11 artifacts |
-| [`references/quality-gates.md`](references/quality-gates.md) | 7 gates with 108 checks + CI/CD |
+| [`references/coverage-invariants.md`](references/coverage-invariants.md) | invariants A–C, the count rules, the fixture |
 | [`references/anti-patterns.md`](references/anti-patterns.md) | 24 failure modes and fixes |
 | [`references/compliance-evidence.md`](references/compliance-evidence.md) | DO-178C/IEC 62304/CMMI/ISO 29148 evidence maps |
 | [`references/quick-reference.md`](references/quick-reference.md) | One-page cheat sheet |
@@ -390,32 +368,31 @@ VDD is benchmarked against NASA SE, CMMI REQM, DO-178C, IEC 62304, DORA, ISO 291
 │   ├── human-factors.md             # Loaded unconditionally
 │   ├── verification-toolchain.md    # Loaded unconditionally
 │   └── safety-critical.md           # FMEA/FTA, DO-178C/IEC 62304
-├── references/                      # 10 authoritative reference docs
+├── skills/                          # the nine SKILL.md procedures
+├── references/                      # 8 authoritative reference docs
 │   ├── INDEX.md                     # Navigation map
 │   ├── quick-reference.md           # 1-page cheat sheet
 │   ├── workflow-phases.md           # Phase order (authoritative)
 │   ├── artifact-templates.md        # 11 artifact templates (authoritative)
-│   ├── prompt-patterns.md           # AI prompts (authoritative)
-│   ├── quality-gates.md             # 7 gates + 108 checks (authoritative)
-│   ├── ai-agent-patterns.md         # Agent orchestration (authoritative)
+│   ├── coverage-invariants.md      # invariants A–C, count rules (authoritative)
 │   ├── anti-patterns.md             # 24 failure modes (authoritative)
 │   ├── traceability-matrix.md       # RTM format + CI/CD
 │   └── compliance-evidence.md       # Evidence maps
-├── vdd/                             # VDD chain artifacts
+├── vdd/                             # artifacts a project accumulates
 │   ├── vision.md                    # Vision, impact model, 17 impacts
 │   ├── strategy.md                  # 12 strategic pillars
 │   ├── tactics.md                   # 38 action items (all DONE)
-│   ├── impact-report.md             # Full-chain traceability + drift
+│   ├── impact-report.md             # authored by the agent in phase 8
 │   ├── docs/                        # 16 guides and references
 │   └── specs/                       # 3 feature specs
 ├── packages/                        # TypeScript monorepo
-│   ├── vdd-engine/                  # Shared core — 17 phase functions + meta.ts
-│   ├── vdd-mcp/                     # MCP server — 14 tools, stdio + Streamable HTTP
-│   └── vdd-cli/                     # CLI binary — 16 subcommands
+│   ├── vdd-engine/                  # Shared core — the coverage engine
+│   ├── vdd-mcp/                     # MCP server — 3 tools + 9 skills
+│   └── vdd-cli/                     # CLI binary — check, chain, amend
 ├── api/                             # Vercel MCP endpoint
-│   ├── mcp.js                       # Streamable HTTP MCP endpoint (14 tools)
-│   └── _vdd-rpc.js                  # Shared JSON-RPC core + browser docs page (not routed)
-├── scripts/                         # 4 installer/helper scripts
+│   ├── mcp.js                       # Streamable HTTP MCP endpoint (3 tools)
+│   └── _vdd-rpc.cjs                 # Transport adapter + browser docs page (not routed)
+├── scripts/                         # seven installer, landing and manifest helpers
 └── .github/                         # GitHub config
     ├── CODEOWNERS
     ├── ISSUE_TEMPLATE/

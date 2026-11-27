@@ -12,8 +12,8 @@
   <rect x="390" y="420" width="120" height="50" rx="8" fill="#4CAF50"/>
   <text x="450" y="452" text-anchor="middle" font-family="system-ui,sans-serif" font-size="24" fill="#fff">8 Phases</text>
   <rect x="530" y="420" width="120" height="50" rx="8" fill="#FF9800"/>
-  <text x="590" y="452" text-anchor="middle" font-family="system-ui,sans-serif" font-size="24" fill="#fff">7 Gates</text>
+  <text x="590" y="452" text-anchor="middle" font-family="system-ui,sans-serif" font-size="24" fill="#fff">3 Tools</text>
   <rect x="670" y="420" width="120" height="50" rx="8" fill="#2196F3"/>
-  <text x="730" y="452" text-anchor="middle" font-family="system-ui,sans-serif" font-size="24" fill="#fff">108 Checks</text>
+  <text x="730" y="452" text-anchor="middle" font-family="system-ui,sans-serif" font-size="24" fill="#fff">9 Skills</text>
   <text x="640" y="560" text-anchor="middle" font-family="system-ui,sans-serif" font-size="24" fill="#666">OpenCode Skill · WebApp · Data Storage · ETL · Infrastructure</text>
 </svg>

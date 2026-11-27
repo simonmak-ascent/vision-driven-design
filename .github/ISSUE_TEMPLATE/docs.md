@@ -8,7 +8,7 @@ assignees: ''
 
 ## Which file?
 
-<!-- e.g., references/workflow-phases.md, prompt-patterns.md -->
+<!-- e.g., references/workflow-phases.md, references/coverage-invariants.md -->
 
 ## What needs to change?
 

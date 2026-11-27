@@ -1,93 +1,39 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
 
-// Drives the real Streamable HTTP transport over a loopback socket. The stdio
-// surface is covered by server-surface.test.ts; this proves the HTTP entrypoint
-// (packages/vdd-mcp/dist/http-entry.js) actually serves the 14 tools.
-describe('HTTP transport (Streamable HTTP)', () => {
-  let server: Server;
+import { startHttpServer } from '../src/http.js';
+
+/**
+ * The self-hosted Streamable-HTTP surface. 2.0.0 is stateless, so the case that
+ * matters is the absence of a session: a header a client resumes from is a header
+ * that makes the endpoint sticky, and there is nothing here to be sticky about.
+ */
+describe('self-hosted http transport', () => {
+  let server: Awaited<ReturnType<typeof startHttpServer>>;
   let base: string;
-  let sessionId: string | null = null;
-
-  const reqHeaders = () => {
-    const h: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Accept: 'application/json, text/event-stream',
-    };
-    if (sessionId) h['mcp-session-id'] = sessionId;
-    return h;
-  };
-
-  const post = (payload: unknown) =>
-    fetch(base, { method: 'POST', headers: reqHeaders(), body: JSON.stringify(payload) });
-
-  // The Streamable HTTP transport may answer with application/json or with an
-  // SSE stream (event: message / data: {...}); decode either.
-  const readRpc = async (res: Response): Promise<Record<string, unknown>> => {
-    const contentType = res.headers.get('content-type') ?? '';
-    if (contentType.includes('text/event-stream')) {
-      const text = await res.text();
-      const line = text.split('\n').find((l) => l.startsWith('data: '));
-      return JSON.parse(line!.slice('data: '.length)) as Record<string, unknown>;
-    }
-    return (await res.json()) as Record<string, unknown>;
-  };
 
   beforeAll(async () => {
+    // Ephemeral port: binding 3000 turns a port clash into a timeout, not a red.
     process.env.PORT = '0';
-    const mod = await import('../src/http.js');
-    server = await mod.startHttpServer();
-    const addr = server.address() as AddressInfo;
-    base = `http://127.0.0.1:${addr.port}/`;
+    server = await startHttpServer();
+    const address = server.address();
+    const port = typeof address === 'object' && address ? address.port : 0;
+    base = `http://127.0.0.1:${port}/mcp`;
   });
 
   afterAll(async () => {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
-  it('answers initialize and issues a session id', async () => {
-    const res = await post({
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'initialize',
-      params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'vitest', version: '1' } },
+  it('answers tools/list without issuing a session id', async () => {
+    const response = await fetch(base, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
     });
-    expect(res.status).toBe(200);
-    sessionId = res.headers.get('mcp-session-id');
-    expect(sessionId).toBeTruthy();
-    const body = (await readRpc(res)) as { result?: { serverInfo?: { name?: string } } };
-    expect(body.result?.serverInfo?.name).toBe('vdd');
 
-    // Clients acknowledge initialization before issuing requests.
-    await post({ jsonrpc: '2.0', method: 'notifications/initialized' });
-  });
-
-  it('lists the 14 tools over HTTP', async () => {
-    const res = await post({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
-    expect(res.status).toBe(200);
-    const body = (await readRpc(res)) as { result?: { tools?: unknown[] } };
-    expect(body.result?.tools?.length).toBe(14);
-  });
-
-  it('rejects a projectRoot outside the allowed roots', async () => {
-    const prev = process.env.VDD_ALLOWED_ROOTS;
-    process.env.VDD_ALLOWED_ROOTS = '/tmp/vdd-allowed-root';
-    try {
-      const res = await post({
-        jsonrpc: '2.0',
-        id: 4,
-        method: 'tools/call',
-        params: { name: 'vdd_detect_environment', arguments: { projectRoot: '/etc' } },
-      });
-      expect(res.status).toBe(200);
-      const body = (await readRpc(res)) as { result?: { content?: Array<{ text: string }> } };
-      const parsed = JSON.parse(body.result!.content![0].text) as { success: boolean; error?: string };
-      expect(parsed.success).toBe(false);
-      expect(parsed.error).toContain('outside the allowed roots');
-    } finally {
-      if (prev === undefined) delete process.env.VDD_ALLOWED_ROOTS;
-      else process.env.VDD_ALLOWED_ROOTS = prev;
-    }
+    expect(response.status).toBe(200);
+    expect(response.headers.get('mcp-session-id')).toBeNull();
+    const text = await response.text();
+    expect(text).toContain('vdd_check');
   });
 });

@@ -34,11 +34,11 @@ Loaded during Phase 2 (Strategy) when the vision involves aerospace, medical dev
 
 | VDD Phase | Safety Integration |
 |-----------|-------------------|
-| Phase 1 (Vision) | Identify safety-critical actors and hazard scenarios in Impact Model |
+| Phase 1 (Vision) | Identify safety-critical actors and hazard scenarios in §4 (5Ws) and §5 (possibility space) |
 | Phase 4 (Specs) | Add `[SAFETY]` ACs alongside `[MUST]` ACs — every safety-critical behavior gets a verifiable AC |
 | Phase 5 (Plan) | Safety architecture: redundancy, isolation, fail-safe defaults, watchdog timers |
 | Phase 6 (Tasks) | Safety verification tasks precede functional tasks (test-first for safety) |
-| Phase 7 (Implement) | Traceability: `feat(scope): TASK-XXX → AC-SAFETY-YYY → HAZARD-ZZZ` |
+| Phase 7 (Implement) | Traceability: `feat(scope): TK-XXX → AC-SAFETY-YYY → HAZARD-ZZZ` |
 | Phase 8 (Validate) | Safety coverage matrix: Hazard → Safety AC → Test → Evidence |
 
 ### Toolchain for Safety-Critical VDD
@@ -56,12 +56,15 @@ Loaded during Phase 2 (Strategy) when the vision involves aerospace, medical dev
 - **Lagging**: Hazard incidents per release, mean time to detect safety violation, false-alarm rate
 - **Regulatory**: % of DO-178C/CMMI/IEC 62304 criteria demonstrably met by VDD artifacts
 
-### Safety Gate Checklist (supplements Gate G3–G7)
+### Safety Checklist (supplements the coverage invariants)
 
-| Gate | Safety Additions |
-|------|-----------------|
-| G3 (T→SP) | Every identified hazard has ≥1 `[SAFETY]` AC |
-| G4 (SP→PL) | Every safety AC has a verified safety mechanism in architecture |
-| G5 (PL→TK) | Safety tasks ordered before dependent functional tasks |
-| G6 (TK→IM) | Safety tests pass before functional implementation proceeds |
-| G7 (IM→VS) | Hazard→AC→Test→Evidence chain complete; residual risk accepted |
+The coverage invariants judge structure, not safety. Each junction below is where a safety addition is
+reviewed; the last two are review steps, not tool checks — 2.0.0 ships no implement or validate gate.
+
+| Junction | Safety addition |
+|---|---|
+| A→SP | Every identified hazard has ≥1 `[SAFETY]` AC |
+| SP→PL | Every safety AC has a verified safety mechanism in architecture |
+| PL→TK | Safety tasks ordered before dependent functional tasks |
+| TK→IM (review) | Safety tests pass before functional implementation proceeds |
+| IM→VS (review) | Hazard→AC→Test→Evidence chain complete; residual risk accepted |

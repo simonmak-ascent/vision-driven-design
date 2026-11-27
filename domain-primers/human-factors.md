@@ -49,7 +49,7 @@ For each vision impact, identify the psychological mechanism:
 
 ## Integration with VDD
 
-- **Vision phase**: Human-factors primer adds "Behavioral Goal" and "Psychological Mechanism" sections to vision.md's Impact Model
+- **Vision phase**: Human-factors primer adds "Behavioral Goal" and "Psychological Mechanism" sections to vision.md §4 (5Ws — actors and impacts)
 - **Strategy phase**: Market Agent uses human-factors patterns to analyze user motivation and switching costs
 - **Specs phase**: ACs include behavioral ACs ("Given a first-time user, when they complete onboarding, then they have created at least 1 task within 5 minutes")
 - **Validate phase**: Impact verification includes behavioral metrics alongside technical metrics
