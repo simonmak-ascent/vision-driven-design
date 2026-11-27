@@ -391,8 +391,9 @@ VDD is benchmarked against NASA SE, CMMI REQM, DO-178C, IEC 62304, DORA, ISO 291
 │   └── vdd-cli/                     # CLI binary — check, chain, amend
 ├── api/                             # Vercel MCP endpoint
 │   ├── mcp.js                       # Streamable HTTP MCP endpoint (3 tools)
-│   └── _vdd-rpc.cjs                 # Transport adapter + browser docs page (not routed)
-├── scripts/                         # seven installer, landing and manifest helpers
+│   ├── _vdd-rpc.cjs                 # Transport adapter + browser docs page (not routed)
+│   └── _vdd-core.cjs                # Generated bundle; do not edit (not routed)
+├── scripts/                         # eight installer, landing, bundler and manifest helpers
 └── .github/                         # GitHub config
     ├── CODEOWNERS
     ├── ISSUE_TEMPLATE/

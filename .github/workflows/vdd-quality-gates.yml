@@ -82,8 +82,11 @@ jobs:
       - name: Typecheck
         run: pnpm check
 
+      - name: Bundle is current
+        run: node scripts/bundle-api.mjs --check
+
       - name: Test
         run: pnpm test
 
       - name: Syntax-check Vercel handlers
-        run: node --check api/mcp.js && node --check api/_vdd-rpc.cjs
+        run: node --check api/mcp.js && node --check api/_vdd-rpc.cjs && node --check api/_vdd-core.cjs

@@ -1,8 +1,7 @@
 {
   "functions": {
     "api/mcp.js": {
-      "maxDuration": 30,
-      "includeFiles": "{packages/vdd-engine/dist/**,packages/vdd-mcp/dist/**}"
+      "maxDuration": 30
     }
   },
   "redirects": [

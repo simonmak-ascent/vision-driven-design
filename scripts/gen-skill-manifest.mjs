@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 // Compiles skills/<name>/SKILL.md into packages/vdd-mcp/src/generated/skills.ts.
 //
-// The hosted endpoint carries no copy of skills/ (vercel.json's includeFiles
-// names the built dist/ trees only), so the manifest is compiled in rather than
-// loaded at runtime.
+// The deployed function is `api/` and its siblings: it carries no copy of
+// skills/, so the manifest is compiled in rather than loaded at runtime.
 // It is committed, like index.html, and regenerated deliberately:
 //
 //   node scripts/gen-skill-manifest.mjs          # write

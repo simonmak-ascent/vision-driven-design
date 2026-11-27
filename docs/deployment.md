@@ -40,6 +40,11 @@ docker run -p 3000:3000 vdd-mcp
 `server/discover` with `supportedVersions: ["2026-07-28"]` and the skills extension, and it serves
 the same `createVddMcpServer()` the stdio entrypoint does.
 
+The function ships as a committed bundle: `scripts/bundle-api.mjs` compiles
+`packages/vdd-mcp/dist/handler.js` into `api/_vdd-core.cjs`, and `api/_vdd-rpc.cjs` requires that
+sibling. Regenerate it with `pnpm bundle:api` after any change under `packages/` or `skills/`;
+`pnpm bundle:api:check` — also a CI step — fails on a stale bundle.
+
 ```jsonc
 "vdd": { "type": "remote", "url": "https://vdd.simonmak.com/api/mcp", "enabled": true }
 ```
