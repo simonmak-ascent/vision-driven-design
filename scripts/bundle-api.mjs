@@ -86,17 +86,17 @@ async function main() {
       process.exit(1);
     }
     process.stdout.write(
-      `api/_vdd-core.cjs is current (${rendered.length} bytes, sha256 ${createHash('sha256').update(rendered).digest('hex').slice(0, 12)})\n`,
+      `api/_vdd-core.cjs is current (${Buffer.byteLength(rendered)} bytes, sha256 ${createHash('sha256').update(rendered).digest('hex').slice(0, 12)})\n`,
     );
     return;
   }
 
   if (current === rendered) {
-    process.stdout.write(`api/_vdd-core.cjs is unchanged (${rendered.length} bytes)\n`);
+    process.stdout.write(`api/_vdd-core.cjs is unchanged (${Buffer.byteLength(rendered)} bytes)\n`);
     return;
   }
   await writeFile(output, rendered);
-  process.stdout.write(`wrote api/_vdd-core.cjs (${rendered.length} bytes)\n`);
+  process.stdout.write(`wrote api/_vdd-core.cjs (${Buffer.byteLength(rendered)} bytes)\n`);
 }
 
 await main();

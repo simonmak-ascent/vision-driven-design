@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { builtinModules } from 'node:module';
 import { copyFileSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
@@ -29,6 +30,18 @@ describe('hosted bundle', () => {
     expect(() =>
       execFileSync('node', [repo('scripts/bundle-api.mjs'), '--check'], { stdio: 'pipe' }),
     ).not.toThrow();
+  });
+
+  it('prints the file byte length and its hash, not the string length', () => {
+    // `rendered.length` is UTF-16 code units. The bundle contains non-ASCII, so a
+    // revert to `.length` reports ~100 bytes fewer than the file — green suite,
+    // wrong evidence in the row that certifies it.
+    const out = execFileSync('node', [repo('scripts/bundle-api.mjs'), '--check'], { encoding: 'utf8' });
+    const match = /\((\d+) bytes, sha256 ([0-9a-f]{12})\)/.exec(out);
+    if (match === null) throw new Error(`unexpected --check output: ${out}`);
+    const bytes = readFileSync(repo('api/_vdd-core.cjs'));
+    expect(Number(match[1])).toBe(bytes.length);
+    expect(match[2]).toBe(createHash('sha256').update(bytes).digest('hex').slice(0, 12));
   });
 
   it('carries the server: the bundle exports a working handler', () => {
