@@ -30,11 +30,16 @@
     "start": "node packages/vdd-mcp/dist/stdio.js",
     "check": "pnpm -r check",
     "test": "pnpm -r test",
-    "verify:publish": "node scripts/verify-publish.mjs"
+    "verify:publish": "node scripts/verify-publish.mjs",
+    "bundle:api": "node scripts/bundle-api.mjs",
+    "bundle:api:check": "node scripts/bundle-api.mjs --check"
   },
   "engines": {
     "node": ">=22"
   },
   "packageManager": "pnpm@10.30.3",
-  "version": "2.0.0"
+  "version": "2.0.0",
+  "devDependencies": {
+    "esbuild": "0.25.0"
+  }
 }

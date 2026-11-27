@@ -16,9 +16,9 @@ export interface SkillSummary {
 
 /**
  * The catalogue, compiled in by `scripts/gen-skill-manifest.mjs`. There is no
- * runtime filesystem read on either surface: `vercel.json` includes the built
- * `dist/` trees but not `skills/`, so a skill the manifest does not carry is a
- * skill the hosted function could not serve.
+ * runtime filesystem read on either surface: the deployed function is `api/`
+ * and its siblings, so a skill the manifest does not carry is a skill the
+ * hosted function could not serve.
  */
 export function listSkills(): SkillSummary[] {
   return SKILLS.map(({ name, description, uri, sha256, size }) => ({ name, description, uri, sha256, size }));

@@ -7,8 +7,10 @@ import { describe, expect, it } from 'vitest';
  * SDK handler itself; this one goes through `api/_vdd-rpc.cjs` — the file Vercel
  * loads — so the path that ships is the path that is tested.
  *
- * It requires `pnpm -r build` first: the shim imports `packages/vdd-mcp/dist`, and
- * a source import would prove nothing about what deploys.
+ * The shim itself needs no build: it requires the committed bundle. The
+ * workspace build is a precondition of `hosted-bundle.test.ts`, whose `--check`
+ * compares those committed bytes against a fresh build of `dist/`; that file
+ * owns the packaging control.
  */
 const require = createRequire(import.meta.url);
 const { handleJsonRpc, isBrowser, SERVER_VERSION } = require('../../../api/_vdd-rpc.cjs');

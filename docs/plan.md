@@ -238,3 +238,9 @@ Per release: every task passed the loop (≤3 rounds, verdict bound to tested by
 after the last edit, the `TASKS.md` row marked `done — <command> → <output>` in the same commit, PR
 merged on green checks, branch deleted, deploy through the repo's own path, production URL returns
 the expected status. A pending check is reported as pending.
+
+## Open follow-ups
+
+- **`typescript` is unpinned** (`^5.6.0` in all three packages, no committed lockfile). A different TS minor emits different `dist`, so `bundle:api:check` can report a stale bundle when nothing changed and a regeneration on that machine still will not match another's. Fail-closed, but the message misdiagnoses. Settles it: pin `typescript` exactly in `packages/vdd-mcp`, or record the TS version beside esbuild's in the bundle banner.
+- **`plan-state.py` hides rows after a blank line** inside the `TASKS.md` table, so a `ready` row placed there cannot block a ship. Measured twice (14 rows in the file, 13 reported).
+- **`og.png`** still renders the previous release's counts in pixels; no grep can see it.
