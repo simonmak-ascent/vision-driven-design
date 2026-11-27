@@ -393,6 +393,20 @@ changes any of that.
   session's own project listing at incident time and may already be stale, so re-resolve it at execution
   (`vercel ls`, or the project's deployment list in the dashboard) and use the id that is aliased to the
   domain. `vercel rollback` with a stale id fails; it does not roll back to something else.
+- **A rollback pins production, and the fixing deploy does not take the domain by itself** (measured
+  2026-11-27, during this incident). The rollback API aliased `vdd.simonmak.com` to `dpl_5ofCE9` (1.10.1).
+  After the fix merged, `dpl_9Jad1BKv` (commit `ef67517`) reached `READY` with `target: production` and the
+  domain **kept serving the rolled-back build** — the probe read the 14-tool 1.x surface until
+  `vercel promote dpl_9Jad1BKv` ran, and followed within seconds to the three 2.0.0 tools. So **after any
+  rollback the repairing deploy needs an explicit promotion** (`vercel promote <deployment-id>`), or the
+  domain keeps the rolled-back build while the deployment list and CI both report the fix shipped. Promotion
+  is the only lever here, not a preference: the rollback API refuses the new deployment with `422 The
+  provided deploymentId has never served production traffic - it is not a valid rollback target.`, so it
+  cannot be used to un-pin. And only §5.3 separates this state from a successful release — `READY` with
+  `target: production` is exactly what a good deploy looks like, so a green deployment list, a merged PR and
+  a passing suite all agree with each other while the endpoint serves the old surface; something has to read
+  the endpoint. The two ids above are incident-time and not resolvable from this repository (the caveat
+  `dpl_5ofCE9` already carries); re-resolve what is currently aliased before promoting.
 - **After a rollback, `main` still carries the failure.** `vercel rollback` moves the deployment alias, not
   the branch, and `vercel.json:1-22` declares no `ignoreCommand` — so the next push to `main`, a
   docs-only one included, rebuilds the failed tree and re-breaks production. Therefore: **after any
