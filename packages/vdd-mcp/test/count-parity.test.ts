@@ -28,9 +28,6 @@ const LIVE_SURFACE = [
   ...readdirSync(repo('domain-primers'))
     .filter((name) => name.endsWith('.md'))
     .map((name) => `domain-primers/${name}`),
-  // `docs/architecture.md` is excluded on purpose: its own header declares it "proposed — under
-  // review", it describes the design before the collapse, and it is a record of that reasoning
-  // rather than a statement about the current surface.
   'package.json',
   'packages/vdd-cli/package.json',
   'packages/vdd-engine/package.json',
