@@ -55,6 +55,12 @@ export interface PhaseConfig {
   readonly childLabel: string;
   /** Emit the cross-key diagnostic. Set on `tactics` only — see `checkCrossKeyActual`. */
   readonly crossKey?: boolean;
+  /**
+   * Validate the artifact's chain projection (v18 §4). Set on `vision` only: it
+   * is the one phase whose child ids are the projection's own lines, so counting
+   * blocks and validating them are two different readings of the same text.
+   */
+  readonly projection?: boolean;
   /** A phase 2.0.0 cannot check at all: the call fails closed with this reason. */
   readonly notCheckable?: string;
 }
@@ -65,7 +71,7 @@ export const PHASE_CONFIG: Record<CheckPhase, PhaseConfig> = {
   // phase has no automated check in 2.0.0: a PASS here means "nothing was
   // checked", and the template's eight sections are asserted by skills/vdd-constitution.
   constitution: { parentPhase: null, parentPrefix: null, childPrefix: 'ART', servesField: null, countKey: null, childLabel: 'artifact' },
-  vision: { parentPhase: null, parentPrefix: null, childPrefix: 'V', servesField: null, countKey: 'goals', childLabel: 'goal' },
+  vision: { parentPhase: null, parentPrefix: null, childPrefix: 'V', servesField: null, countKey: 'goals', childLabel: 'goal', projection: true },
   strategy: { parentPhase: 'vision', parentPrefix: 'V', childPrefix: 'S', servesField: 'serves_goal', countKey: 'pillars', childLabel: 'pillar' },
   tactics: { parentPhase: 'strategy', parentPrefix: 'S', childPrefix: 'A', servesField: 'serves_pillar', countKey: 'actions', childLabel: 'action item', crossKey: true },
   specs: { parentPhase: 'tactics', parentPrefix: 'A', childPrefix: 'SP', servesField: 'serves_action', filter: 'MUST', countKey: 'specs', childLabel: 'spec' },
@@ -393,6 +399,95 @@ export function amendImpact(
   return impacted;
 }
 
+const PROJECTION_HEADING = /^##[ \t]+Chain projection[ \t]*$/m;
+const PROJECTION_LINE = /^- V-(\d{3}) → OBJ-(\d{3})$/;
+
+interface ProjectionResult {
+  /** Projection lines, not distinct ids: two lines naming `V-001` are two goals. */
+  goals: number;
+  reasons: string[];
+  /** False when R1 or R2 short-circuited: there is no line count to compare with. */
+  counted: boolean;
+}
+
+/**
+ * The chain projection rule (v18 §4). The vision is the only phase whose child
+ * ids are the projection's own lines, so `childIds` cannot answer it: it reads
+ * blocks anywhere in the text and de-duplicates mentions, which is why a bare
+ * `> Impact Chain: V-001` header used to satisfy the id guard and a duplicate
+ * `V-001` counted once.
+ *
+ * R1 section exists · R2 every `- V-` line is the strict shape · R3 no V id on
+ * two lines · R4 no objective on two lines · R5 every V id in the artifact is
+ * projected · R6 every projected objective is declared before the heading.
+ * R1 and R2 short-circuit; R5 and R6 skip what R3 and R4 already reported, so a
+ * duplicate emits one reason rather than three.
+ */
+function checkProjection(content: string): ProjectionResult {
+  const heading = PROJECTION_HEADING.exec(content);
+  if (!heading) {
+    return { goals: 0, reasons: ['vision has no "## Chain projection" section'], counted: false };
+  }
+
+  const after = content.slice(heading.index + heading[0].length);
+  const next = /^## /m.exec(after);
+  const section = next ? after.slice(0, next.index) : after;
+
+  const lines = section
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('- V-'));
+
+  const reasons: string[] = [];
+  const projected: Array<{ goal: string; objective: string }> = [];
+  // Ids on a malformed line are reported once by R2; R5 must not repeat them.
+  const malformed = new Set<string>();
+  for (const line of lines) {
+    const match = PROJECTION_LINE.exec(line);
+    if (!match) {
+      reasons.push(`not a projection line: ${line}`);
+      for (const id of extractIds(line, 'V')) malformed.add(id);
+      continue;
+    }
+    projected.push({ goal: `V-${match[1]}`, objective: `OBJ-${match[2]}` });
+  }
+  if (projected.length === 0) {
+    if (reasons.length === 0) reasons.push('the chain projection names no V-### id');
+    return { goals: 0, reasons, counted: false };
+  }
+
+  const count = (ids: string[]): Map<string, number> => {
+    const seen = new Map<string, number>();
+    for (const id of ids) seen.set(id, (seen.get(id) ?? 0) + 1);
+    return seen;
+  };
+  const duplicated = (ids: string[]): Set<string> =>
+    new Set([...count(ids)].filter(([, times]) => times > 1).map(([id]) => id));
+
+  const duplicateGoals = duplicated(projected.map(({ goal }) => goal));
+  const duplicateObjectives = duplicated(projected.map(({ objective }) => objective));
+  for (const id of duplicateGoals) reasons.push(`${id} is projected more than once`);
+  for (const id of duplicateObjectives) reasons.push(`${id} is projected more than once`);
+
+  const onALine = new Set(projected.map(({ goal }) => goal));
+  for (const goal of extractIds(content, 'V')) {
+    if (onALine.has(goal) || duplicateGoals.has(goal) || malformed.has(goal)) continue;
+    reasons.push(`${goal} is not in the chain projection`);
+  }
+
+  // §3 carries the objective, so "declared" means before the heading: a second
+  // copy after it would be the restatement the projection exists to prevent.
+  const declared = new Set(content.slice(0, heading.index).match(/\bOBJ-\d{3}\b/g) ?? []);
+  const reported = new Set<string>();
+  for (const { goal, objective } of projected) {
+    if (declared.has(objective) || duplicateObjectives.has(objective) || reported.has(objective)) continue;
+    reported.add(objective);
+    reasons.push(`${goal} projects ${objective}, which the artifact does not declare`);
+  }
+
+  return { goals: projected.length, reasons, counted: true };
+}
+
 /**
  * The dispatch every surface calls. One implementation, so a hosted and a local
  * response cannot disagree about the same artifact.
@@ -436,10 +531,19 @@ export function runPhaseCheck(
     };
   }
 
-  const counts = actualCounts(phase, parents, childIdsFound.length);
+  // The projection is read after the id guard, so an artifact with no V-### at
+  // all keeps its specific failure, and before the counts, because the number of
+  // projection lines is what `declaredCounts.goals` is compared with.
+  const projection = cfg.projection ? checkProjection(content) : null;
+  const counts = actualCounts(phase, parents, projection ? projection.goals : childIdsFound.length);
+  // R1 and R2 short-circuit: with no projection section, or none with a valid
+  // line, there is no line count, and comparing a declared count with 0 would
+  // report a second defect for the same one.
+  const countReasons = projection && !projection.counted ? [] : checkCounts(declaredCounts, counts, phase);
   const reasons = [
     ...invariants.reasons,
-    ...checkCounts(declaredCounts, counts, phase),
+    ...(projection ? projection.reasons : []),
+    ...countReasons,
     ...(cfg.crossKey ? checkCrossKeyActual(matrix) : []),
   ];
 

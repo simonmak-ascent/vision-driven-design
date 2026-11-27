@@ -39,6 +39,10 @@ const STRATEGY = `# strategy.md
 
 const VISION = `# vision.md
 
+## §3 Vision, goal, objectives
+- OBJ-001 — metric: activation · baseline → target: 10% → 25%
+- OBJ-002 — metric: retention · baseline → target: 40% → 55%
+
 ## Chain projection
 - V-001 → OBJ-001
 - V-002 → OBJ-002
@@ -113,6 +117,16 @@ describe('api surface', () => {
     const one = await rpc('skills/get', { uri: 'skill://vdd-tactics/SKILL.md' }, { id: 3 });
     expect(one.result.skill.frontmatter.name).toBe('vdd-tactics');
     expect(one.result.skill.frontmatter.description.length).toBeGreaterThan(0);
+
+    // v18's wire control. `skills/get` returns no body — only the entry, with each
+    // file's server-computed digest and size (`buildSkillEntry`) — so the byte size
+    // is what proves the served `vdd-vision/SKILL.md` is the file on disk.
+    const vision = await rpc('skills/get', { uri: 'skill://vdd-vision/SKILL.md' }, { id: 4 });
+    const resource = vision.result.skill.resources.find(
+      (entry: { uri: string }) => entry.uri === 'skill://vdd-vision/SKILL.md',
+    );
+    expect(resource, 'vdd-vision/SKILL.md is not in resources').toBeTruthy();
+    expect(resource.size).toBe(readFileSync(repo('skills/vdd-vision/SKILL.md')).length);
 
     // No negotiation: the methods answer a 2025-era client that sends no envelope
     // at all, because SEP-2640 governs whether a host uses the extension, not

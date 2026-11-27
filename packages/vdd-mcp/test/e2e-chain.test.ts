@@ -13,6 +13,10 @@ import { callTool } from './harness.js';
 
 const VISION = `# vision.md
 
+## §3 Vision, goal, objectives
+- OBJ-001 — metric: activation · baseline → target: 10% → 25%
+- OBJ-002 — metric: retention · baseline → target: 40% → 55%
+
 ## Chain projection
 - V-001 → OBJ-001
 - V-002 → OBJ-002

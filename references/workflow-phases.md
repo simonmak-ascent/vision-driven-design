@@ -27,8 +27,13 @@ declares no ids and has no junction.
 
 Fill the framework artifact — §0 Input through §6 Decision — then write `## Chain projection`, one line
 per selected objective: `- V-001 → OBJ-001`. The objective is authoritative; the projection carries the
-two ids and never restates a metric. The check fails an artifact that declares no `V-###` id, and
-compares the declared goal count when you send one.
+two ids and never restates a metric.
+
+`vdd_check` validates the projection (v18 §4): the section must exist, every line beginning `- V-`
+must be `- V-### → OBJ-###` exactly, no `V-###` or `OBJ-###` may appear twice, every `V-###` in the artifact
+must be projected, and every projected objective must be declared before the heading. It also compares
+the declared goal count, when you send one, with the number of projection lines. The headings, the
+claim ledger, the grid and the GRADE `downgrades` are the skill's checklist, not the tool's.
 
 ## Phase 2 — Strategy
 

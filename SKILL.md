@@ -51,11 +51,12 @@ Without forward verification: vision goals ship with no implementation.
 
 ## Quick Start
 
-1. **Write the vision.** The `vdd-vision` skill walks the v16 artifact: observations with locators,
-   problems, objectives with metrics, the 5Ws, the possibility space, the decision — then the chain
-   projection that gives each objective a `V-###` id.
+1. **Write the vision.** The `vdd-vision` skill walks the v18 framework — v16 as amended by v17 and
+   v18: observations with locators, problems, objectives with metrics and an instrument, the 5Ws, the
+   possibility space, the decision — then the chain projection that gives each objective a `V-###` id.
 2. **Check it.** `vdd_check` with `{phase: "vision", content}` returns PASS or FAIL and the matrix.
-   A FAIL names the id to fix; the skill says what to write.
+   A FAIL names the line or id to fix; the check validates the chain projection and the declared goal
+   count, and the skill says what to write.
 3. **Continue with the next skill** — `vdd-strategy`, `vdd-tactics`, `vdd-specs`, `vdd-plan`,
    `vdd-tasks` — passing the artifact you just wrote as `priorArtifacts`, until `vdd-tasks` passes.
 4. **Implement** with `vdd-implement`: the host agent's own tools, one commit per task, the chain in

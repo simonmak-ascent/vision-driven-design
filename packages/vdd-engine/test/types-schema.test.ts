@@ -22,7 +22,10 @@ describe('published schema surface', () => {
   });
 
   it('CheckResult accepts a real engine result and refuses missing coverage or matrix', () => {
-    const result = runPhaseCheck('vision', '## Chain projection\n- V-001 → OBJ-001\n');
+    const result = runPhaseCheck(
+      'vision',
+      '## §3 Vision, goal, objectives\n- OBJ-001 — metric: m · baseline → target: 1 → 2\n\n## Chain projection\n- V-001 → OBJ-001\n',
+    );
     expect(CheckResult.parse(result).status).toBe('PASS');
 
     const { coverage: _dropped, ...withoutCoverage } = result;
@@ -35,7 +38,10 @@ describe('published schema surface', () => {
   });
 
   it('CheckResult refuses a status outside PASS / FAIL', () => {
-    const result = runPhaseCheck('vision', '## Chain projection\n- V-001 → OBJ-001\n');
+    const result = runPhaseCheck(
+      'vision',
+      '## §3 Vision, goal, objectives\n- OBJ-001 — metric: m · baseline → target: 1 → 2\n\n## Chain projection\n- V-001 → OBJ-001\n',
+    );
     expect(CheckResult.safeParse({ ...result, status: 'MAYBE' }).success).toBe(false);
   });
 

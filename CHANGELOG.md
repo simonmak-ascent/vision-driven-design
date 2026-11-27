@@ -1,5 +1,26 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- **The vision check enforces the chain projection** (`docs/vision-framework-v18.md` §4):
+  `vdd_check{phase:'vision'}` now fails a missing `## Chain projection` section, a line that is not
+  `- V-### → OBJ-###`, a duplicate `V-` or `OBJ-` id, a `V-###` outside the projection, and a projected
+  objective the artifact does not declare. `actual_counts.goals` is the number of projection lines, not
+  of distinct mentions.
+- **The vision field contract is v18** (§2): the template and the skill carry the same 70 fields, and
+  `vision-framework.test.ts` derives from the delta rather than from a hardcoded list.
+
+### Migration
+- A vision artifact written for v17 that names its goals in `## V-001 …` headings and has no
+  `## Chain projection` section now fails. Add the section — one `- V-### → OBJ-###` line per selected
+  objective — and declare each objective in §3 before the heading.
+
+### Deliberate
+- The endpoint still advertises 2.0.0. The published surface (3 tools, 9 skills, the phase grammar) is
+  unchanged; this is a stricter check, and a version move touches eight values, three landing pages and
+  the registry surfaces. Recorded, not hidden.
+
 ## [2.0.0] - 2026-11-27
 
 A capability collapse: fourteen generation tools and twenty prompts become three tools that judge an

@@ -38,8 +38,15 @@ const A001_WITH_SIBLINGS = `# tactics.md
 
 const VISION = `# vision.md
 
-## V-001 Reduce review time
-## V-002 Raise change confidence
+> Impact Chain: V-001
+
+## §3 Vision, goal, objectives
+- OBJ-001 — metric: review time · baseline → target: 9d → 3d
+- OBJ-002 — metric: change confidence · baseline → target: 60% → 85%
+
+## Chain projection
+- V-001 → OBJ-001
+- V-002 → OBJ-002
 `;
 
 const STRATEGY_THREE = `# strategy.md
@@ -302,7 +309,10 @@ describe('coverage engine', () => {
     expect(empty.status).toBe('FAIL');
     expect(empty.reasons).toEqual(['vision declares no V-### id']);
 
-    const template = runPhaseCheck('vision', '# vision.md\n\n## Chain projection\n- V-001 → OBJ-001\n');
+    const template = runPhaseCheck(
+      'vision',
+      '# vision.md\n\n## §3 Vision, goal, objectives\n- OBJ-001 — metric: m · baseline → target: 1 → 2\n\n## Chain projection\n- V-001 → OBJ-001\n',
+    );
     expect(template.status).toBe('PASS');
   });
 
